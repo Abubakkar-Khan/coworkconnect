@@ -368,7 +368,23 @@ The project includes Vercel deployment support through:
 - `.python-version`
 - `requirements.txt`
 
-Important: Vercel cannot connect to the MySQL database running on your laptop through `localhost`. For the backend to work online, you must use an external MySQL database such as Railway, Aiven, PlanetScale-compatible MySQL, or another hosted MySQL service.
+Important: Vercel cannot connect to the MySQL database running on your laptop through `localhost`. For a real deployed backend, use an external database. Supabase is recommended because it provides a hosted PostgreSQL database with a connection URL that works well with Vercel.
+
+### Recommended: Supabase Database
+
+1. Create a Supabase project.
+2. Open the Supabase dashboard.
+3. Go to Project Settings > Database.
+4. Copy the pooled connection string.
+5. Add it to Vercel as `DATABASE_URL`.
+
+Supabase connection string example:
+
+```text
+DATABASE_URL=postgresql://postgres.xxx:password@aws-0-region.pooler.supabase.com:6543/postgres?sslmode=require
+```
+
+The backend supports Supabase/PostgreSQL, hosted MySQL, and a temporary SQLite fallback for Vercel deployments without database variables. The SQLite fallback is only for basic testing because serverless storage is not permanent.
 
 Set these environment variables in the Vercel project dashboard:
 
@@ -377,18 +393,19 @@ DEBUG=false
 DJANGO_SECRET_KEY=your_long_random_secret
 JWT_SECRET=your_long_random_secret
 JWT_EXPIRE=30d
+DATABASE_URL=your_supabase_or_external_database_url
+```
+
+Hosted MySQL can still be configured with individual DB variables:
+
+```text
+DB_ENGINE=mysql
 DB_HOST=your_external_mysql_host
 DB_PORT=3306
 DB_USER=your_external_mysql_user
 DB_PASSWORD=your_external_mysql_password
 DB_NAME=coworkconnect
 DB_SSL=true
-```
-
-You can also use one database URL instead of the individual DB variables:
-
-```text
-DATABASE_URL=mysql://user:password@host:3306/coworkconnect?ssl-mode=REQUIRED
 ```
 
 After saving the environment variables, redeploy the Vercel project. The Django backend will create the required tables automatically on the first request.

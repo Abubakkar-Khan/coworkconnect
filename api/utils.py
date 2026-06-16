@@ -39,6 +39,11 @@ def fetch_one(sql, params=None):
 
 def execute(sql, params=None):
     with connection.cursor() as cursor:
+        if connection.vendor == "postgresql" and sql.lstrip().lower().startswith("insert") and " returning " not in sql.lower():
+            cursor.execute(f"{sql.rstrip()} RETURNING id", params or [])
+            row = cursor.fetchone()
+            return cursor.rowcount, row[0] if row else None
+
         cursor.execute(sql, params or [])
         return cursor.rowcount, cursor.lastrowid
 
