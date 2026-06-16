@@ -20,12 +20,18 @@ from .utils import (
 
 def health(_request):
     from datetime import datetime
+    from django.db import connection
 
     return api_response(
         {
             "success": True,
             "message": "CoWorkConnect API is healthy",
             "timestamp": datetime.utcnow().isoformat(),
+            "database": {
+                "vendor": connection.vendor,
+                "external_configured": settings.HAS_EXTERNAL_DB_CONFIG,
+                "temporary_sqlite": settings.USE_SQLITE_FALLBACK,
+            },
         }
     )
 
