@@ -14,17 +14,18 @@
         }
 
         .groups-page {
-            min-height: 100vh;
-            padding: 96px 1rem 1rem;
+            height: 100vh;
+            padding: 96px 1rem 0.75rem;
             background:
                 linear-gradient(180deg, rgba(6, 78, 59, 0.08), rgba(238, 242, 247, 0) 320px),
                 #eef2f7;
+            overflow: hidden;
         }
 
         .groups-shell {
             width: min(1540px, calc(100vw - 2rem));
-            height: calc(100vh - 112px);
-            min-height: 720px;
+            height: calc(100vh - 106px);
+            min-height: 0;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 76px 340px minmax(420px, 1fr) 330px;
@@ -395,6 +396,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
             position: relative;
         }
 
@@ -455,11 +457,12 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            overflow: hidden;
         }
 
         .chat-header {
-            min-height: 76px;
-            padding: 0.9rem 1.25rem;
+            min-height: 66px;
+            padding: 0.65rem 1.25rem;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
@@ -512,11 +515,11 @@
         }
 
         .announcement {
-            margin: 1rem 1.25rem 0;
+            margin: 0.7rem 1.25rem 0;
             border: 1px solid #bbf7d0;
             background: #ecfdf5;
             border-radius: 8px;
-            padding: 0.85rem 1rem;
+            padding: 0.65rem 0.85rem;
             display: flex;
             gap: 0.8rem;
             align-items: flex-start;
@@ -534,7 +537,7 @@
             margin: 0;
             color: #047857;
             font-size: 0.82rem;
-            line-height: 1.45;
+            line-height: 1.35;
             font-weight: 600;
         }
 
@@ -542,7 +545,7 @@
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 1.3rem 1.25rem;
+            padding: 1rem 1.25rem;
             display: flex;
             flex-direction: column;
             gap: 0.95rem;
@@ -692,8 +695,8 @@
             color: #64748b;
             font-size: 0.78rem;
             font-weight: 700;
-            padding: 0 1.25rem 0.65rem;
-            min-height: 24px;
+            padding: 0 1.25rem 0.35rem;
+            min-height: 20px;
         }
 
         .typing-dots {
@@ -718,7 +721,7 @@
         }
 
         .quick-prompts {
-            padding: 0 1.25rem 0.85rem;
+            padding: 0 1.25rem 0.55rem;
             display: flex;
             gap: 0.55rem;
             overflow-x: auto;
@@ -743,7 +746,7 @@
         }
 
         .composer-wrap {
-            padding: 1rem 1.25rem 1.2rem;
+            padding: 0.8rem 1.25rem 0.9rem;
             background: white;
             border-top: 2px solid #dbe5ef;
             position: relative;
@@ -778,7 +781,7 @@
             line-height: 1.45;
             padding: 0.78rem 0.55rem;
             min-width: 0;
-            height: 52px;
+            height: 48px;
             max-height: 120px;
             resize: none;
         }
@@ -852,7 +855,7 @@
         }
 
         .send-btn {
-            height: 52px;
+            height: 48px;
             padding: 0 1.2rem;
             border: 0;
             border-radius: 8px;
