@@ -727,14 +727,15 @@
         }
 
         .composer-wrap {
-            padding: 0 1.25rem 1.15rem;
+            padding: 0.85rem 1.25rem 1.15rem;
             background: white;
+            border-top: 1px solid #e2e8f0;
         }
 
         .composer {
             display: grid;
             grid-template-columns: auto 1fr auto;
-            align-items: center;
+            align-items: end;
             gap: 0.45rem;
             border: 1px solid #dbe5ef;
             border-radius: 8px;
@@ -748,15 +749,19 @@
             box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.10);
         }
 
-        .composer input {
+        .composer textarea {
             border: 0;
             outline: 0;
             background: transparent;
             font-family: var(--font);
             color: #0f172a;
             font-size: 0.96rem;
-            padding: 0.75rem 0.4rem;
+            line-height: 1.45;
+            padding: 0.65rem 0.4rem;
             min-width: 0;
+            height: 44px;
+            max-height: 120px;
+            resize: none;
         }
 
         .composer-actions {
@@ -783,6 +788,18 @@
 
         .send-btn:hover {
             background: var(--primary-hover);
+        }
+
+        .send-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .composer-hint {
+            margin: 0.45rem 0 0;
+            color: #64748b;
+            font-size: 0.74rem;
+            font-weight: 700;
         }
 
         .details-panel {
@@ -881,6 +898,11 @@
             color: white;
             background: var(--primary);
             border-color: var(--primary);
+        }
+
+        .details-action:disabled {
+            cursor: not-allowed;
+            opacity: 0.62;
         }
 
         .stats-grid {
@@ -1296,11 +1318,9 @@
                             </div>
                         </div>
                         <div class="chat-actions">
-                            <button class="icon-button optional-action" type="button" title="Search messages"><i data-lucide="search" size="19"></i></button>
-                            <button class="icon-button optional-action" type="button" title="Pinned messages"><i data-lucide="pin" size="19"></i></button>
-                            <button class="icon-button optional-action" type="button" title="Start audio room"><i data-lucide="phone" size="19"></i></button>
-                            <button class="icon-button optional-action" type="button" title="Video room"><i data-lucide="video" size="19"></i></button>
-                            <button class="icon-button" type="button" title="Group info"><i data-lucide="info" size="19"></i></button>
+                            <button class="icon-button optional-action" type="button" id="refresh-messages-btn" title="Refresh messages"><i data-lucide="refresh-cw" size="19"></i></button>
+                            <button class="icon-button optional-action" type="button" id="jump-latest-btn" title="Latest message"><i data-lucide="arrow-down-to-line" size="19"></i></button>
+                            <button class="icon-button" type="button" id="group-info-btn" title="Group info"><i data-lucide="info" size="19"></i></button>
                         </div>
                     </header>
 
@@ -1329,15 +1349,14 @@
                     <div class="composer-wrap">
                         <form id="chat-form" class="composer">
                             <div class="composer-actions">
-                                <button class="icon-button" type="button" title="Attach file"><i data-lucide="paperclip" size="19"></i></button>
-                                <button class="icon-button" type="button" title="Mention"><i data-lucide="at-sign" size="19"></i></button>
+                                <button class="icon-button" id="mention-btn" type="button" title="Mention"><i data-lucide="at-sign" size="19"></i></button>
                             </div>
-                            <input id="msg-input" type="text" autocomplete="off" placeholder="Message this circle">
+                            <textarea id="msg-input" autocomplete="off" rows="1" placeholder="Message this circle"></textarea>
                             <div class="composer-actions">
-                                <button class="icon-button" type="button" title="Emoji"><i data-lucide="smile" size="19"></i></button>
-                                <button class="send-btn" type="submit"><span>Send</span><i data-lucide="send" size="17"></i></button>
+                                <button class="send-btn" id="send-message-btn" type="submit"><span>Send</span><i data-lucide="send" size="17"></i></button>
                             </div>
                         </form>
+                        <p class="composer-hint" id="composer-hint">Messages update automatically every few seconds.</p>
                     </div>
                 </div>
             </section>
@@ -1362,8 +1381,8 @@
                             <button class="details-action primary" type="button" id="join-group-btn">
                                 <i data-lucide="user-plus" size="16"></i> Join
                             </button>
-                            <button class="details-action" type="button">
-                                <i data-lucide="bell" size="16"></i> Mute
+                            <button class="details-action" type="button" id="notify-group-btn">
+                                <i data-lucide="bell" size="16"></i> Notify
                             </button>
                         </div>
 
@@ -1466,6 +1485,7 @@
             messages: [],
             filter: 'all',
             messagePoller: null,
+            sending: false,
         };
 
         const categories = ['Tech', 'Design', 'Marketing', 'Founder', 'Growth', 'Remote'];
@@ -1525,10 +1545,64 @@
                 unread: group.id % 4 === 0 ? 0 : (group.id % 5) + 1,
                 activity: memberCount > 5 ? 'High' : group.id % 2 ? 'Active' : 'New',
                 time: hour,
-                joined: memberCount > 0,
+                joined: Boolean(group.joined_by_me || group.created_by_me),
                 channels: channelSets[group.id % channelSets.length],
                 preview: group.description || 'Discuss workspaces, ideas, events, and collaboration opportunities.',
             };
+        }
+
+        function updateComposerState() {
+            const input = document.getElementById('msg-input');
+            const sendButton = document.getElementById('send-message-btn');
+            const hint = document.getElementById('composer-hint');
+            if (!input || !sendButton || !hint) return;
+
+            const token = localStorage.getItem('token');
+            const disabled = !state.selectedGroupId || !token || state.sending;
+            input.disabled = disabled;
+            sendButton.disabled = disabled;
+            input.placeholder = token ? 'Message this circle' : 'Login to send messages';
+            hint.textContent = token
+                ? 'Messages update automatically every 3 seconds. Press Enter to send, Shift+Enter for a new line.'
+                : 'Login first to read and send group messages.';
+        }
+
+        function scrollMessagesToBottom() {
+            const container = document.getElementById('message-container');
+            if (container) container.scrollTop = container.scrollHeight;
+        }
+
+        function autoResizeMessageInput() {
+            const input = document.getElementById('msg-input');
+            if (!input) return;
+            input.style.height = '44px';
+            input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+        }
+
+        function insertComposerText(text) {
+            const input = document.getElementById('msg-input');
+            if (!input || input.disabled) return;
+            const start = input.selectionStart || 0;
+            const end = input.selectionEnd || 0;
+            input.value = `${input.value.slice(0, start)}${text}${input.value.slice(end)}`;
+            input.selectionStart = input.selectionEnd = start + text.length;
+            autoResizeMessageInput();
+            input.focus();
+        }
+
+        function showGroupInfo() {
+            document.querySelector('.details-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
+        }
+
+        function toggleNotifications() {
+            const button = document.getElementById('notify-group-btn');
+            const active = button.dataset.active === 'true';
+            button.dataset.active = active ? 'false' : 'true';
+            button.innerHTML = active
+                ? '<i data-lucide="bell" size="16"></i> Notify'
+                : '<i data-lucide="bell-ring" size="16"></i> On';
+            lucide.createIcons();
+            showToast(active ? 'Group notifications off.' : 'Group notifications on.');
         }
 
         function showToast(message) {
@@ -1654,6 +1728,11 @@
             document.getElementById('active-group-status').textContent = `${group.member_count} members, ${group.activity.toLowerCase()} today`;
             document.getElementById('announcement-title').textContent = `Welcome to ${group.name}`;
             document.getElementById('announcement-copy').textContent = group.description || 'Introduce yourself, share useful resources, and keep the discussion focused.';
+            const joinButton = document.getElementById('join-group-btn');
+            joinButton.innerHTML = group.joined
+                ? '<i data-lucide="check" size="16"></i> Joined'
+                : '<i data-lucide="user-plus" size="16"></i> Join';
+            joinButton.disabled = group.joined;
 
             document.getElementById('info-group-name').textContent = group.name;
             document.getElementById('info-group-desc').textContent = group.description || 'A focused professional circle for coworking members, founders, freelancers, and remote professionals.';
@@ -1665,10 +1744,13 @@
             renderChannels(group);
             renderMembers(group);
             renderGroups();
+            updateComposerState();
             await fetchMessages();
 
             if (state.messagePoller) clearInterval(state.messagePoller);
-            state.messagePoller = setInterval(fetchMessages, 5000);
+            state.messagePoller = setInterval(() => {
+                if (!document.hidden) fetchMessages(true);
+            }, 3000);
         }
 
         function renderChannels(group) {
@@ -1738,28 +1820,41 @@
                 `);
             });
             container.innerHTML = rows.join('');
-            container.scrollTop = container.scrollHeight;
+            scrollMessagesToBottom();
         }
 
-        async function fetchMessages() {
+        async function fetchMessages(silent = false) {
             if (!state.selectedGroupId) return;
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
-            const response = await fetch(`/api/groups/${state.selectedGroupId}/messages`, { headers });
-            if (response.status === 401) {
-                renderMessages([]);
+            try {
+                const response = await fetch(`/api/groups/${state.selectedGroupId}/messages?t=${Date.now()}`, { headers });
+                if (response.status === 401) {
+                    renderMessages([]);
+                    document.getElementById('message-container').innerHTML = `
+                        <div class="chat-empty-messages">
+                            <h3>Login required</h3>
+                            <p>Please login to read and send messages in this circle.</p>
+                            <a class="btn btn-primary" href="login.html" style="margin-top:1rem;">Login</a>
+                        </div>
+                    `;
+                    updateComposerState();
+                    return;
+                }
+                if (!response.ok) throw new Error('Messages request failed');
+                const data = await response.json();
+                state.messages = data.data || [];
+                renderMessages(state.messages);
+                updateComposerState();
+            } catch (error) {
+                if (silent) return;
                 document.getElementById('message-container').innerHTML = `
                     <div class="chat-empty-messages">
-                        <h3>Login required</h3>
-                        <p>Please login to read and send messages in this circle.</p>
-                        <a class="btn btn-primary" href="login.html" style="margin-top:1rem;">Login</a>
+                        <h3>Messages unavailable</h3>
+                        <p>Please refresh the group or try again in a moment.</p>
                     </div>
                 `;
-                return;
             }
-            const data = await response.json();
-            state.messages = data.data || [];
-            renderMessages(state.messages);
         }
 
         async function sendMessage(event) {
@@ -1776,19 +1871,35 @@
                 showToast('Please login to send messages.');
                 return;
             }
+            if (!state.selectedGroup?.joined) {
+                showToast('Join this group before sending messages.');
+                return;
+            }
             if (!content) return;
 
-            const response = await fetch(`/api/groups/${state.selectedGroupId}/messages`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ content }),
-            });
+            try {
+                state.sending = true;
+                updateComposerState();
+                const response = await fetch(`/api/groups/${state.selectedGroupId}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ content }),
+                });
 
-            if (response.ok) {
-                input.value = '';
-                await fetchMessages();
-            } else {
+                if (response.ok) {
+                    input.value = '';
+                    autoResizeMessageInput();
+                    await fetchMessages();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    showToast(data.message || 'Message could not be sent.');
+                }
+            } catch (error) {
                 showToast('Message could not be sent.');
+            } finally {
+                state.sending = false;
+                updateComposerState();
+                input.focus();
             }
         }
 
@@ -1808,6 +1919,7 @@
             if (response.ok) {
                 showToast('Joined group successfully.');
                 await fetchGroups();
+                selectGroup(state.selectedGroupId);
             } else {
                 showToast(data.message || 'Could not join group.');
             }
@@ -1847,6 +1959,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            updateComposerState();
             fetchGroups();
 
             document.getElementById('group-search').addEventListener('input', applyFilters);
@@ -1862,10 +1975,25 @@
             document.getElementById('chat-form').addEventListener('submit', sendMessage);
             document.getElementById('create-group-form').addEventListener('submit', createGroup);
             document.getElementById('join-group-btn').addEventListener('click', joinSelectedGroup);
+            document.getElementById('notify-group-btn').addEventListener('click', toggleNotifications);
+            document.getElementById('refresh-messages-btn').addEventListener('click', () => fetchMessages());
+            document.getElementById('jump-latest-btn').addEventListener('click', scrollMessagesToBottom);
+            document.getElementById('group-info-btn').addEventListener('click', showGroupInfo);
+            document.getElementById('mention-btn').addEventListener('click', () => insertComposerText('@'));
+
+            const messageInput = document.getElementById('msg-input');
+            messageInput.addEventListener('input', autoResizeMessageInput);
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    document.getElementById('chat-form').requestSubmit();
+                }
+            });
 
             document.querySelectorAll('.quick-prompt').forEach((prompt) => {
                 prompt.addEventListener('click', () => {
                     document.getElementById('msg-input').value = prompt.dataset.prompt;
+                    autoResizeMessageInput();
                     document.getElementById('msg-input').focus();
                 });
             });

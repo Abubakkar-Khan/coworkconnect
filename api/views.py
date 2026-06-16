@@ -434,14 +434,25 @@ def delete_post(request, post_id):
 
 def groups(request):
     if request.method == "GET":
+        current_user, _ = auth_user(request, required=False)
         rows = fetch_all(
             """
             SELECT g.*, u.name as creator_name,
               (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
             FROM community_groups g
             JOIN users u ON g.created_by = u.id
+            ORDER BY g.created_at DESC
             """
         )
+        if current_user:
+            for group in rows:
+                group["joined_by_me"] = bool(
+                    fetch_one(
+                        "SELECT id FROM group_members WHERE group_id = %s AND user_id = %s",
+                        [group["id"], current_user["id"]],
+                    )
+                )
+                group["created_by_me"] = group.get("created_by") == current_user["id"]
         return api_response({"success": True, "count": len(rows), "data": rows})
 
     if request.method == "POST":
@@ -465,6 +476,8 @@ def join_group(request, group_id):
     user, error = auth_user(request)
     if error:
         return error
+    if not fetch_one("SELECT id FROM community_groups WHERE id = %s", [group_id]):
+        return api_response({"success": False, "message": "Group not found"}, 404)
     if fetch_one("SELECT id FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]]):
         return api_response({"success": False, "message": "Already a member"}, 400)
     execute("INSERT INTO group_members (group_id, user_id) VALUES (%s, %s)", [group_id, user["id"]])
@@ -490,7 +503,13 @@ def group_messages(request, group_id):
         return api_response({"success": True, "data": rows})
 
     if request.method == "POST":
-        content = read_data(request).get("content")
+        if not fetch_one("SELECT id FROM community_groups WHERE id = %s", [group_id]):
+            return api_response({"success": False, "message": "Group not found"}, 404)
+        if not fetch_one("SELECT id FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]]):
+            return api_response({"success": False, "message": "Join this group before sending messages"}, 403)
+        content = (read_data(request).get("content") or "").strip()
+        if not content:
+            return api_response({"success": False, "message": "Message cannot be empty"}, 400)
         _, message_id = execute(
             "INSERT INTO messages (group_id, user_id, content) VALUES (%s, %s, %s)",
             [group_id, user["id"], content],
