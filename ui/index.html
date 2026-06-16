@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoWorkConnect | Your professional growth starts here</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i data-lucide="layout"></i>
+                <span>CoWorkConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="spaces.html" class="nav-link">Explore Spaces</a>
+                <a href="community.html" class="nav-link">Networking</a>
+                <a href="groups.html" class="nav-link">Groups</a>
+                <a href="events.html" class="nav-link">Events</a>
+                
+                <div id="auth-links" class="auth-links" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <a href="login.html" class="nav-link">Login</a>
+                    <a href="register.html" class="btn btn-primary" style="border-radius: 50px; padding: 0.6rem 1.5rem;">Join Now</a>
+                </div>
+                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero" style="padding-top: 200px; padding-bottom: 150px; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1600'); background-size: cover; background-position: center; color: white;">
+        <div class="container hero-container fade-in">
+            <div style="text-align: center; max-width: 900px; margin: 0 auto;">
+                <span class="badge" style="background: var(--primary); color: white; font-weight: 700;">The Complete professional Ecosystem</span>
+                <h1 style="font-size: 4rem; line-height: 1.1; font-weight: 800; letter-spacing: -2px; margin-bottom: 1.5rem; color: white;">
+                    Elevate Your Work <br><span class="gradient-text" style="background: linear-gradient(135deg, white, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Experience</span> Anywhere
+                </h1>
+                <p style="font-size: 1.3rem; color: rgba(255,255,255,0.9); margin-bottom: 2.5rem; line-height: 1.6; font-weight: 500;">
+                    Discover premium workspaces, join elite professional circles, and grow with a community of 5,000+ innovators.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="register.html" class="btn btn-primary btn-lg" style="box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); padding: 1.2rem 2.5rem;">Join for Free</a>
+                    <a href="spaces.html" class="btn btn-outline btn-lg" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white; backdrop-filter: blur(10px); padding: 1.2rem 2.5rem;">Explore Ecosystem</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Statistics Bar -->
+    <section style="background: var(--dark); padding: 3rem 0; color: white; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; align-items: center;">
+            <div style="border-right: 1px solid rgba(255,255,255,0.1);">
+                <span style="color: var(--primary); font-size: 2.2rem; font-weight: 800; display: block; margin-bottom: 5px;">50+</span>
+                <span style="color: #94a3b8; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Premium Spaces</span>
+            </div>
+            <div style="border-right: 1px solid rgba(255,255,255,0.1);">
+                <span style="color: var(--primary); font-size: 2.2rem; font-weight: 800; display: block; margin-bottom: 5px;">5k+</span>
+                <span style="color: #94a3b8; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Linked Members</span>
+            </div>
+            <div style="border-right: 1px solid rgba(255,255,255,0.1);">
+                <span style="color: var(--primary); font-size: 2.2rem; font-weight: 800; display: block; margin-bottom: 5px;">120+</span>
+                <span style="color: #94a3b8; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Weekly Events</span>
+            </div>
+            <div>
+                <span style="color: var(--primary); font-size: 2.2rem; font-weight: 800; display: block; margin-bottom: 5px;">12+</span>
+                <span style="color: #94a3b8; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Partner Cities</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Features (The Heart of CoWorkConnect) -->
+    <section class="features" style="padding: 120px 0; background: #fcfdfd;">
+        <div class="container">
+            <div class="section-header" style="max-width: 800px; margin: 0 auto 6rem; text-align: center;">
+                <span style="color: var(--primary); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;">Core Ecosystem</span>
+                <h2 style="font-size: 3rem; font-weight: 800; margin-top: 1rem; line-height: 1.2;">The Complete Toolkit for <br><span class="gradient-text">Remote Excellence.</span></h2>
+            </div>
+    
+            <div class="features-grid">
+                <!-- Workspace Booking -->
+                <div class="module-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&q=80&w=800" alt="Workspace Booking" class="module-img">
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title">Digital Workspaces</h3>
+                        <p class="module-desc">Book high-performance hot desks or private office suites with instant confirmation and smart entry tech.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="spaces.html" class="module-hover-btn">Explore Spaces <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Networking Feed -->
+                <div class="module-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&q=80&w=800" alt="Social Network" class="module-img">
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title">Social Network</h3>
+                        <p class="module-desc">A specialized feed for professionals to build authority, share insights, and find elite collaborators.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="community.html" class="module-hover-btn">Open Feed <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Specialized Groups -->
+                <div class="module-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=800" alt="Expert Groups" class="module-img">
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title">Expert Groups</h3>
+                        <p class="module-desc">Join mastermind circles and private discussion groups with real-time chat and document sharing.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="groups.html" class="module-hover-btn">Join Circles <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Events Module -->
+                <div class="module-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=800" alt="Academy Hub" class="module-img">
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title">Academy Hub</h3>
+                        <p class="module-desc">Host or attend elite workshops and certified training events with instant QR-pass generation.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="events.html" class="module-hover-btn">Browse Events <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Smart Profiles -->
+                <div class="module-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=800" alt="Digital Passport" class="module-img">
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title">Digital Passport</h3>
+                        <p class="module-desc">Showcase your skills with a smart profile that tracks your networking influence and workshop history.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="profile.html" class="module-hover-btn">View Portfolio <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Start Your Journey -->
+                <div class="module-card dark-card">
+                    <div class="module-img-container">
+                        <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80&w=800" alt="Start Your Journey" class="module-img">
+                        <div style="position: absolute; inset: 0; background: rgba(6, 78, 59, 0.6); mix-blend-mode: multiply;"></div>
+                    </div>
+                    <div class="module-content">
+                        <h3 class="module-title" style="color: white;">Ready to Begin?</h3>
+                        <p class="module-desc" style="color: rgba(255,255,255,0.8);">Join 5,000+ professionals who have already stepped into the future of flexible workspace.</p>
+                        <div class="module-hover-btn-container">
+                            <a href="register.html" class="module-hover-btn" style="background: white; color: var(--dark);">Create Account <i data-lucide="arrow-right" size="18"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The CoWorkConnect Vision (Cinematic Storyboard) -->
+    <section style="background: white; padding: 120px 0;">
+        <div class="container">
+            <!-- Part 1: Synergy First -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 6rem; align-items: center; margin-bottom: 120px;">
+                <div style="position: relative;">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800" style="width: 100%; border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.1);">
+                    <div style="position: absolute; bottom: -30px; right: -30px; background: var(--primary); color: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 15px 30px rgba(16, 185, 129, 0.3);">
+                        <span style="font-size: 2.5rem; font-weight: 800; display: block;">5K+</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Success Partners</span>
+                    </div>
+                </div>
+                <div>
+                    <span style="color: var(--primary); font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">The Social Substrate</span>
+                    <h2 style="font-size: 2.8rem; font-weight: 800; margin: 1.5rem 0; line-height: 1.2;">Unlocking Synergy through <br><span class="gradient-text">Elite Proximity.</span></h2>
+                    <p style="color: var(--gray); line-height: 1.9; font-size: 1.1rem; margin-bottom: 2.5rem;">
+                        CoWorkConnect isn't about booking a desk; it's about unlocking the human capital around you. We've built the underlying digital layer that turns physical spaces into active networking hubs. Here, your professional identity is your greatest asset, allowing you to seamlessly discover innovators and build your next big venture.
+                    </p>
+                    <div style="display: flex; gap: 3rem;">
+                        <div><h4 style="font-weight: 800; font-size: 1.1rem;">Verified Hubs</h4><p style="font-size: 0.9rem; color: var(--gray);"> vetted professional circles.</p></div>
+                        <div><h4 style="font-weight: 800; font-size: 1.1rem;">Active Growth</h4><p style="font-size: 0.9rem; color: var(--gray);">Daily expert-led workshops.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part 2: Growth Ecosystem -->
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 6rem; align-items: center;">
+                <div>
+                    <span style="color: var(--primary); font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Digital Infrastructure</span>
+                    <h2 style="font-size: 2.8rem; font-weight: 800; margin: 1.5rem 0; line-height: 1.2;">Platform for <br><span class="gradient-text">Remote Excellence.</span></h2>
+                    <p style="color: var(--gray); line-height: 1.9; font-size: 1.1rem; margin-bottom: 2.5rem;">
+                        Our core mission is to provide the digital tools that modern professionals need to thrive. Whether it's managing complex group discussions, attending high-value events, or tracking your networking history—everything is integrated into a single, cohesive ecosystem designed for maximum professional output.
+                    </p>
+                    <button class="btn btn-primary" style="padding: 1rem 3rem; border-radius: 12px; font-weight: 800; letter-spacing: 1px;">BROWSE THE ECOSYSTEM</button>
+                </div>
+                <div style="position: relative;">
+                    <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=800" style="width: 100%; border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.1);">
+                    <div style="position: absolute; top: -30px; left: -30px; background: white; padding: 2.5rem; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 15px 30px rgba(0,0,0,0.05); text-align: center;">
+                        <i data-lucide="zap" color="var(--primary)" size="40"></i>
+                        <span style="display: block; font-weight: 800; margin-top: 10px; font-size: 0.9rem;">Powered by Growth</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Final Call to Action (Pattern Matched) -->
+    <section style="background: #0d4d3d; padding: 120px 0; text-align: center; color: white;">
+        <div class="container">
+            <h2 style="font-size: 4rem; font-weight: 800; margin-bottom: 2rem; line-height: 1.1;">
+                Ready to join the <br><span style="color: #4ade80;">Elite Ecosystem?</span>
+            </h2>
+            <p style="font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 800px; margin: 0 auto 3.5rem; line-height: 1.6; font-weight: 500;">
+                Stop searching for a desk. Start building your legacy with a community of thousands who have already redefined their professional life.
+            </p>
+            <div style="display: flex; gap: 1.5rem; justify-content: center;">
+                <a href="register.html" class="btn" style="background: white; color: #0d4d3d; padding: 1.2rem 3rem; font-weight: 800; border-radius: 12px; text-decoration: none; font-size: 1rem; border: none;">Get Started for Free</a>
+                <a href="community.html" class="btn" style="background: white; color: #0d4d3d; padding: 1.2rem 3rem; font-weight: 800; border-radius: 12px; text-decoration: none; font-size: 1rem; border: none;">Explore Community</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: white; padding: 100px 0 50px; border-top: 1px solid #f1f5f9;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 80px;">
+                <div style="max-width: 320px;">
+                    <div class="logo" style="color: var(--dark); font-size: 1.8rem; margin-bottom: 1.5rem;">
+                        <i data-lucide="layout" style="color: var(--primary);"></i>
+                        <span>CoWorkConnect</span>
+                    </div>
+                    <p style="color: var(--gray); line-height: 1.8; font-size: 0.95rem; font-weight: 500;">
+                        Building the infrastructure for the next generation of Pakistan's digital nomad and professional community.
+                    </p>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="facebook" size="18"></i></div>
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="twitter" size="18"></i></div>
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="linkedin" size="18"></i></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Platform</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="spaces.html" style="text-decoration: none; color: #475569;">Workspaces</a></li>
+                        <li><a href="community.html" style="text-decoration: none; color: #475569;">Networking</a></li>
+                        <li><a href="groups.html" style="text-decoration: none; color: #475569;">Discussion Circles</a></li>
+                        <li><a href="events.html" style="text-decoration: none; color: #475569;">Events Academy</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Ecosystem</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="profile.html" style="text-decoration: none; color: #475569;">Professional IDs</a></li>
+                        <li><a href="admin.html" style="text-decoration: none; color: #475569;">Partner Portal</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Success Stories</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Community Guidelines</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Support</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Help Center</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Safety & Security</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Privacy Policy</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="padding-top: 40px; border-top: 1px solid #f1f5f9; text-align: center; color: var(--gray); font-size: 0.85rem; font-weight: 600;">
+                <p>&copy; 2026 CoWorkConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

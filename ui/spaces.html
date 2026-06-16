@@ -1,0 +1,240 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Workspaces | CoWorkConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body style="background-color: #f8fafc;">
+    <!-- Shared Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i data-lucide="layout"></i>
+                <span>CoWorkConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="spaces.html" class="nav-link active">Explore Spaces</a>
+                <a href="community.html" class="nav-link">Networking</a>
+                <a href="groups.html" class="nav-link">Groups</a>
+                <a href="events.html" class="nav-link">Events</a>
+                
+                <div id="auth-links" class="auth-links" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <a href="login.html" class="nav-link">Login</a>
+                    <a href="register.html" class="btn btn-primary" style="border-radius: 50px; padding: 0.6rem 1.5rem;">Join Now</a>
+                </div>
+                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Professional Search Header -->
+    <header style="padding-top: 140px; padding-bottom: 40px; background: white; border-bottom: 1px solid var(--border);">
+        <div class="container">
+            <div style="max-width: 700px;">
+                <h1 style="font-size: 2.2rem; margin-bottom: 1.5rem; font-weight: 800;">Workspaces in <span id="location-title" style="color: var(--primary);">Anywhere</span></h1>
+                <div style="display: flex; gap: 0.5rem; background: var(--bg-soft); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="flex: 1; display: flex; align-items: center; padding-left: 1rem; gap: 0.5rem;">
+                        <i data-lucide="map-pin" size="18" color="var(--gray)"></i>
+                        <input type="text" id="location-input" placeholder="Enter area (e.g. Islamabad, Karachi)" style="border: none; background: transparent; width: 100%; height: 40px; font-family: var(--font); outline: none; font-size: 1rem;">
+                    </div>
+                    <button id="main-search-btn" class="btn btn-primary" style="padding: 0 2rem; border-radius: 12px;">Search</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; padding-top: 2rem; padding-bottom: 5rem;">
+        <!-- Sidebar Filters -->
+        <aside style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="filter-section" style="background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
+                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 800;">
+                    <i data-lucide="banknote" size="18"></i> Budget (Rs)
+                </h4>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                    <input type="number" id="min-price" placeholder="Min" class="input-field" style="padding: 0.5rem 1rem;">
+                    <span style="color: var(--gray);">â”€</span>
+                    <input type="number" id="max-price" placeholder="Max" class="input-field" style="padding: 0.5rem 1rem;">
+                </div>
+                <button id="apply-price-btn" class="btn btn-outline" style="width: 100%; font-size: 0.85rem; border-radius: 12px;">Apply Range</button>
+            </div>
+
+            <div class="filter-section" style="background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
+                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 800;">
+                    <i data-lucide="briefcase" size="18"></i> Workspace
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <button class="type-btn" data-type="private_office">
+                        <i data-lucide="door-closed" size="16"></i>
+                        <span>Private Office</span>
+                    </button>
+                    <button class="type-btn active" data-type="all">
+                        <i data-lucide="users" size="16"></i>
+                        <span>All Spaces</span>
+                    </button>
+                    <button class="type-btn" data-type="desk">
+                        <i data-lucide="monitor" size="16"></i>
+                        <span>Desk</span>
+                    </button>
+                    <button class="type-btn" data-type="virtual_office">
+                        <i data-lucide="globe" size="16"></i>
+                        <span>Virtual</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Listings Content -->
+        <section>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <p style="color: var(--gray); font-weight: 600;"><span id="results-count" style="color: var(--primary);">0</span> spaces near you</p>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.85rem; color: var(--gray); font-weight: 600;">Sort By:</span>
+                    <select class="input-field" style="padding: 0.3rem 1rem; width: auto; font-size: 0.85rem; border-radius: 10px;">
+                        <option>Relevance</option>
+                        <option>Price: Low to High</option>
+                        <option>Top Rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="listing-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="text-align: center; padding: 5rem; background: white; border-radius: 20px;">
+                    <p style="color: var(--gray);">Loading premium spaces...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <style>
+        .type-btn { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; transition: 0.3s; color: var(--gray); font-family: var(--font); font-size: 0.75rem; font-weight: 700; }
+        .type-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .type-btn.active { background: #ecfdf5; border-color: var(--primary); color: var(--primary); }
+        .listing-card { background: white; border-radius: 24px; border: 1px solid var(--border); display: grid; grid-template-columns: 320px 1fr; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .listing-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow); }
+        .listing-image { background-size: cover; background-position: center; position: relative; }
+        .listing-body { padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; }
+    </style>
+<script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+        let currentFilters = { location: '', type: 'all', minPrice: '', maxPrice: '' };
+
+        async function fetchResults() {
+            const container = document.getElementById('listing-container');
+            const queryParams = new URLSearchParams(currentFilters).toString();
+            try {
+                const res = await fetch(`/api/spaces?${queryParams}`);
+                const data = await res.json();
+                document.getElementById('results-count').textContent = data.count;
+                document.getElementById('location-title').textContent = currentFilters.location || 'Anywhere';
+                if (data.count === 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 5rem; background: white; border-radius: 24px;"><p style="color: var(--gray);">No spaces found matching your search.</p></div>`;
+                } else {
+                    container.innerHTML = data.data.map(space => `
+                        <div class="listing-card fade-in">
+                            <div class="listing-image" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600')">
+                                <div style="position: absolute; top: 1rem; left: 1rem; background: #065f46; color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Verified</div>
+                            </div>
+                            <div class="listing-body">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <h3 style="font-size: 1.5rem; font-weight: 800;">${space.name}</h3>
+                                        <div style="display: flex; align-items: center; gap: 4px; color: #f59e0b; font-weight: 800;">
+                                            <i data-lucide="star" fill="#f59e0b" size="16"></i> 4.9
+                                        </div>
+                                    </div>
+                                    <p style="display: flex; align-items: center; gap: 4px; font-size: 0.9rem; color: var(--gray); font-weight: 600; margin-bottom: 1.2rem;"><i data-lucide="map-pin" size="14"></i> ${space.location}</p>
+                                    <p style="font-size: 0.95rem; color: #475569; line-height: 1.6;">${space.description || 'Modern coworking space with premium amenities.'}</p>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1.5rem;">
+                                    <div><span style="font-size: 0.8rem; color: var(--gray); font-weight: 700; display: block; text-transform: uppercase;">Per Day</span><span style="font-size: 1.6rem; font-weight: 800; color: var(--dark);">Rs ${space.price_per_day}</span></div>
+                                    <button class="btn btn-primary" style="padding: 0.8rem 2rem; border-radius: 12px; font-weight: 800;">Book Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                lucide.createIcons();
+            } catch (err) { container.innerHTML = '<p>Error loading results.</p>'; }
+        }
+
+        document.getElementById('main-search-btn').addEventListener('click', () => { currentFilters.location = document.getElementById('location-input').value; fetchResults(); });
+        document.getElementById('apply-price-btn').addEventListener('click', () => { currentFilters.minPrice = document.getElementById('min-price').value; currentFilters.maxPrice = document.getElementById('max-price').value; fetchResults(); });
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilters.type = this.dataset.type;
+                fetchResults();
+            });
+        });
+        document.addEventListener('DOMContentLoaded', fetchResults);
+    </script>
+
+    <!-- Footer -->
+    <footer style="background: white; padding: 100px 0 50px; border-top: 1px solid #f1f5f9;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 80px;">
+                <div style="max-width: 320px;">
+                    <div class="logo" style="color: var(--dark); font-size: 1.8rem; margin-bottom: 1.5rem;">
+                        <i data-lucide="layout" style="color: var(--primary);"></i>
+                        <span>CoWorkConnect</span>
+                    </div>
+                    <p style="color: var(--gray); line-height: 1.8; font-size: 0.95rem; font-weight: 500;">
+                        Building the infrastructure for the next generation of Pakistan's digital nomad and professional community.
+                    </p>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="facebook" size="18"></i></div>
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="twitter" size="18"></i></div>
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray);"><i data-lucide="linkedin" size="18"></i></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Platform</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="spaces.html" style="text-decoration: none; color: #475569;">Workspaces</a></li>
+                        <li><a href="community.html" style="text-decoration: none; color: #475569;">Networking</a></li>
+                        <li><a href="groups.html" style="text-decoration: none; color: #475569;">Discussion Circles</a></li>
+                        <li><a href="events.html" style="text-decoration: none; color: #475569;">Events Academy</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Ecosystem</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="profile.html" style="text-decoration: none; color: #475569;">Professional IDs</a></li>
+                        <li><a href="admin.html" style="text-decoration: none; color: #475569;">Partner Portal</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Success Stories</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Community Guidelines</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 1px; color: var(--dark);">Support</h4>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-weight: 600; font-size: 0.9rem;">
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Help Center</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Safety & Security</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Privacy Policy</a></li>
+                        <li><a href="#" style="text-decoration: none; color: #475569;">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="padding-top: 40px; border-top: 1px solid #f1f5f9; text-align: center; color: var(--gray); font-size: 0.85rem; font-weight: 600;">
+                <p>&copy; 2026 CoWorkConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+
+
+
