@@ -57,8 +57,6 @@ body {
 
 .image-surface {
   background-color: var(--color-primary-soft);
-  background-image:
-    linear-gradient(135deg, rgba(14, 159, 110, 0.14), rgba(37, 99, 235, 0.12));
   background-size: cover;
   background-position: center;
 }
@@ -197,7 +195,7 @@ body {
 .hero {
   padding: 128px 0 72px;
   text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, var(--color-bg) 100%);
+  background: var(--color-bg);
 }
 
 .badge {
@@ -219,9 +217,7 @@ h1 {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
 }
 
 .hero p {
@@ -280,9 +276,7 @@ h1 {
   align-items: center;
   justify-content: center;
   padding: 112px 1.5rem 3rem;
-  background:
-    linear-gradient(135deg, rgba(14,159,110,0.08), rgba(37,99,235,0.08)),
-    var(--color-bg) !important;
+  background: var(--color-bg) !important;
 }
 
 .auth-card {
@@ -298,9 +292,7 @@ h1 {
 .inline-auth-page {
   min-height: calc(100vh - var(--nav-height));
   padding: calc(var(--nav-height) + 2.5rem) 1.5rem 3rem;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(14, 159, 110, 0.12), transparent 28%),
-    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(236, 253, 245, 0.9));
+  background: var(--color-bg);
 }
 
 .inline-auth-shell {

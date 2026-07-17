@@ -90,9 +90,22 @@ def mysql_statements():
           id INT AUTO_INCREMENT PRIMARY KEY,
           post_id INT NOT NULL,
           user_id INT NOT NULL,
+          parent_id INT DEFAULT NULL,
           content TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS comment_likes (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          comment_id INT NOT NULL,
+          user_id INT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_comment_like (comment_id, user_id),
+          FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """,
@@ -229,9 +242,22 @@ def sqlite_statements():
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           post_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
+          parent_id INTEGER DEFAULT NULL,
           content TEXT NOT NULL,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS comment_likes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          comment_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (comment_id, user_id),
+          FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """,
@@ -369,9 +395,22 @@ def postgres_statements():
           id SERIAL PRIMARY KEY,
           post_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
+          parent_id INTEGER DEFAULT NULL,
           content TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS comment_likes (
+          id SERIAL PRIMARY KEY,
+          comment_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (comment_id, user_id),
+          FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """,
@@ -456,11 +495,14 @@ def compatibility_statements(vendor):
     if vendor == "postgresql":
         return [
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url VARCHAR(255)",
+            "ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INT DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
         ]
     if vendor == "sqlite":
         return [
             "ALTER TABLE messages ADD COLUMN image_url TEXT",
+            "ALTER TABLE comments ADD COLUMN parent_id INTEGER DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
         ]
     return [
         "ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)",
+        "ALTER TABLE comments ADD COLUMN parent_id INT DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
     ]

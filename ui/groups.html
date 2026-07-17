@@ -22,7 +22,6 @@
             height: auto;
             padding: 0.75rem 1rem;
             background:
-                linear-gradient(180deg, rgba(6, 78, 59, 0.08), rgba(238, 242, 247, 0) 320px),
                 #eef2f7;
             overflow: hidden;
         }
@@ -33,7 +32,7 @@
             min-height: 0;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 76px 340px minmax(420px, 1fr) 330px;
+            grid-template-columns: 350px 1fr;
             background: #ffffff;
             border: 1px solid #dbe5ef;
             border-radius: 8px;
@@ -413,8 +412,6 @@
             justify-content: center;
             padding: 2rem;
             background:
-                radial-gradient(circle at top left, rgba(16, 185, 129, 0.10), transparent 280px),
-                radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.08), transparent 320px),
                 #ffffff;
         }
 
@@ -1223,7 +1220,7 @@
 
         @media (max-width: 1280px) {
             .groups-shell {
-                grid-template-columns: 70px 320px minmax(420px, 1fr);
+                grid-template-columns: 300px 1fr;
             }
 
             .details-panel {
@@ -1303,6 +1300,7 @@
             }
         }
     </style>
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
 </head>
 <body>
     <nav class="navbar" style="background: white; border-bottom: 1px solid #e2e8f0; height: 80px;">
@@ -1324,19 +1322,7 @@
 
     <main class="groups-page">
         <div class="groups-shell" id="groups-shell">
-            <aside class="workspace-rail" aria-label="Workspace navigation">
-                <a href="index.html" class="rail-logo" title="Home"><i data-lucide="layout-dashboard" size="22"></i></a>
-                <button class="rail-btn active" title="Groups"><i data-lucide="messages-square" size="22"></i></button>
-                <button class="rail-btn" title="Community"><i data-lucide="users" size="22"></i></button>
-                <button class="rail-btn" title="Events"><i data-lucide="calendar-days" size="22"></i></button>
-                <div class="rail-divider"></div>
-                <button class="rail-btn" title="Pinned"><i data-lucide="pin" size="21"></i></button>
-                <button class="rail-btn" title="Saved"><i data-lucide="bookmark" size="21"></i></button>
-                <div class="rail-bottom">
-                    <button class="rail-btn" title="Create group" onclick="toggleGroupModal(true)"><i data-lucide="plus" size="22"></i></button>
-                    <button class="rail-btn" title="Settings"><i data-lucide="settings" size="21"></i></button>
-                </div>
-            </aside>
+            
 
             <aside class="groups-sidebar">
                 <div class="sidebar-head">
@@ -1352,31 +1338,6 @@
                     <div class="search-box">
                         <i data-lucide="search" size="18" style="color:#64748b;"></i>
                         <input id="group-search" type="search" placeholder="Search groups, topics, cities">
-                    </div>
-                </div>
-
-                <div class="filter-tabs" role="tablist">
-                    <button class="filter-tab active" data-filter="all" type="button">All</button>
-                    <button class="filter-tab" data-filter="active" type="button">Active</button>
-                    <button class="filter-tab" data-filter="joined" type="button">Joined</button>
-                </div>
-
-                <div class="sidebar-section-label">
-                    <span>Pinned</span>
-                    <i data-lucide="star" size="14"></i>
-                </div>
-                <div class="pinned-grid" id="pinned-groups">
-                    <div class="pinned-card">
-                        <img class="pinned-avatar" src="assets/fallback-community.svg" data-fallback="assets/fallback-community.svg" alt="">
-                        <span>Global</span>
-                    </div>
-                    <div class="pinned-card">
-                        <img class="pinned-avatar" src="assets/fallback-workspace.svg" data-fallback="assets/fallback-workspace.svg" alt="">
-                        <span>Startup</span>
-                    </div>
-                    <div class="pinned-card">
-                        <img class="pinned-avatar" src="assets/fallback-event.svg" data-fallback="assets/fallback-event.svg" alt="">
-                        <span>Design</span>
                     </div>
                 </div>
 
@@ -1478,67 +1439,7 @@
                 </div>
             </section>
 
-            <aside class="details-panel">
-                <div id="info-placeholder" class="details-empty">
-                    <i data-lucide="panel-right" size="34" style="margin-bottom:1rem; color:#94a3b8;"></i>
-                    <strong style="color:#0f172a; margin-bottom:0.35rem;">Group profile</strong>
-                    <span>Select a group to see members, channels, shared resources, and room details.</span>
-                </div>
-
-                <div id="info-active" class="details-active hidden">
-                    <div class="details-cover">
-                        <img id="info-group-banner" src="" alt="">
-                        <img id="info-group-img" class="details-avatar" src="" alt="">
-                    </div>
-                    <div class="details-body">
-                        <h3 id="info-group-name">Group Name</h3>
-                        <p id="info-group-desc" class="details-desc">Group description</p>
-
-                        <div class="details-actions">
-                            <button class="details-action primary" type="button" id="join-group-btn">
-                                <i data-lucide="user-plus" size="16"></i> Join
-                            </button>
-                            <button class="details-action" type="button" id="notify-group-btn">
-                                <i data-lucide="bell" size="16"></i> Notify
-                            </button>
-                        </div>
-
-                        <div class="stats-grid">
-                            <div class="stat-card"><strong id="info-member-count">0</strong><span>Members</span></div>
-                            <div class="stat-card"><strong id="info-message-count">0</strong><span>Messages</span></div>
-                            <div class="stat-card"><strong id="info-activity">High</strong><span>Activity</span></div>
-                        </div>
-
-                        <div class="panel-block">
-                            <div class="panel-block-head">
-                                <span>Channels</span>
-                                <i data-lucide="hash" size="15"></i>
-                            </div>
-                            <div class="channel-list" id="channel-list"></div>
-                        </div>
-
-                        <div class="panel-block">
-                            <div class="panel-block-head">
-                                <span>Members</span>
-                                <i data-lucide="users" size="15"></i>
-                            </div>
-                            <div id="info-member-list" class="member-list"></div>
-                        </div>
-
-                        <div class="panel-block">
-                            <div class="panel-block-head">
-                                <span>Shared Resources</span>
-                                <i data-lucide="folder-open" size="15"></i>
-                            </div>
-                            <div class="resource-list">
-                                <div class="resource-item"><i data-lucide="file-text" size="16"></i> Community guidelines</div>
-                                <div class="resource-item"><i data-lucide="calendar" size="16"></i> Weekly meetup plan</div>
-                                <div class="resource-item"><i data-lucide="link" size="16"></i> Recommended workspaces</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+            
         </div>
     </main>
 
@@ -1871,35 +1772,102 @@
             document.getElementById('groups-shell').classList.remove('chat-open');
         }
 
+        function connectWebSocket(groupId) {
+            if (state.chatSocket) {
+                state.chatSocket.close();
+            }
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${wsProtocol}${window.location.host}/ws/chat/${groupId}/`;
+            
+            console.log("Connecting WebSocket to:", wsUrl);
+            state.chatSocket = new WebSocket(wsUrl);
+
+            state.chatSocket.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    const isDuplicate = state.messages.some(m => 
+                        m.content === data.message && 
+                        m.user_name === data.user_name &&
+                        Math.abs(new Date(m.created_at || new Date()) - new Date(data.created_at || new Date())) < 2000
+                    );
+                    if (!isDuplicate) {
+                        state.messages.push({
+                            content: data.message,
+                            user_name: data.user_name,
+                            image_url: data.image_url,
+                            created_at: data.created_at || new Date().toISOString()
+                        });
+                        renderMessages(state.messages);
+                    }
+                } catch (err) {
+                    console.error("Error parsing socket message:", err);
+                }
+            };
+
+            state.chatSocket.onclose = function(e) {
+                console.log("WebSocket closed. Reconnecting in 3s...");
+                setTimeout(() => {
+                    if (state.selectedGroupId === groupId) {
+                        connectWebSocket(groupId);
+                    }
+                }, 3000);
+            };
+
+            state.chatSocket.onerror = function(err) {
+                console.error("WebSocket error:", err);
+                state.chatSocket.close();
+            };
+        }
+
         async function selectGroup(groupId) {
             const group = state.groups.find((item) => item.id === groupId);
             if (!group) return;
 
             state.selectedGroup = group;
             state.selectedGroupId = group.id;
-            document.getElementById('groups-shell').classList.add('chat-open');
-            document.getElementById('chat-placeholder').classList.add('hidden');
-            document.getElementById('chat-active').classList.remove('hidden');
-            document.getElementById('info-placeholder').classList.add('hidden');
-            document.getElementById('info-active').classList.remove('hidden');
+            const shell = document.getElementById('groups-shell');
+            if (shell) shell.classList.add('chat-open');
+            const placeholder = document.getElementById('chat-placeholder');
+            if (placeholder) placeholder.classList.add('hidden');
+            const chatActive = document.getElementById('chat-active');
+            if (chatActive) chatActive.classList.remove('hidden');
 
-            document.getElementById('active-group-name').textContent = group.name;
-            document.getElementById('active-group-img').src = groupImage(group, 160);
-            document.getElementById('active-group-status').textContent = `${group.member_count} members, ${group.activity.toLowerCase()} today`;
-            document.getElementById('announcement-title').textContent = `Welcome to ${group.name}`;
-            document.getElementById('announcement-copy').textContent = group.description || 'Introduce yourself, share useful resources, and keep the discussion focused.';
+            const infoPlaceholder = document.getElementById('info-placeholder');
+            if (infoPlaceholder) infoPlaceholder.classList.add('hidden');
+            const infoActive = document.getElementById('info-active');
+            if (infoActive) infoActive.classList.remove('hidden');
+
+            const activeGroupName = document.getElementById('active-group-name');
+            if (activeGroupName) activeGroupName.textContent = group.name;
+            const activeGroupImg = document.getElementById('active-group-img');
+            if (activeGroupImg) activeGroupImg.src = groupImage(group, 160);
+            const activeGroupStatus = document.getElementById('active-group-status');
+            if (activeGroupStatus) activeGroupStatus.textContent = `${group.member_count} members, ${group.activity.toLowerCase()} today`;
+            const announceTitle = document.getElementById('announcement-title');
+            if (announceTitle) announceTitle.textContent = `Welcome to ${group.name}`;
+            const announceCopy = document.getElementById('announcement-copy');
+            if (announceCopy) announceCopy.textContent = group.description || 'Introduce yourself, share useful resources, and keep the discussion focused.';
+            
             const joinButton = document.getElementById('join-group-btn');
-            joinButton.innerHTML = group.joined
-                ? '<i data-lucide="check" size="16"></i> Joined'
-                : '<i data-lucide="user-plus" size="16"></i> Join';
-            joinButton.disabled = group.joined;
+            if (joinButton) {
+                joinButton.innerHTML = group.joined
+                    ? '<i data-lucide="check" size="16"></i> Joined'
+                    : '<i data-lucide="user-plus" size="16"></i> Join';
+                joinButton.disabled = group.joined;
+            }
 
-            document.getElementById('info-group-name').textContent = group.name;
-            document.getElementById('info-group-desc').textContent = group.description || 'A focused professional circle for coworking members, founders, freelancers, and remote professionals.';
-            document.getElementById('info-group-img').src = groupImage(group, 160);
-            document.getElementById('info-group-banner').src = groupImage(group, 700);
-            document.getElementById('info-member-count').textContent = group.member_count || 1;
-            document.getElementById('info-activity').textContent = group.activity;
+            const infoGroupName = document.getElementById('info-group-name');
+            if (infoGroupName) infoGroupName.textContent = group.name;
+            const infoGroupDesc = document.getElementById('info-group-desc');
+            if (infoGroupDesc) infoGroupDesc.textContent = group.description || 'A focused professional circle for coworking members, founders, freelancers, and remote professionals.';
+            const infoGroupImg = document.getElementById('info-group-img');
+            if (infoGroupImg) infoGroupImg.src = groupImage(group, 160);
+            const infoGroupBanner = document.getElementById('info-group-banner');
+            if (infoGroupBanner) infoGroupBanner.src = groupImage(group, 700);
+            const infoMemberCount = document.getElementById('info-member-count');
+            if (infoMemberCount) infoMemberCount.textContent = group.member_count || 1;
+            const infoActivity = document.getElementById('info-activity');
+            if (infoActivity) infoActivity.textContent = group.activity;
 
             renderChannels(group);
             renderMembers(group);
@@ -1907,14 +1875,13 @@
             updateComposerState();
             await fetchMessages();
 
-            if (state.messagePoller) clearInterval(state.messagePoller);
-            state.messagePoller = setInterval(() => {
-                if (!document.hidden) fetchMessages(true);
-            }, 3000);
+            connectWebSocket(group.id);
         }
 
         function renderChannels(group) {
-            document.getElementById('channel-list').innerHTML = group.channels.map((channel, index) => `
+            const el = document.getElementById('channel-list');
+            if (!el) return;
+            el.innerHTML = group.channels.map((channel, index) => `
                 <div class="channel-item ${index === 0 ? 'active' : ''}">
                     <i data-lucide="hash" size="15"></i>
                     <span>${escapeHtml(channel)}</span>
@@ -1924,9 +1891,11 @@
         }
 
         function renderMembers(group) {
+            const el = document.getElementById('info-member-list');
+            if (!el) return;
             const count = Math.max(3, Math.min(6, group.member_count || 3));
             const members = memberPool.slice(0, count);
-            document.getElementById('info-member-list').innerHTML = members.map((member, index) => `
+            el.innerHTML = members.map((member, index) => `
                 <div class="member-item">
                     <img src="${fallbackImage('avatar')}" data-fallback="${fallbackImage('avatar')}" alt="">
                     <div style="min-width:0;">
@@ -1942,7 +1911,8 @@
             const container = document.getElementById('message-container');
             const user = getCurrentUser();
             const currentUserId = user ? user.id : null;
-            document.getElementById('info-message-count').textContent = messages.length;
+            const countEl = document.getElementById('info-message-count');
+            if (countEl) countEl.textContent = messages.length;
 
             if (!messages.length) {
                 container.innerHTML = `
@@ -2143,11 +2113,22 @@
 
             document.getElementById('chat-form').addEventListener('submit', sendMessage);
             document.getElementById('create-group-form').addEventListener('submit', createGroup);
-            document.getElementById('join-group-btn').addEventListener('click', joinSelectedGroup);
-            document.getElementById('notify-group-btn').addEventListener('click', toggleNotifications);
-            document.getElementById('refresh-messages-btn').addEventListener('click', () => fetchMessages());
-            document.getElementById('jump-latest-btn').addEventListener('click', scrollMessagesToBottom);
-            document.getElementById('group-info-btn').addEventListener('click', showGroupInfo);
+            
+            const joinGroupBtn = document.getElementById('join-group-btn');
+            if (joinGroupBtn) joinGroupBtn.addEventListener('click', joinSelectedGroup);
+            
+            const notifyGroupBtn = document.getElementById('notify-group-btn');
+            if (notifyGroupBtn) notifyGroupBtn.addEventListener('click', toggleNotifications);
+            
+            const refreshMessagesBtn = document.getElementById('refresh-messages-btn');
+            if (refreshMessagesBtn) refreshMessagesBtn.addEventListener('click', () => fetchMessages());
+            
+            const jumpLatestBtn = document.getElementById('jump-latest-btn');
+            if (jumpLatestBtn) jumpLatestBtn.addEventListener('click', scrollMessagesToBottom);
+            
+            const groupInfoBtn = document.getElementById('group-info-btn');
+            if (groupInfoBtn) groupInfoBtn.addEventListener('click', showGroupInfo);
+            
             document.getElementById('mention-btn').addEventListener('click', () => insertComposerText('@'));
             document.getElementById('emoji-btn').addEventListener('click', toggleEmojiPicker);
             document.getElementById('attach-image-btn').addEventListener('click', () => document.getElementById('message-image-input').click());

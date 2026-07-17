@@ -19,6 +19,7 @@ urlpatterns = [
     path("posts", views.posts),
     path("posts/<int:post_id>/like", views.toggle_like),
     path("posts/<int:post_id>/comments", views.add_comment),
+    path("comments/<int:comment_id>/like", views.toggle_comment_like),
     path("posts/<int:post_id>", views.delete_post),
     path("groups", views.groups),
     path("groups/<int:group_id>/join", views.join_group),

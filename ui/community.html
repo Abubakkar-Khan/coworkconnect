@@ -17,7 +17,6 @@
             min-height: 100vh;
             padding: 96px 1rem 2rem;
             background:
-                linear-gradient(180deg, rgba(6, 78, 59, 0.08), rgba(238, 242, 247, 0) 330px),
                 #eef2f7;
         }
 
@@ -51,7 +50,7 @@
         .profile-cover {
             height: 88px;
             background:
-                linear-gradient(135deg, rgba(15, 23, 42, 0.18), rgba(16, 185, 129, 0.85)),
+                rgba(13, 77, 61, 0.85),
                 url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=900");
             background-size: cover;
             background-position: center;
@@ -209,7 +208,7 @@
             min-height: 190px;
             padding: 1.4rem;
             background:
-                linear-gradient(120deg, rgba(15, 23, 42, 0.90), rgba(6, 78, 59, 0.72)),
+                rgba(15, 23, 42, 0.90),
                 url("https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80&w=1400");
             background-size: cover;
             background-position: center;
@@ -851,6 +850,7 @@
             }
         }
     </style>
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
 </head>
 <body>
     <nav class="navbar" style="background: white; border-bottom: 1px solid #e2e8f0; height: 80px;">
@@ -1231,18 +1231,7 @@
                                 <input type="text" id="comment-input-${post.id}" placeholder="Add a useful comment..." onkeypress="if(event.key === 'Enter') addComment(${post.id})">
                             </div>
                             <div>
-                                ${comments.map((comment) => `
-                                    <div class="comment-item">
-                                        <div class="small-avatar">${escapeHtml((comment.user_name || 'M')[0].toUpperCase())}</div>
-                                        <div class="comment-bubble">
-                                            <div style="display:flex;justify-content:space-between;gap:0.75rem;">
-                                                <h5>${escapeHtml(comment.user_name || 'Member')}</h5>
-                                                <span style="font-size:0.7rem;color:#64748b;font-weight:700;">${comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}</span>
-                                            </div>
-                                            <p>${escapeHtml(comment.content)}</p>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                                ${comments.map(c => renderComment(c, post.id)).join('')}
                             </div>
                         </div>
                     </article>
@@ -1251,6 +1240,86 @@
             updateProfileStats();
             applyImageFallbacks(feed);
             lucide.createIcons();
+        }
+
+        function renderComment(comment, postId) {
+            return `
+                <div class="comment-item" style="${comment.parent_id ? 'margin-left: 2rem; margin-top: 0.5rem;' : ''}">
+                    <div class="small-avatar">${escapeHtml((comment.user_name || 'M')[0].toUpperCase())}</div>
+                    <div class="comment-bubble" style="width:100%;">
+                        <div style="display:flex;justify-content:space-between;gap:0.75rem;">
+                            <h5>${escapeHtml(comment.user_name || 'Member')}</h5>
+                            <span style="font-size:0.7rem;color:#64748b;font-weight:700;">${comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}</span>
+                        </div>
+                        <p>${escapeHtml(comment.content)}</p>
+                        <div style="display:flex; gap:1rem; margin-top:0.5rem; font-size:0.8rem;">
+                            <span style="cursor:pointer; font-weight:600; color: ${comment.liked_by_me ? 'var(--primary)' : 'var(--gray)'}" onclick="toggleCommentLike(${comment.id})">
+                                <i data-lucide="thumbs-up" style="width:14px;height:14px;vertical-align:middle;margin-right:2px"></i>
+                                ${comment.likes_count || 0}
+                            </span>
+                            <span style="cursor:pointer; font-weight:600; color: var(--gray)" onclick="showReplyInput(${postId}, ${comment.id})">
+                                Reply
+                            </span>
+                        </div>
+                        <div id="reply-input-container-${comment.id}" style="display:none; margin-top: 0.5rem;">
+                            <div class="comment-input-row" style="margin-bottom:0; padding-bottom:0; border:none;">
+                                <input type="text" id="reply-input-${comment.id}" placeholder="Write a reply..." style="font-size:0.85rem; padding:0.5rem; border-radius:12px; border:1px solid var(--color-border); width:100%;" onkeypress="if(event.key === 'Enter') addReply(${postId}, ${comment.id})">
+                            </div>
+                        </div>
+                        ${(comment.replies && comment.replies.length > 0) ? `
+                            <div style="margin-top:0.5rem;">
+                                ${comment.replies.map(r => renderComment(r, postId)).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showReplyInput(postId, commentId) {
+            const container = document.getElementById(`reply-input-container-${commentId}`);
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                document.getElementById(`reply-input-${commentId}`).focus();
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        async function addReply(postId, parentId) {
+            const input = document.getElementById(`reply-input-${parentId}`);
+            const content = input.value.trim();
+            const token = localStorage.getItem('token');
+            if (!content) return;
+            if (!token) {
+                showToast('Please login to reply.', 'error');
+                return;
+            }
+
+            const response = await fetch(`/api/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ content, parent_id: parentId }),
+            });
+            if (response.ok) {
+                fetchFeed();
+            }
+        }
+
+        async function toggleCommentLike(commentId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please login to like comments.', 'error');
+                return;
+            }
+
+            const response = await fetch(`/api/comments/${commentId}/like`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                fetchFeed(true); // silent fetch to keep state
+            }
         }
 
         async function fetchFeed({ silent = false } = {}) {

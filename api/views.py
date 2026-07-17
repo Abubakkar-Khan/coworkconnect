@@ -405,13 +405,20 @@ def posts(request):
                 )
             post["comments"] = fetch_all(
                 """
-                SELECT c.*, u.name as user_name
+                SELECT c.*, u.name as user_name,
+                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count
                 FROM comments c
                 JOIN users u ON c.user_id = u.id
                 WHERE c.post_id = %s ORDER BY c.created_at ASC
                 """,
                 [post["id"]],
             )
+            for comment in post["comments"]:
+                comment["liked_by_me"] = False
+                if current_user:
+                    comment["liked_by_me"] = bool(
+                        fetch_one("SELECT id FROM comment_likes WHERE comment_id = %s AND user_id = %s", [comment["id"], current_user["id"]])
+                    )
         return api_response({"success": True, "count": len(rows), "data": rows})
 
     if request.method == "POST":
@@ -464,17 +471,40 @@ def add_comment(request, post_id):
     user, error = auth_user(request)
     if error:
         return error
-    content = (read_data(request).get("content") or "").strip()
+    data = read_data(request)
+    content = (data.get("content") or "").strip()
+    parent_id = data.get("parentId")
     if not content:
         return api_response({"success": False, "message": "Comment content is required"}, 400)
     if not fetch_one("SELECT id FROM posts WHERE id = %s", [post_id]):
         return api_response({"success": False, "message": "Post not found"}, 404)
+    if parent_id and not fetch_one("SELECT id FROM comments WHERE id = %s", [parent_id]):
+        return api_response({"success": False, "message": "Parent comment not found"}, 404)
     _, comment_id = execute(
-        "INSERT INTO comments (post_id, user_id, content) VALUES (%s, %s, %s)",
-        [post_id, user["id"], content],
+        "INSERT INTO comments (post_id, user_id, parent_id, content) VALUES (%s, %s, %s, %s)",
+        [post_id, user["id"], parent_id, content],
     )
     row = fetch_one("SELECT name FROM users WHERE id = %s", [user["id"]])
-    return api_response({"success": True, "data": {"id": comment_id, "content": content, "user_name": row["name"]}}, 201)
+    return api_response({"success": True, "data": {"id": comment_id, "parent_id": parent_id, "content": content, "user_name": row["name"]}}, 201)
+
+
+def toggle_comment_like(request, comment_id):
+    if request.method != "POST":
+        return method_not_allowed()
+    user, error = auth_user(request)
+    if error:
+        return error
+    if not fetch_one("SELECT id FROM comments WHERE id = %s", [comment_id]):
+        return api_response({"success": False, "message": "Comment not found"}, 404)
+    
+    existing = fetch_one("SELECT id FROM comment_likes WHERE comment_id = %s AND user_id = %s", [comment_id, user["id"]])
+    if existing:
+        execute("DELETE FROM comment_likes WHERE id = %s", [existing["id"]])
+        liked = False
+    else:
+        execute("INSERT INTO comment_likes (comment_id, user_id) VALUES (%s, %s)", [comment_id, user["id"]])
+        liked = True
+    return api_response({"success": True, "liked": liked})
 
 
 def delete_post(request, post_id):
@@ -597,6 +627,25 @@ def group_messages(request, group_id):
             """,
             [message_id],
         )
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                created_at_val = row.get("created_at")
+                created_at_str = created_at_val.isoformat() if hasattr(created_at_val, "isoformat") else str(created_at_val)
+                async_to_sync(channel_layer.group_send)(
+                    f"chat_{group_id}",
+                    {
+                        "type": "chat_message",
+                        "message": content,
+                        "user_name": user["name"],
+                        "image_url": image_url,
+                        "created_at": created_at_str
+                    }
+                )
+        except Exception:
+            pass
         return api_response({"success": True, "message": "Message sent", "data": row}, 201)
 
     return method_not_allowed()
@@ -624,6 +673,8 @@ def events(request):
         missing = require_fields(data, ["title", "description", "eventDate"])
         if missing:
             return missing
+        if data.get("endDate") and data.get("endDate") < data.get("eventDate"):
+            return api_response({"success": False, "message": "End date and time cannot be earlier than start time"}, 400)
         try:
             image_url = save_upload(request.FILES["image"], "events") if "image" in request.FILES else None
         except ValueError as exc:
