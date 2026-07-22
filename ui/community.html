@@ -524,6 +524,20 @@
             color: var(--primary);
         }
 
+        .action-count {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.15rem 0.45rem;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .post-action.liked .action-count {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
         .comments-section {
             padding: 1rem;
             background: #f8fafc;
@@ -538,7 +552,7 @@
             margin-bottom: 0.9rem;
         }
 
-        .comment-input-row input {
+        .comment-input-row textarea {
             width: 100%;
             border: 1px solid #dbe5ef;
             border-radius: 8px;
@@ -546,34 +560,118 @@
             font-family: var(--font);
             outline: 0;
             background: white;
+            resize: none;
+            box-sizing: border-box;
+            min-height: 42px;
+            overflow: hidden;
         }
 
         .comment-item {
-            display: grid;
-            grid-template-columns: 34px minmax(0, 1fr);
-            gap: 0.65rem;
+            display: flex;
+            gap: 0.75rem;
             padding: 0.5rem 0;
+            margin-top: 0.25rem;
         }
 
-        .comment-bubble {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0.72rem 0.85rem;
+        .comment-content-wrap {
+            flex: 1;
+            min-width: 0;
         }
 
-        .comment-bubble h5 {
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .comment-header h5 {
             color: #0f172a;
-            font-size: 0.82rem;
-            font-weight: 800;
+            font-size: 0.85rem;
+            font-weight: 700;
             margin: 0;
         }
 
-        .comment-bubble p {
-            color: #334155;
-            font-size: 0.84rem;
+        .comment-header span {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .comment-body {
+            color: #1e293b;
+            font-size: 0.9rem;
             line-height: 1.5;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .comment-body.collapsed {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .read-more-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 0.15rem;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.4rem;
+            font-size: 0.8rem;
+            align-items: center;
+        }
+
+        .comment-action {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .comment-action:hover {
+            color: #0f172a;
+        }
+
+        .comment-action.liked {
+            color: var(--primary);
+        }
+
+        .replies-container {
+            margin-left: 2.8rem;
+            padding-left: 1rem;
+            border-left: 2px solid #e2e8f0;
             margin-top: 0.25rem;
+        }
+
+        .toggle-replies-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0;
+            border-radius: 4px;
+        }
+
+        .toggle-replies-btn:hover {
+            background: #f1f5f9;
         }
 
         .empty-feed {
@@ -1210,16 +1308,12 @@
                             ${tags ? `<div class="tag-row">${tags}</div>` : ''}
                         </div>
                         ${post.image_url ? `<img class="post-image" src="${safeImageUrl(post.image_url, fallbackImage('community'))}" data-fallback="${fallbackImage('community')}" alt="Post image">` : ''}
-                        <div class="post-stats">
-                            <span><i data-lucide="thumbs-up" size="14" style="color:#2563eb;fill:#2563eb;"></i> ${post.likes_count || 0} likes</span>
-                            <span>${comments.length} comments</span>
-                        </div>
-                        <div class="post-actions">
+                        <div class="post-actions" style="margin-top: 0.5rem;">
                             <button onclick="toggleLike(${post.id})" class="post-action ${post.liked_by_me ? 'liked' : ''}" type="button">
-                                <i data-lucide="thumbs-up" size="18"></i><span>Like</span>
+                                <i data-lucide="thumbs-up" size="18"></i><span>Like</span>${post.likes_count ? `<span class="action-count">${post.likes_count}</span>` : ''}
                             </button>
                             <button onclick="focusComment(${post.id})" class="post-action" type="button">
-                                <i data-lucide="message-circle" size="18"></i><span>Comment</span>
+                                <i data-lucide="message-circle" size="18"></i><span>Comment</span>${comments.length > 0 ? `<span class="action-count">${comments.length}</span>` : ''}
                             </button>
                             <button onclick="sharePost(${post.id})" class="post-action" type="button">
                                 <i data-lucide="share-2" size="18"></i><span>Share</span>
@@ -1228,10 +1322,10 @@
                         <div class="comments-section">
                             <div class="comment-input-row">
                                 <div class="small-avatar user-avatar-small">U</div>
-                                <input type="text" id="comment-input-${post.id}" placeholder="Add a useful comment..." onkeypress="if(event.key === 'Enter') addComment(${post.id})">
+                                <textarea id="comment-input-${post.id}" rows="1" placeholder="Add a useful comment..." oninput="autoResize(this)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addComment(${post.id}); }"></textarea>
                             </div>
                             <div>
-                                ${comments.map(c => renderComment(c, post.id)).join('')}
+                                ${renderCommentsTree(comments, post.id)}
                             </div>
                         </div>
                     </article>
@@ -1240,37 +1334,108 @@
             updateProfileStats();
             applyImageFallbacks(feed);
             lucide.createIcons();
+
+            document.querySelectorAll('.comment-body.collapsed').forEach(el => {
+                if (el.scrollHeight > el.clientHeight) {
+                    const btn = document.createElement('button');
+                    btn.className = 'read-more-btn';
+                    btn.innerText = 'See more';
+                    btn.onclick = () => {
+                        el.classList.remove('collapsed');
+                        btn.remove();
+                    };
+                    el.parentNode.insertBefore(btn, el.nextSibling);
+                }
+            });
+        }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
+        function renderCommentsTree(comments, postId) {
+            const map = {};
+            const roots = [];
+            comments.forEach(c => { map[c.id] = { ...c, replies: [] }; });
+            comments.forEach(c => {
+                if (c.parent_id && map[c.parent_id]) {
+                    map[c.parent_id].replies.push(map[c.id]);
+                } else {
+                    roots.push(map[c.id]);
+                }
+            });
+
+            function renderNode(node) {
+                return `
+                    ${renderComment(node, postId)}
+                    ${node.replies.length > 0 ? `
+                        <div class="replies-container">
+                            <button class="toggle-replies-btn" onclick="toggleReplies(this)" type="button">
+                                <i data-lucide="chevron-down" size="14"></i> Show ${node.replies.length} ${node.replies.length === 1 ? 'reply' : 'replies'}
+                            </button>
+                            <div class="replies-list hidden">
+                                ${node.replies.map(renderNode).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+            }
+            return roots.map(renderNode).join('');
+        }
+
+        function toggleReplies(btn) {
+            const list = btn.nextElementSibling;
+            if (list.classList.contains('hidden')) {
+                list.classList.remove('hidden');
+                btn.innerHTML = `<i data-lucide="chevron-up" size="14"></i> Hide replies`;
+                
+                list.querySelectorAll('.comment-body.collapsed').forEach(el => {
+                    if (el.scrollHeight > el.clientHeight && (!el.nextElementSibling || !el.nextElementSibling.classList.contains('read-more-btn'))) {
+                        const readMoreBtn = document.createElement('button');
+                        readMoreBtn.className = 'read-more-btn';
+                        readMoreBtn.innerText = 'See more';
+                        readMoreBtn.onclick = () => {
+                            el.classList.remove('collapsed');
+                            readMoreBtn.remove();
+                        };
+                        el.parentNode.insertBefore(readMoreBtn, el.nextSibling);
+                    }
+                });
+            } else {
+                list.classList.add('hidden');
+                btn.innerHTML = `<i data-lucide="chevron-down" size="14"></i> Show replies`;
+            }
+            lucide.createIcons();
         }
 
         function renderComment(comment, postId) {
             return `
-                <div class="comment-item" style="${comment.parent_id ? 'margin-left: 2rem; margin-top: 0.5rem;' : ''}">
-                    <div class="small-avatar">${escapeHtml((comment.user_name || 'M')[0].toUpperCase())}</div>
-                    <div class="comment-bubble" style="width:100%;">
-                        <div style="display:flex;justify-content:space-between;gap:0.75rem;">
+                <div class="comment-item">
+                    <div class="small-avatar" style="width:34px;height:34px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;">
+                        ${escapeHtml((comment.user_name || 'M')[0].toUpperCase())}
+                    </div>
+                    <div class="comment-content-wrap">
+                        <div class="comment-header">
                             <h5>${escapeHtml(comment.user_name || 'Member')}</h5>
-                            <span style="font-size:0.7rem;color:#64748b;font-weight:700;">${comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}</span>
+                            <span>${comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}</span>
                         </div>
-                        <p>${escapeHtml(comment.content)}</p>
-                        <div style="display:flex; gap:1rem; margin-top:0.5rem; font-size:0.8rem;">
-                            <span style="cursor:pointer; font-weight:600; color: ${comment.liked_by_me ? 'var(--primary)' : 'var(--gray)'}" onclick="toggleCommentLike(${comment.id})">
-                                <i data-lucide="thumbs-up" style="width:14px;height:14px;vertical-align:middle;margin-right:2px"></i>
-                                ${comment.likes_count || 0}
+                        <p class="comment-body collapsed">${escapeHtml(comment.content)}</p>
+                        <div class="comment-actions">
+                            <span class="comment-action ${comment.liked_by_me ? 'liked' : ''}" onclick="toggleCommentLike(${comment.id})">
+                                <i data-lucide="thumbs-up" size="14"></i> ${comment.likes_count || 0}
                             </span>
-                            <span style="cursor:pointer; font-weight:600; color: var(--gray)" onclick="showReplyInput(${postId}, ${comment.id})">
-                                Reply
-                            </span>
+                            <span class="comment-action" onclick="showReplyInput(${postId}, ${comment.id})">Reply</span>
                         </div>
-                        <div id="reply-input-container-${comment.id}" style="display:none; margin-top: 0.5rem;">
-                            <div class="comment-input-row" style="margin-bottom:0; padding-bottom:0; border:none;">
-                                <input type="text" id="reply-input-${comment.id}" placeholder="Write a reply..." style="font-size:0.85rem; padding:0.5rem; border-radius:12px; border:1px solid var(--color-border); width:100%;" onkeypress="if(event.key === 'Enter') addReply(${postId}, ${comment.id})">
+                        <div id="reply-input-container-${comment.id}" style="display:none; margin-top: 0.75rem; margin-bottom: 0.5rem; margin-left: 2.8rem;">
+                            <div class="comment-input-row" style="margin-bottom:0; display:flex; align-items:flex-start; gap:0.6rem;">
+                                <div class="small-avatar user-avatar-small" style="width:28px; height:28px; font-size:0.75rem;">U</div>
+                                <div style="flex:1; display:flex; gap:0.5rem; align-items:flex-start;">
+                                    <textarea id="reply-input-${comment.id}" rows="1" placeholder="Add a reply..." style="flex:1; font-size:0.85rem; padding:0.5rem 0.8rem; border-radius:18px; border:1px solid #cbd5e1; background:white; outline:none; resize:none; min-height:36px; box-sizing:border-box; overflow:hidden;" oninput="autoResize(this)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addReply(${postId}, ${comment.id}); }"></textarea>
+                                    <button onclick="addReply(${postId}, ${comment.id})" style="background:var(--primary); color:white; border:none; border-radius:20px; padding:0.5rem 1rem; font-size:0.8rem; font-weight:600; cursor:pointer;">Reply</button>
+                                </div>
                             </div>
                         </div>
-                        ${(comment.replies && comment.replies.length > 0) ? `
-                            <div style="margin-top:0.5rem;">
-                                ${comment.replies.map(r => renderComment(r, postId)).join('')}
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -1299,7 +1464,7 @@
             const response = await fetch(`/api/posts/${postId}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ content, parent_id: parentId }),
+                body: JSON.stringify({ content, parentId: parentId }),
             });
             if (response.ok) {
                 fetchFeed();
@@ -1466,7 +1631,18 @@
             updateProfileStats();
             fetchFeed();
             setInterval(() => {
-                if (!document.hidden) fetchFeed({ silent: true });
+                if (document.hidden) return;
+                
+                // Prevent auto-refresh if the user is typing a comment or has a draft
+                const hasFocus = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+                let hasDraft = false;
+                document.querySelectorAll('#feed-container input[type="text"]').forEach(input => {
+                    if (input.value.trim() !== '') hasDraft = true;
+                });
+                
+                if (!hasFocus && !hasDraft) {
+                    fetchFeed({ silent: true });
+                }
             }, 8000);
             document.getElementById('trigger-composer').addEventListener('click', () => toggleComposer(true));
             document.getElementById('post-image-input').addEventListener('change', handleFile);

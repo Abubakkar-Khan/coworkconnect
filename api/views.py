@@ -328,7 +328,7 @@ def profile(request):
         return error
 
     if request.method == "GET":
-        row = fetch_one("SELECT id, name, email, role, status, bio, created_at FROM users WHERE id = %s", [user["id"]])
+        row = fetch_one("SELECT id, name, email, role, status, bio, avatar_url, expertise, created_at FROM users WHERE id = %s", [user["id"]])
         if not row:
             return api_response({"success": False, "message": "User not found"}, 404)
         return api_response({"success": True, "data": row})
@@ -338,13 +338,34 @@ def profile(request):
         email = (data.get("email") or "").strip().lower() or None
         if email and fetch_one("SELECT id FROM users WHERE LOWER(email) = LOWER(%s) AND id != %s", [email, user["id"]]):
             return api_response({"success": False, "message": "Email already in use"}, 400)
+        
+        # Determine if avatar_url or expertise are provided in the payload; if not, fallback to existing to allow partial updates
+        # Actually, using COALESCE handles missing keys if they are passed as None. 
+        # But for expertise which could be empty string, we should just update it if the key exists in data.
+        update_params = [
+            data.get("name"), email, data.get("status"), data.get("bio"),
+            data.get("avatar_url") if "avatar_url" in data else None,
+            data.get("expertise") if "expertise" in data else None,
+            user["id"]
+        ]
+        
         execute(
             """
             UPDATE users
-            SET name = COALESCE(%s, name), email = COALESCE(%s, email), status = COALESCE(%s, status), bio = COALESCE(%s, bio)
+            SET name = COALESCE(%s, name), 
+                email = COALESCE(%s, email), 
+                status = COALESCE(%s, status), 
+                bio = COALESCE(%s, bio),
+                avatar_url = CASE WHEN %s IS NOT NULL THEN %s ELSE avatar_url END,
+                expertise = CASE WHEN %s IS NOT NULL THEN %s ELSE expertise END
             WHERE id = %s
             """,
-            [data.get("name"), email, data.get("status"), data.get("bio"), user["id"]],
+            [
+                data.get("name"), email, data.get("status"), data.get("bio"),
+                data.get("avatar_url") if "avatar_url" in data else None, data.get("avatar_url") if "avatar_url" in data else None,
+                data.get("expertise") if "expertise" in data else None, data.get("expertise") if "expertise" in data else None,
+                user["id"]
+            ],
         )
         return api_response({"success": True, "message": "Profile updated successfully"})
 

@@ -196,6 +196,8 @@ def sqlite_statements():
           role TEXT DEFAULT 'user',
           status TEXT DEFAULT 'Available',
           bio TEXT,
+          avatar_url TEXT,
+          expertise TEXT,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """,
@@ -349,6 +351,8 @@ def postgres_statements():
           role VARCHAR(20) DEFAULT 'user',
           status VARCHAR(50) DEFAULT 'Available',
           bio TEXT,
+          avatar_url TEXT,
+          expertise TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """,
