@@ -50,7 +50,10 @@ def execute(sql, params=None):
             return cursor.rowcount, row[0] if row else None
 
         cursor.execute(sql, params or [])
-        return cursor.rowcount, cursor.lastrowid
+        lastrowid = getattr(cursor, "lastrowid", None)
+        if lastrowid is None and hasattr(cursor, "cursor"):
+            lastrowid = getattr(cursor.cursor, "lastrowid", None)
+        return cursor.rowcount, lastrowid
 
 
 def hash_password(password):
@@ -104,7 +107,9 @@ def auth_user(request, required=True):
             [token_user.get("id")],
         )
         if not user:
-            raise jwt.InvalidTokenError("User no longer exists")
+            if required:
+                return None, api_response({"success": False, "message": "User not found"}, 401)
+            return None, None
         return user, None
     except jwt.PyJWTError:
         if required:
