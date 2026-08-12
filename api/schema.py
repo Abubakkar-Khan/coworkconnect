@@ -58,6 +58,11 @@ def mysql_statements():
           capacity INT NOT NULL,
           description TEXT,
           image_url VARCHAR(255),
+          images TEXT,
+          user_id INT,
+          contact_email TEXT,
+          contact_phone TEXT,
+          website_url TEXT,
           is_available BOOLEAN DEFAULT TRUE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -212,6 +217,11 @@ def sqlite_statements():
           capacity INTEGER NOT NULL,
           description TEXT,
           image_url TEXT,
+          images TEXT,
+          user_id INTEGER,
+          contact_email TEXT,
+          contact_phone TEXT,
+          website_url TEXT,
           is_available INTEGER DEFAULT 1,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
@@ -367,6 +377,11 @@ def postgres_statements():
           capacity INTEGER NOT NULL,
           description TEXT,
           image_url VARCHAR(255),
+          images TEXT,
+          user_id INTEGER,
+          contact_email TEXT,
+          contact_phone TEXT,
+          website_url TEXT,
           is_available BOOLEAN DEFAULT TRUE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )

@@ -456,6 +456,9 @@
             line-height: 1.65;
             margin-bottom: 0.85rem;
             white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            hyphens: auto;
         }
 
         .tag-row {
@@ -477,7 +480,11 @@
         .post-image {
             width: 100%;
             max-height: 520px;
+            height: auto;
             object-fit: cover;
+            border-radius: 8px;
+            background: #f1f5f9;
+            display: block;
             border-top: 1px solid #e2e8f0;
             border-bottom: 1px solid #e2e8f0;
         }
@@ -604,6 +611,8 @@
             margin: 0;
             white-space: pre-wrap;
             word-break: break-word;
+            overflow-wrap: anywhere;
+            hyphens: auto;
         }
 
         .comment-body.collapsed {
@@ -819,13 +828,26 @@
             border: 1px solid #dbe5ef;
             border-radius: 8px;
             overflow: hidden;
+            background: #0f172a;
         }
 
-        .image-preview-wrap img {
-            width: 100%;
-            max-height: 320px;
-            object-fit: cover;
+        .editor-viewport {
+            position: relative;
+            overflow: hidden;
+            max-height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+        }
+
+        .editor-viewport img {
+            max-width: 100%;
+            max-height: 360px;
+            object-fit: contain;
             display: block;
+            transition: transform 0.15s ease-out;
+            transform-origin: center center;
         }
 
         .remove-image-btn {
@@ -836,12 +858,59 @@
             height: 34px;
             border: 0;
             border-radius: 8px;
-            background: rgba(15, 23, 42, 0.72);
+            background: rgba(15, 23, 42, 0.75);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            z-index: 10;
+        }
+
+        .btn-xs-tool {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 0.3rem 0.55rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: 0.15s ease;
+        }
+
+        .btn-xs-tool:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .ratio-chip {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.15s ease;
+        }
+
+        .ratio-chip.active, .ratio-chip:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spin {
+            animation: spin 0.8s linear infinite;
         }
 
         .tag-input {
@@ -978,25 +1047,14 @@
                         <h3 id="profile-name">Member</h3>
                         <p>CoWorkConnect Member</p>
                     </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat"><strong id="profile-posts">0</strong><span>Posts</span></div>
+                        <div class="profile-stat"><strong id="profile-comments">0</strong><span>Comments</span></div>
+                    </div>
                 </section>
             </aside>
 
             <section class="feed-stack">
-                <section class="feed-card feed-header">
-                    <div class="feed-hero">
-                        <div>
-                            <span class="hero-kicker"><i data-lucide="radio" size="15"></i> Professional Network</span>
-                            <h1>Share ideas with Pakistan's coworking community.</h1>
-                            <p>Post updates, ask questions, find collaborators, discover professionals, and turn everyday workspace conversations into useful community knowledge.</p>
-                        </div>
-                        <div class="hero-metrics">
-                            <div class="hero-metric"><strong id="hero-post-count">0</strong><span>Posts</span></div>
-                            <div class="hero-metric"><strong id="hero-comment-count">0</strong><span>Comments</span></div>
-                            <div class="hero-metric"><strong>Live</strong><span>Feed</span></div>
-                        </div>
-                    </div>
-                </section>
-
                 <section class="feed-card composer-card">
                     <div class="composer-top">
                         <div id="composer-avatar" class="avatar-box">U</div>
@@ -1113,8 +1171,33 @@
                 </div>
                 <textarea id="modal-post-content" class="modal-textarea" placeholder="What do you want to talk about?"></textarea>
                 <div id="image-preview-container" class="image-preview-wrap hidden">
-                    <img id="image-preview" src="" alt="Selected post image">
-                    <button onclick="clearImage()" class="remove-image-btn" type="button" title="Remove image"><i data-lucide="x" size="16"></i></button>
+                    <div class="editor-viewport">
+                        <img id="image-preview" src="" alt="Selected post image">
+                        <button onclick="clearImage()" class="remove-image-btn" type="button" title="Remove image"><i data-lucide="x" size="16"></i></button>
+                    </div>
+                    <div class="image-edit-toolbar" style="padding:0.75rem; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; flex-direction:column; gap:0.6rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; font-weight:700; color:#475569;">
+                                <i data-lucide="zoom-in" size="16"></i>
+                                <span>Zoom</span>
+                                <input type="range" id="image-zoom-slider" min="1" max="3" step="0.05" value="1" style="width:90px; accent-color:var(--primary);" oninput="updateImageTransform()">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <button type="button" class="btn-xs-tool" onclick="rotateImage(-90)" title="Rotate Left"><i data-lucide="rotate-ccw" size="13"></i> -90°</button>
+                                <button type="button" class="btn-xs-tool" onclick="rotateImage(90)" title="Rotate Right"><i data-lucide="rotate-cw" size="13"></i> +90°</button>
+                                <button type="button" class="btn-xs-tool" onclick="resetImageTransform()" title="Reset Editor"><i data-lucide="refresh-cw" size="13"></i> Reset</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; font-weight:700; color:#475569; flex-wrap:wrap;">
+                            <span>Aspect Ratio:</span>
+                            <div class="ratio-chips" style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                                <button type="button" class="ratio-chip active" onclick="setAspectRatio('free', this)">Original</button>
+                                <button type="button" class="ratio-chip" onclick="setAspectRatio('1:1', this)">1:1 Square</button>
+                                <button type="button" class="ratio-chip" onclick="setAspectRatio('16:9', this)">16:9 Landscape</button>
+                                <button type="button" class="ratio-chip" onclick="setAspectRatio('4:3', this)">4:3 Photo</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top:1rem;">
                     <input type="text" id="modal-post-tags" class="tag-input" placeholder="Add hashtags, e.g. #startup #coworking">
@@ -1135,10 +1218,17 @@
     </div>
 
     <script src="app.js?v=route-images-1"></script>
-    <script>
-        lucide.createIcons();
+    <script>        lucide.createIcons();
         let selectedFile = null;
         let currentPosts = [];
+        let isPosting = false;
+        const pendingComments = new Set();
+        const pendingReplies = new Set();
+        const pendingLikes = new Set();
+
+        let currentZoom = 1;
+        let currentRotation = 0;
+        let currentAspectRatio = 'free';
 
         function getUser() {
             try {
@@ -1188,11 +1278,14 @@
 
         function quickCompose(text) {
             toggleComposer(true);
-            document.getElementById('modal-post-content').value = text;
+            const contentEl = document.getElementById('modal-post-content');
+            contentEl.value = text;
+            contentEl.focus();
         }
 
         function clearImage() {
             selectedFile = null;
+            resetImageTransform();
             document.getElementById('image-preview').src = '';
             document.getElementById('image-preview-container').classList.add('hidden');
             document.getElementById('post-image-input').value = '';
@@ -1203,6 +1296,7 @@
             const file = event.target.files[0];
             if (!file) return;
             selectedFile = file;
+            resetImageTransform();
             const reader = new FileReader();
             reader.onload = (readerEvent) => {
                 document.getElementById('image-preview').src = readerEvent.target.result;
@@ -1214,6 +1308,108 @@
             }
         };
 
+        function updateImageTransform() {
+            const slider = document.getElementById('image-zoom-slider');
+            currentZoom = parseFloat(slider.value) || 1;
+            const img = document.getElementById('image-preview');
+            if (img) img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
+        }
+
+        function rotateImage(deg) {
+            currentRotation = (currentRotation + deg) % 360;
+            updateImageTransform();
+        }
+
+        function setAspectRatio(ratio, btnEl) {
+            currentAspectRatio = ratio;
+            document.querySelectorAll('.ratio-chip').forEach(c => c.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const viewport = document.querySelector('.editor-viewport');
+            if (!viewport) return;
+
+            switch (ratio) {
+                case '1:1':
+                    viewport.style.aspectRatio = '1 / 1';
+                    viewport.style.maxHeight = '300px';
+                    break;
+                case '16:9':
+                    viewport.style.aspectRatio = '16 / 9';
+                    viewport.style.maxHeight = '280px';
+                    break;
+                case '4:3':
+                    viewport.style.aspectRatio = '4 / 3';
+                    viewport.style.maxHeight = '300px';
+                    break;
+                default:
+                    viewport.style.aspectRatio = 'unset';
+                    viewport.style.maxHeight = '360px';
+                    break;
+            }
+        }
+
+        function resetImageTransform() {
+            currentZoom = 1;
+            currentRotation = 0;
+            currentAspectRatio = 'free';
+            const slider = document.getElementById('image-zoom-slider');
+            if (slider) slider.value = 1;
+            const img = document.getElementById('image-preview');
+            if (img) img.style.transform = 'scale(1) rotate(0deg)';
+            const defaultBtn = document.querySelector('.ratio-chip');
+            if (defaultBtn) setAspectRatio('free', defaultBtn);
+        }
+
+        async function getEditedImageBlob() {
+            if (!selectedFile) return null;
+            const img = document.getElementById('image-preview');
+            if (!img || !img.src || (currentZoom === 1 && currentRotation === 0 && currentAspectRatio === 'free')) {
+                return selectedFile;
+            }
+
+            return new Promise((resolve) => {
+                const imageObj = new Image();
+                imageObj.crossOrigin = 'anonymous';
+                imageObj.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    let width = imageObj.width;
+                    let height = imageObj.height;
+
+                    if (currentAspectRatio === '1:1') {
+                        const side = Math.min(width, height);
+                        width = side;
+                        height = side;
+                    } else if (currentAspectRatio === '16:9') {
+                        height = Math.round(width * 9 / 16);
+                    } else if (currentAspectRatio === '4:3') {
+                        height = Math.round(width * 3 / 4);
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate((currentRotation * Math.PI) / 180);
+                    ctx.scale(currentZoom, currentZoom);
+                    ctx.drawImage(
+                        imageObj,
+                        -imageObj.width / 2,
+                        -imageObj.height / 2,
+                        imageObj.width,
+                        imageObj.height
+                    );
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob || selectedFile);
+                    }, selectedFile.type || 'image/jpeg', 0.92);
+                };
+                imageObj.onerror = () => resolve(selectedFile);
+                imageObj.src = img.src;
+            });
+        }
+
         function renderEmptyFeed() {
             document.getElementById('posts-feed').innerHTML = `
                 <div class="feed-card empty-feed">
@@ -1224,7 +1420,7 @@
                 </div>
             `;
             lucide.createIcons();
-        }
+        } 
 
         function renderPosts(posts) {
             const feed = document.getElementById('posts-feed');
@@ -1260,7 +1456,7 @@
                             <p class="post-text">${escapeHtml(post.content)}</p>
                             ${tags ? `<div class="tag-row">${tags}</div>` : ''}
                         </div>
-                        ${post.image_url ? `<img class="post-image" src="${safeImageUrl(post.image_url, fallbackImage('community'))}" data-fallback="${fallbackImage('community')}" alt="Post image">` : ''}
+                        ${post.image_url ? `<img class="post-image" loading="lazy" decoding="async" src="${safeImageUrl(post.image_url, fallbackImage('community'))}" data-fallback="${fallbackImage('community')}" alt="Post image">` : ''}
                         <div class="post-actions" style="margin-top: 0.5rem;">
                             <button onclick="toggleLike(${post.id})" class="post-action ${post.liked_by_me ? 'liked' : ''}" type="button">
                                 <i data-lucide="thumbs-up" size="18"></i><span>Like</span>${post.likes_count ? `<span class="action-count">${post.likes_count}</span>` : ''}
@@ -1405,6 +1601,7 @@
         }
 
         async function addReply(postId, parentId) {
+            if (pendingReplies.has(parentId)) return;
             const input = document.getElementById(`reply-input-${parentId}`);
             const content = input.value.trim();
             const token = localStorage.getItem('token');
@@ -1414,45 +1611,85 @@
                 return;
             }
 
-            const response = await fetch(`/api/posts/${postId}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ content, parentId: parentId }),
-            });
-            if (response.ok) {
-                fetchFeed();
+            pendingReplies.add(parentId);
+            input.disabled = true;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ content, parentId: parentId }),
+                });
+                if (response.ok) {
+                    fetchFeed({ silent: true });
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    showToast(errData.message || 'Reply could not be posted.', 'error');
+                }
+            } catch (e) {
+                showToast('Network error while replying.', 'error');
+            } finally {
+                pendingReplies.delete(parentId);
+                input.disabled = false;
             }
         }
 
         async function toggleCommentLike(commentId) {
+            if (pendingLikes.has(`c_${commentId}`)) return;
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please login to like comments.', 'error');
                 return;
             }
 
-            const response = await fetch(`/api/comments/${commentId}/like`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                fetchFeed(true); // silent fetch to keep state
+            pendingLikes.add(`c_${commentId}`);
+            try {
+                const response = await fetch(`/api/comments/${commentId}/like`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) {
+                    fetchFeed({ silent: true });
+                } else {
+                    showToast('Could not update like.', 'error');
+                }
+            } catch (e) {
+                showToast('Network error.', 'error');
+            } finally {
+                pendingLikes.delete(`c_${commentId}`);
             }
         }
 
         async function fetchFeed({ silent = false } = {}) {
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            if (!silent && !currentPosts.length) {
+                document.getElementById('posts-feed').innerHTML = `
+                    <div class="skeleton-card">
+                        <div style="display:flex;gap:0.75rem;align-items:center;">
+                            <div class="skeleton-bar" style="width:44px;height:44px;border-radius:8px;"></div>
+                            <div style="flex:1;display:flex;flex-direction:column;gap:0.4rem;">
+                                <div class="skeleton-bar" style="width:140px;height:16px;"></div>
+                                <div class="skeleton-bar" style="width:90px;height:12px;"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-bar" style="width:100%;height:40px;margin-top:0.4rem;"></div>
+                    </div>
+                `;
+            }
             try {
                 const response = await fetch('/api/posts?t=' + Date.now(), { headers });
                 if (!response.ok) throw new Error('Feed request failed');
                 const data = await response.json();
                 currentPosts = data.data || [];
-                document.getElementById('hero-post-count').textContent = currentPosts.length;
-                document.getElementById('profile-posts').textContent = currentPosts.length;
-                document.getElementById('hero-comment-count').textContent = currentPosts.reduce((total, post) => total + ((post.comments || []).length), 0);
-                renderPosts(currentPosts);
+                const totalComments = currentPosts.reduce((total, post) => total + ((post.comments || []).length), 0);
+                const profilePosts = document.getElementById('profile-posts');
+                const profileComments = document.getElementById('profile-comments');
+                if (profilePosts) profilePosts.textContent = currentPosts.length;
+                if (profileComments) profileComments.textContent = totalComments;
+                applyFeedFilter();
             } catch (error) {
+                console.error('Feed fetch error:', error);
                 if (!silent) {
                     document.getElementById('posts-feed').innerHTML = `
                         <div class="feed-card empty-feed">
@@ -1466,19 +1703,59 @@
             }
         }
 
+        let activeFilter = 'top';
+
+        function applyFeedFilter() {
+            let filtered = [...currentPosts];
+            switch (activeFilter) {
+                case 'latest':
+                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    break;
+                case 'questions':
+                    filtered = filtered.filter(p => (p.content || '').includes('?'));
+                    break;
+                case 'collaborations':
+                    filtered = filtered.filter(p => {
+                        const text = ((p.content || '') + ' ' + (p.tags || '')).toLowerCase();
+                        return text.includes('collaborat') || text.includes('partner') || text.includes('team') || text.includes('looking for');
+                    });
+                    break;
+                case 'events':
+                    filtered = filtered.filter(p => {
+                        const text = ((p.content || '') + ' ' + (p.tags || '')).toLowerCase();
+                        return text.includes('event') || text.includes('meetup') || text.includes('workshop') || text.includes('webinar');
+                    });
+                    break;
+                default:
+                    filtered.sort((a, b) => ((b.likes_count || 0) + (b.comments_count || 0)) - ((a.likes_count || 0) + (a.comments_count || 0)));
+                    break;
+            }
+            renderPosts(filtered);
+        }
+
         async function toggleLike(postId) {
+            if (pendingLikes.has(`p_${postId}`)) return;
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please login to like posts.', 'error');
                 return;
             }
 
-            const response = await fetch(`/api/posts/${postId}/like`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                fetchFeed();
+            pendingLikes.add(`p_${postId}`);
+            try {
+                const response = await fetch(`/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) {
+                    fetchFeed({ silent: true });
+                } else {
+                    showToast('Could not update like.', 'error');
+                }
+            } catch (e) {
+                showToast('Network error.', 'error');
+            } finally {
+                pendingLikes.delete(`p_${postId}`);
             }
         }
 
@@ -1490,6 +1767,7 @@
         }
 
         async function addComment(postId) {
+            if (pendingComments.has(postId)) return;
             const input = document.getElementById(`comment-input-${postId}`);
             const content = input.value.trim();
             const token = localStorage.getItem('token');
@@ -1499,14 +1777,27 @@
                 return;
             }
 
-            const response = await fetch(`/api/posts/${postId}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ content }),
-            });
-            if (response.ok) {
-                input.value = '';
-                fetchFeed();
+            pendingComments.add(postId);
+            input.disabled = true;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ content }),
+                });
+                if (response.ok) {
+                    input.value = '';
+                    fetchFeed({ silent: true });
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    showToast(errData.message || 'Comment could not be posted.', 'error');
+                }
+            } catch (e) {
+                showToast('Network error while commenting.', 'error');
+            } finally {
+                pendingComments.delete(postId);
+                input.disabled = false;
             }
         }
 
@@ -1515,6 +1806,8 @@
         }
 
         async function submitPost() {
+            if (isPosting) return;
+            const submitBtn = document.getElementById('submit-post');
             const content = document.getElementById('modal-post-content').value.trim();
             const tags = document.getElementById('modal-post-tags').value.trim();
             const token = localStorage.getItem('token');
@@ -1527,27 +1820,47 @@
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('content', content);
-            formData.append('tags', tags);
-            if (selectedFile) formData.append('image', selectedFile);
+            isPosting = true;
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.innerHTML = `<i data-lucide="loader-2" class="spin" size="17"></i> Publishing...`;
+            lucide.createIcons();
 
-            const response = await fetch('/api/posts', {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData,
-            });
+            try {
+                const formData = new FormData();
+                formData.append('content', content);
+                formData.append('tags', tags);
 
-            if (response.ok) {
-                toggleComposer(false);
-                document.getElementById('modal-post-content').value = '';
-                document.getElementById('modal-post-tags').value = '';
-                clearImage();
-                showToast('Post shared.');
-                fetchFeed();
-            } else {
-                const data = await response.json().catch(() => ({}));
-                showToast(data.message || 'Post could not be shared.', 'error');
+                if (selectedFile) {
+                    const editedBlob = await getEditedImageBlob();
+                    formData.append('image', editedBlob, selectedFile.name);
+                }
+
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    toggleComposer(false);
+                    document.getElementById('modal-post-content').value = '';
+                    document.getElementById('modal-post-tags').value = '';
+                    clearImage();
+                    showToast('Post published!');
+                    fetchFeed();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    showToast(data.message || 'Post could not be shared.', 'error');
+                }
+            } catch (e) {
+                showToast('Network error while publishing post.', 'error');
+            } finally {
+                isPosting = false;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.innerHTML = `<i data-lucide="send" size="17"></i> Post`;
+                lucide.createIcons();
             }
         }
 
@@ -1579,8 +1892,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (!localStorage.getItem('token')) return;
-
             updateProfileStats();
             fetchFeed();
             setInterval(() => {
@@ -1589,7 +1900,7 @@
                 // Prevent auto-refresh if the user is typing a comment or has a draft
                 const hasFocus = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
                 let hasDraft = false;
-                document.querySelectorAll('#feed-container input[type="text"]').forEach(input => {
+                document.querySelectorAll('#posts-feed textarea, #posts-feed input').forEach(input => {
                     if (input.value.trim() !== '') hasDraft = true;
                 });
                 
@@ -1603,10 +1914,13 @@
             document.getElementById('submit-post').addEventListener('click', submitPost);
             document.getElementById('profile-search-input').addEventListener('input', searchProfiles);
 
-            document.querySelectorAll('.feed-tab').forEach((tab) => {
+            const filterMap = ['top', 'latest', 'questions', 'collaborations', 'events'];
+            document.querySelectorAll('.feed-tab').forEach((tab, index) => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.feed-tab').forEach((item) => item.classList.remove('active'));
                     tab.classList.add('active');
+                    activeFilter = filterMap[index] || 'top';
+                    applyFeedFilter();
                 });
             });
             lucide.createIcons();

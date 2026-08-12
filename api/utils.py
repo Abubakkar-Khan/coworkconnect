@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import json
 import time
+import os
 from uuid import uuid4
+
+import cloudinary
+import cloudinary.uploader
 
 import bcrypt
 import jwt
@@ -121,14 +125,31 @@ def require_admin(user):
 
 
 def save_upload(file_obj, folder=""):
-    max_size = getattr(settings, "MAX_UPLOAD_SIZE", 5 * 1024 * 1024)
-    allowed_types = getattr(settings, "ALLOWED_UPLOAD_TYPES", {"image/jpeg", "image/png", "image/webp", "image/gif"})
-    content_type = getattr(file_obj, "content_type", "")
-    if content_type not in allowed_types:
-        raise ValueError("Only JPG, PNG, WebP, and GIF images are supported")
-    if getattr(file_obj, "size", 0) > max_size:
-        raise ValueError("Image must be 5MB or smaller")
+    max_size = getattr(settings, "MAX_UPLOAD_SIZE", 10 * 1024 * 1024)
+    allowed_types = getattr(settings, "ALLOWED_UPLOAD_TYPES", {
+        "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
+        "image/avif", "image/heic", "image/heif", "image/svg+xml", "image/bmp",
+        "image/tiff", "image/jfif", "image/x-icon", "image/pjpeg"
+    })
+    allowed_extensions = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".heic", ".heif", ".svg", ".bmp", ".tiff", ".jfif"}
+    content_type = getattr(file_obj, "content_type", "").lower()
+    suffix = Path(file_obj.name).suffix.lower() if getattr(file_obj, "name", None) else ""
 
+    if content_type not in allowed_types and suffix not in allowed_extensions:
+        raise ValueError("Unsupported image format. Please upload JPG, PNG, WebP, GIF, AVIF, HEIC, SVG, or BMP.")
+    if getattr(file_obj, "size", 0) > max_size:
+        raise ValueError("Image must be 10MB or smaller")
+
+    cloudinary_url = os.environ.get("CLOUDINARY_URL")
+    if cloudinary_url:
+        # Use Cloudinary if the env var is set
+        try:
+            res = cloudinary.uploader.upload(file_obj, folder=folder)
+            return res.get("secure_url")
+        except Exception as e:
+            raise ValueError(f"Cloudinary upload failed: {e}")
+
+    # Fallback to local storage
     upload_dir = Path(settings.MEDIA_ROOT) / folder
     upload_dir.mkdir(parents=True, exist_ok=True)
     suffix = Path(file_obj.name).suffix.lower()

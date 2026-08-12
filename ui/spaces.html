@@ -3,11 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Workspaces | CoWorkConnect</title>
+    <title>Explore Workspaces | CoWorkConnect</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
+    <style>
+        .type-btn { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: 0.2s; color: var(--gray); font-family: var(--font); font-size: 0.75rem; font-weight: 700; }
+        .type-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .type-btn.active { background: #ecfdf5; border-color: var(--primary); color: var(--primary); }
+        
+        .listing-card { background: white; border-radius: 20px; border: 1px solid var(--border); display: grid; grid-template-columns: 340px 1fr; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); }
+        .listing-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 12px 20px -4px rgba(0,0,0,0.08); }
+        
+        .gallery-container { position: relative; height: 100%; display: flex; flex-direction: column; }
+        .main-image { height: 230px; background-size: cover; background-position: center; position: relative; transition: background-image 0.3s ease; cursor: pointer; }
+        .thumb-row { display: flex; gap: 6px; padding: 8px; background: #f8fafc; border-top: 1px solid #edf2f7; }
+        .thumb-item { width: 44px; height: 36px; border-radius: 6px; background-size: cover; background-position: center; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; }
+        .thumb-item.active, .thumb-item:hover { opacity: 1; border-color: var(--primary); }
+        
+        .listing-body { padding: 1.5rem 1.75rem; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .badge-verified { background: #065f46; color: white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-rank { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; padding: 0.25rem 0.6rem; border-radius: 50px; font-size: 0.65rem; font-weight: 800; display: inline-flex; align-items: center; gap: 3px; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.25s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-card { background: white; border-radius: 24px; width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.95); transition: 0.25s ease; }
+        .modal-overlay.open .modal-card { transform: scale(1); }
+
+        .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 0.5rem; }
+        .img-upload-slot { height: 90px; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background-position: center; background-size: cover; position: relative; overflow: hidden; transition: 0.2s; }
+        .img-upload-slot:hover { border-color: var(--primary); background-color: #f8fafc; }
+        .img-upload-slot span { font-size: 0.7rem; color: var(--gray); font-weight: 700; margin-top: 4px; }
+        
+        .chip { padding: 0.4rem 0.8rem; border-radius: 50px; background: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .chip:hover, .chip.active { background: #e2e8f0; color: var(--dark); border-color: var(--primary); }
+
+        .view-toggle-btn { background: transparent; border: none; padding: 0.4rem 0.9rem; font-size: 0.85rem; font-weight: 700; color: var(--gray); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .view-toggle-btn.active { background: var(--primary); color: white; }
+    </style>
 </head>
 <body style="background-color: #f8fafc;">
     <!-- Shared Navbar -->
@@ -31,53 +67,71 @@
         </div>
     </nav>
 
-    <!-- Professional Search Header -->
-    <header style="padding-top: 140px; padding-bottom: 40px; background: white; border-bottom: 1px solid var(--border);">
+    <!-- Header Search Bar -->
+    <header style="padding-top: 130px; padding-bottom: 30px; background: white; border-bottom: 1px solid var(--border);">
         <div class="container">
-            <div style="max-width: 700px;">
-                <h1 style="font-size: 2.2rem; margin-bottom: 1.5rem; font-weight: 800;">Workspaces in <span id="location-title" style="color: var(--primary);">Anywhere</span></h1>
-                <div style="display: flex; gap: 0.5rem; background: var(--bg-soft); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border);">
-                    <div style="flex: 1; display: flex; align-items: center; padding-left: 1rem; gap: 0.5rem;">
-                        <i data-lucide="map-pin" size="18" color="var(--gray)"></i>
-                        <input type="text" id="location-input" placeholder="Enter area (e.g. Islamabad, Karachi)" style="border: none; background: transparent; width: 100%; height: 40px; font-family: var(--font); outline: none; font-size: 1rem;">
-                    </div>
-                    <button id="main-search-btn" class="btn btn-primary" style="padding: 0 2rem; border-radius: 12px;">Search</button>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem;">
+                <div>
+                    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--dark);">Coworking Spaces in <span id="location-title" style="color: var(--primary);">Anywhere</span></h1>
+                    <p style="color: var(--gray); font-weight: 600; font-size: 0.95rem;">Find and connect directly with verified desks, private offices, and meeting rooms.</p>
                 </div>
+                <button id="open-add-space-btn" class="btn btn-primary" style="border-radius: 12px; padding: 0.75rem 1.5rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px;">
+                    <i data-lucide="plus-circle" size="18"></i> List Your Space
+                </button>
+            </div>
+
+            <!-- Search Field -->
+            <div style="display: flex; gap: 0.5rem; background: var(--bg-soft); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border); margin-top: 1.5rem; max-width: 750px;">
+                <div style="flex: 1; display: flex; align-items: center; padding-left: 1rem; gap: 0.5rem;">
+                    <i data-lucide="map-pin" size="18" color="var(--gray)"></i>
+                    <input type="text" id="location-input" placeholder="Search city or area (e.g. Islamabad, Lahore, Karachi)" style="border: none; background: transparent; width: 100%; height: 40px; font-family: var(--font); outline: none; font-size: 0.95rem;">
+                </div>
+                <button id="main-search-btn" class="btn btn-primary" style="padding: 0 2rem; border-radius: 12px; font-weight: 700;">Search</button>
             </div>
         </div>
     </header>
 
     <main class="container" style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; padding-top: 2rem; padding-bottom: 5rem;">
         <!-- Sidebar Filters -->
-        <aside style="display: flex; flex-direction: column; gap: 2rem;">
+        <aside style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Price Range Filter -->
             <div class="filter-section" style="background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
-                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 800;">
-                    <i data-lucide="banknote" size="18"></i> Budget (Rs)
+                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-weight: 800; font-size: 0.95rem;">
+                    <i data-lucide="banknote" size="18" color="var(--primary)"></i> Price Range (Rs / day)
                 </h4>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-                    <input type="number" id="min-price" placeholder="Min" class="input-field" style="padding: 0.5rem 1rem;">
+                    <input type="number" id="min-price" min="0" value="0" placeholder="Min" class="input-field" style="padding: 0.5rem 0.75rem; font-weight: 600;">
                     <span style="color: var(--gray);">-</span>
-                    <input type="number" id="max-price" placeholder="Max" class="input-field" style="padding: 0.5rem 1rem;">
+                    <input type="number" id="max-price" min="0" placeholder="Max" class="input-field" style="padding: 0.5rem 0.75rem; font-weight: 600;">
                 </div>
-                <button id="apply-price-btn" class="btn btn-outline" style="width: 100%; font-size: 0.85rem; border-radius: 12px;">Apply Range</button>
+
+                <!-- Quick Presets -->
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.2rem;">
+                    <span class="chip" onclick="setBudgetPreset(0, 5000)">Under 5K</span>
+                    <span class="chip" onclick="setBudgetPreset(0, 15000)">Under 15K</span>
+                    <span class="chip" onclick="setBudgetPreset(0, 35000)">Under 35K</span>
+                </div>
+
+                <button id="apply-price-btn" class="btn btn-outline" style="width: 100%; font-size: 0.85rem; border-radius: 12px; font-weight: 700;">Apply Range</button>
             </div>
 
+            <!-- Space Type Filter -->
             <div class="filter-section" style="background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
-                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 800;">
-                    <i data-lucide="briefcase" size="18"></i> Workspace
+                <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-weight: 800; font-size: 0.95rem;">
+                    <i data-lucide="briefcase" size="18" color="var(--primary)"></i> Space Type
                 </h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                    <button class="type-btn" data-type="private_office">
-                        <i data-lucide="door-closed" size="16"></i>
-                        <span>Private Office</span>
-                    </button>
                     <button class="type-btn active" data-type="all">
-                        <i data-lucide="users" size="16"></i>
+                        <i data-lucide="layout-grid" size="16"></i>
                         <span>All Spaces</span>
                     </button>
                     <button class="type-btn" data-type="desk">
                         <i data-lucide="monitor" size="16"></i>
                         <span>Desk</span>
+                    </button>
+                    <button class="type-btn" data-type="private_office">
+                        <i data-lucide="door-closed" size="16"></i>
+                        <span>Private Office</span>
                     </button>
                     <button class="type-btn" data-type="virtual_office">
                         <i data-lucide="globe" size="16"></i>
@@ -89,39 +143,184 @@
 
         <!-- Main Listings Content -->
         <section>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <p style="color: var(--gray); font-weight: 600;"><span id="results-count" style="color: var(--primary);">0</span> spaces near you</p>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="font-size: 0.85rem; color: var(--gray); font-weight: 600;">Sort By:</span>
-                    <select class="input-field" style="padding: 0.3rem 1rem; width: auto; font-size: 0.85rem; border-radius: 10px;">
-                        <option>Relevance</option>
-                        <option>Price: Low to High</option>
-                        <option>Top Rated</option>
-                    </select>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <p style="color: var(--gray); font-weight: 600;"><span id="results-count" style="color: var(--primary); font-weight: 800;">0</span> spaces found</p>
+                
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- View Toggle: List vs Map -->
+                    <div style="display: flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: white;">
+                        <button id="view-list-btn" class="view-toggle-btn active" onclick="toggleDirectoryView('list')">
+                            <i data-lucide="list" size="16"></i> List
+                        </button>
+                        <button id="view-map-btn" class="view-toggle-btn" onclick="toggleDirectoryView('map')">
+                            <i data-lucide="map" size="16"></i> Map View
+                        </button>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.85rem; color: var(--gray); font-weight: 700;">Sort:</span>
+                        <select id="sort-select" class="input-field" style="padding: 0.4rem 0.8rem; width: auto; font-size: 0.85rem; border-radius: 12px; font-weight: 700;">
+                            <option value="rating">Top Rated & Ranking</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
+            <!-- Map View Container (Hidden by default) -->
+            <div id="map-view-panel" style="display: none; height: 450px; background: white; border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem;">
+                <iframe id="directory-map-iframe" width="100%" height="100%" frameborder="0" style="border:0;" allowfullscreen="" loading="lazy" src="https://maps.google.com/maps?q=Pakistan&t=&z=6&ie=UTF8&iwloc=&output=embed"></iframe>
+            </div>
+
+            <!-- Listing Cards Container -->
             <div id="listing-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <div style="text-align: center; padding: 5rem; background: white; border-radius: 20px;">
-                    <p style="color: var(--gray);">Loading premium spaces...</p>
+                <div style="text-align: center; padding: 5rem; background: white; border-radius: 20px; border: 1px solid var(--border);">
+                    <p style="color: var(--gray); font-weight: 600;">Loading premium workspaces...</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <style>
-        .type-btn { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; transition: 0.3s; color: var(--gray); font-family: var(--font); font-size: 0.75rem; font-weight: 700; }
-        .type-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .type-btn.active { background: #ecfdf5; border-color: var(--primary); color: var(--primary); }
-        .listing-card { background: white; border-radius: 24px; border: 1px solid var(--border); display: grid; grid-template-columns: 320px 1fr; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .listing-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow); }
-        .listing-image { background-size: cover; background-position: center; position: relative; }
-        .listing-body { padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; }
-    </style>
-<script src="app.js?v=route-images-1"></script>
+    <!-- Modal: Add New Workspace -->
+    <div id="add-space-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--dark);">List a Workspace</h3>
+                <button id="close-modal-btn" style="background: none; border: none; cursor: pointer; color: var(--gray);"><i data-lucide="x" size="22"></i></button>
+            </div>
+            
+            <form id="add-space-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Workspace Name</label>
+                    <input type="text" id="new-space-name" placeholder="e.g. Hive Mind Innovation Hub" class="input-field" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Type</label>
+                        <select id="new-space-type" class="input-field" required>
+                            <option value="desk">Dedicated Desk</option>
+                            <option value="private_office">Private Office</option>
+                            <option value="meeting_room">Meeting Room</option>
+                            <option value="virtual_office">Virtual Office</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Location / City</label>
+                        <input type="text" id="new-space-location" placeholder="e.g. F-7 Markaz, Islamabad" class="input-field" required>
+                        
+                        <!-- Live Connected Location Map Preview -->
+                        <div id="modal-map-preview-container" style="height: 160px; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; margin-top: 0.6rem; position: relative; background: #f8fafc;">
+                            <iframe id="modal-map-iframe" width="100%" height="100%" frameborder="0" style="border:0;" allowfullscreen="" loading="lazy" src="https://maps.google.com/maps?q=Pakistan&t=&z=10&ie=UTF8&iwloc=&output=embed"></iframe>
+                            <div style="position: absolute; bottom: 6px; right: 8px; background: rgba(15, 23, 42, 0.75); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; backdrop-filter: blur(4px);">
+                                <i data-lucide="map-pin" size="10" style="vertical-align: middle;"></i> Live Location Map
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Price / Day (Rs)</label>
+                        <input type="number" id="new-space-price" min="0" placeholder="e.g. 2500" class="input-field" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Capacity (Seats)</label>
+                        <input type="number" id="new-space-capacity" min="1" placeholder="e.g. 15" class="input-field" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Contact Email (Must)</label>
+                        <input type="email" id="new-space-email" placeholder="e.g. contact@workspace.com" class="input-field" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">WhatsApp / Contact (Must)</label>
+                        <input type="tel" id="new-space-phone" placeholder="e.g. +923001234567" class="input-field" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Official Website Link (Optional)</label>
+                    <input type="url" id="new-space-website" placeholder="e.g. https://mycoworking.com" class="input-field">
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Description</label>
+                    <textarea id="new-space-desc" rows="3" placeholder="Describe high-speed wifi, tea/coffee, 24/7 access..." class="input-field" style="resize: vertical;"></textarea>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Workspace Photos (Max 3)</label>
+                    <div class="img-upload-grid">
+                        <div class="img-upload-slot" id="slot-0" onclick="triggerSlotUpload(0)">
+                            <i data-lucide="image-plus" size="20" color="var(--gray)"></i>
+                            <span>Cover Image</span>
+                            <input type="file" id="file-slot-0" accept="image/*" style="display: none;" onchange="handleSlotImage(0, this)">
+                        </div>
+                        <div class="img-upload-slot" id="slot-1" onclick="triggerSlotUpload(1)">
+                            <i data-lucide="image-plus" size="20" color="var(--gray)"></i>
+                            <span>Photo 2</span>
+                            <input type="file" id="file-slot-1" accept="image/*" style="display: none;" onchange="handleSlotImage(1, this)">
+                        </div>
+                        <div class="img-upload-slot" id="slot-2" onclick="triggerSlotUpload(2)">
+                            <i data-lucide="image-plus" size="20" color="var(--gray)"></i>
+                            <span>Photo 3</span>
+                            <input type="file" id="file-slot-2" accept="image/*" style="display: none;" onchange="handleSlotImage(2, this)">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 1rem; padding: 0.8rem; border-radius: 12px; font-weight: 800;">Publish Space</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js?v=route-images-2"></script>
     <script>
         lucide.createIcons();
-        let currentFilters = { location: '', type: 'all', minPrice: '', maxPrice: '' };
+
+        let currentFilters = { location: '', type: 'all', minPrice: '0', maxPrice: '', sort: 'rating' };
+        let uploadedImages = ['', '', ''];
+
+        // Enforce Non-Negative Budget Validation
+        document.getElementById('min-price').addEventListener('input', function() {
+            if (this.value < 0) this.value = 0;
+            currentFilters.minPrice = this.value;
+        });
+        document.getElementById('max-price').addEventListener('input', function() {
+            if (this.value !== '' && this.value < 0) this.value = 0;
+            currentFilters.maxPrice = this.value;
+        });
+
+        function setBudgetPreset(min, max) {
+            document.getElementById('min-price').value = min;
+            document.getElementById('max-price').value = max;
+            currentFilters.minPrice = min;
+            currentFilters.maxPrice = max;
+            fetchResults();
+        }
+
+        function toggleDirectoryView(mode) {
+            const mapPanel = document.getElementById('map-view-panel');
+            const listBtn = document.getElementById('view-list-btn');
+            const mapBtn = document.getElementById('view-map-btn');
+
+            if (mode === 'map') {
+                mapPanel.style.display = 'block';
+                listBtn.classList.remove('active');
+                mapBtn.classList.add('active');
+                
+                const locQuery = encodeURIComponent(currentFilters.location || 'Pakistan');
+                document.getElementById('directory-map-iframe').src = `https://maps.google.com/maps?q=${locQuery}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+            } else {
+                mapPanel.style.display = 'none';
+                mapBtn.classList.remove('active');
+                listBtn.classList.add('active');
+            }
+        }
 
         async function fetchResults() {
             const container = document.getElementById('listing-container');
@@ -129,63 +328,252 @@
             try {
                 const res = await fetch(`/api/spaces?${queryParams}`);
                 const data = await res.json();
-                document.getElementById('results-count').textContent = data.count;
+                
+                document.getElementById('results-count').textContent = data.count || 0;
                 document.getElementById('location-title').textContent = currentFilters.location || 'Anywhere';
+                
                 if (!data.data || data.count === 0) {
-                    container.innerHTML = `<div style="text-align: center; padding: 5rem; background: white; border-radius: 24px;"><p style="color: var(--gray);">No spaces found matching your search.</p></div>`;
-                } else {
-                    container.innerHTML = data.data.map(space => `
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 5rem; background: white; border-radius: 20px; border: 1px solid var(--border);">
+                            <i data-lucide="search-x" size="40" color="var(--gray)" style="margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gray); font-weight: 700;">No spaces found matching your range or location.</p>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                const currentUser = getCurrentUser();
+
+                container.innerHTML = data.data.map((space, idx) => {
+                    const imgs = space.images_list && space.images_list.length > 0 ? space.images_list : [safeImageUrl(space.image_url, fallbackImage('workspace'))];
+                    const rankNum = idx + 1;
+                    const isCreatorOrAdmin = currentUser && (currentUser.role === 'admin' || (space.user_id && Number(currentUser.id) === Number(space.user_id)));
+
+                    return `
                         <div class="listing-card fade-in">
-                            <div class="listing-image image-surface" style="background-image: url('${safeImageUrl(space.image_url, fallbackImage('workspace'))}')">
-                                <div style="position: absolute; top: 1rem; left: 1rem; background: #065f46; color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Verified</div>
+                            <!-- Image Gallery Column -->
+                            <div class="gallery-container">
+                                <div id="main-img-${space.id}" class="main-image image-surface" style="background-image: url('${imgs[0]}');" onclick="window.location.href='space-details.html?id=${space.id}'">
+                                    <div style="position: absolute; top: 0.8rem; left: 0.8rem; display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <span class="badge-verified">Verified</span>
+                                        <span class="badge-rank"><i data-lucide="trophy" size="12"></i> #${rankNum} Ranked</span>
+                                    </div>
+                                </div>
+                                ${imgs.length > 1 ? `
+                                    <div class="thumb-row">
+                                        ${imgs.map((url, i) => `
+                                            <div class="thumb-item ${i === 0 ? 'active' : ''}" style="background-image: url('${url}');" onclick="switchCardImage(${space.id}, '${url}', this)"></div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
                             </div>
+
+                            <!-- Info Body Column -->
                             <div class="listing-body">
                                 <div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                        <h3 style="font-size: 1.5rem; font-weight: 800;">${escapeHtml(space.name)}</h3>
-                                        <div style="display: flex; align-items: center; gap: 4px; color: #f59e0b; font-weight: 800;">
-                                            <i data-lucide="star" fill="#f59e0b" size="16"></i> ${escapeHtml(space.rating || '4.9')}
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                        <a href="space-details.html?id=${space.id}" style="text-decoration: none; color: inherit;">
+                                            <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--dark);">${escapeHtml(space.name)}</h3>
+                                        </a>
+                                        <div style="display: flex; align-items: center; gap: 4px; background: #fffbebf5; border: 1px solid #fde68a; padding: 0.3rem 0.6rem; border-radius: 8px; color: #d97706; font-weight: 800; font-size: 0.85rem;">
+                                            <i data-lucide="star" fill="#f59e0b" size="14"></i> ${escapeHtml(space.rating || '5.0')}
                                         </div>
                                     </div>
-                                    <p style="display: flex; align-items: center; gap: 4px; font-size: 0.9rem; color: var(--gray); font-weight: 600; margin-bottom: 1.2rem;"><i data-lucide="map-pin" size="14"></i> ${escapeHtml(space.location || 'General')}</p>
-                                    <p style="font-size: 0.95rem; color: #475569; line-height: 1.6;">${escapeHtml(space.description || 'Modern coworking space with premium amenities.')}</p>
+                                    <p style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--gray); font-weight: 600; margin-bottom: 0.8rem;">
+                                        <i data-lucide="map-pin" size="14" color="var(--primary)"></i> ${escapeHtml(space.location || 'General')}
+                                        <span style="color: #cbd5e1;">•</span>
+                                        <i data-lucide="users" size="14"></i> Capacity: ${escapeHtml(space.capacity || 10)} seats
+                                    </p>
+                                    <p style="font-size: 0.9rem; color: #475569; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        ${escapeHtml(space.description || 'Modern flexible workspace with high-speed internet, ergonomic desks, and community access.')}
+                                    </p>
                                 </div>
-                                <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 0.75rem; align-items: end; margin-top: 1.5rem;">
-                                    <div><span style="font-size: 0.8rem; color: var(--gray); font-weight: 700; display: block; text-transform: uppercase;">Per Day</span><span style="font-size: 1.6rem; font-weight: 800; color: var(--dark);">Rs ${escapeHtml(space.price_per_day)}</span></div>
-                                    <input type="date" id="booking-date-${space.id}" class="input-field" style="width: 150px; padding: 0.7rem;" min="${new Date().toISOString().slice(0, 10)}">
-                                    <button class="btn btn-primary" onclick="bookSpace(${Number(space.id)})" style="padding: 0.8rem 1.25rem; font-weight: 800;">Book</button>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed #e2e8f0;">
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--gray); font-weight: 700; display: block; text-transform: uppercase;">Per Day</span>
+                                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--dark);">Rs ${escapeHtml(space.price_per_day)}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        ${isCreatorOrAdmin ? `
+                                            <button onclick="deleteCardSpace(${space.id}, '${escapeHtml(space.name)}')" class="btn" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 10px; padding: 0.6rem 0.8rem; font-weight: 700;" title="Delete Workspace">
+                                                <i data-lucide="trash-2" size="16"></i>
+                                            </button>
+                                        ` : ''}
+                                        <a class="btn btn-primary" href="space-details.html?id=${space.id}" style="padding: 0.65rem 1.25rem; font-weight: 800; border-radius: 12px; text-decoration: none;">Contact Space</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    `).join('');
-                }
+                    `;
+                }).join('');
+
                 lucide.createIcons();
-            } catch (err) { container.innerHTML = '<p>Error loading results.</p>'; }
+            } catch (err) {
+                container.innerHTML = '<p style="color: var(--gray); text-align: center;">Error loading results.</p>';
+            }
         }
 
-        async function bookSpace(spaceId) {
+        function switchCardImage(spaceId, newUrl, thumbEl) {
+            const mainImg = document.getElementById(`main-img-${spaceId}`);
+            if (mainImg) mainImg.style.backgroundImage = `url('${newUrl}')`;
+            const parent = thumbEl.parentElement;
+            if (parent) {
+                parent.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('active'));
+                thumbEl.classList.add('active');
+            }
+        }
+
+        async function deleteCardSpace(id, name) {
+            if (!confirm(`Are you sure you want to delete workspace "${name}"?`)) return;
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/spaces/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Workspace deleted successfully!', 'success');
+                    fetchResults();
+                } else {
+                    showToast(data.message || 'Failed to delete workspace.', 'error');
+                }
+            } catch (err) {
+                showToast('Error deleting workspace.', 'error');
+            }
+        }
+
+        // Modal Controls & Live Connected Map Listener
+        const modal = document.getElementById('add-space-modal');
+        let mapDebounceTimer = null;
+
+        document.getElementById('new-space-location').addEventListener('input', (e) => {
+            clearTimeout(mapDebounceTimer);
+            const locVal = e.target.value.trim();
+            mapDebounceTimer = setTimeout(() => {
+                const mapIframe = document.getElementById('modal-map-iframe');
+                if (mapIframe) {
+                    const query = encodeURIComponent(locVal || 'Pakistan');
+                    mapIframe.src = `https://maps.google.com/maps?q=${query}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                }
+            }, 300);
+        });
+
+        document.getElementById('open-add-space-btn').addEventListener('click', () => {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = 'community.html';
+                showToast('Please sign in to list a workspace.', 'error');
                 return;
             }
-            const dateInput = document.getElementById(`booking-date-${spaceId}`);
-            const bookingDate = dateInput?.value;
-            if (!bookingDate) {
-                showToast('Choose a booking date first.', 'error');
-                return;
-            }
-            const response = await fetch('/api/bookings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ spaceId, bookingDate }),
-            });
-            const data = await response.json().catch(() => ({}));
-            showToast(data.message || (response.ok ? 'Booking request sent.' : 'Booking failed.'), response.ok ? 'success' : 'error');
+            modal.classList.add('open');
+        });
+        document.getElementById('close-modal-btn').addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+        // Multi Image Slot Upload Handler
+        function triggerSlotUpload(slotIdx) {
+            document.getElementById(`file-slot-${slotIdx}`).click();
         }
 
-        document.getElementById('main-search-btn').addEventListener('click', () => { currentFilters.location = document.getElementById('location-input').value; fetchResults(); });
-        document.getElementById('apply-price-btn').addEventListener('click', () => { currentFilters.minPrice = document.getElementById('min-price').value; currentFilters.maxPrice = document.getElementById('max-price').value; fetchResults(); });
+        async function handleSlotImage(slotIdx, inputEl) {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const token = localStorage.getItem('token');
+            const slotDiv = document.getElementById(`slot-${slotIdx}`);
+            slotDiv.style.opacity = '0.5';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                const uploadedUrl = data.url || data.avatar_url;
+                if (data.success && uploadedUrl) {
+                    uploadedImages[slotIdx] = uploadedUrl;
+                    slotDiv.style.backgroundImage = `url(${uploadedUrl})`;
+                    slotDiv.innerHTML = '';
+                    showToast(`Photo ${slotIdx + 1} uploaded!`, 'success');
+                } else {
+                    showToast(data.message || 'Image upload failed', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to upload photo', 'error');
+            } finally {
+                slotDiv.style.opacity = '1';
+            }
+        }
+
+        // Form Submission
+        document.getElementById('add-space-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            
+            const validImages = uploadedImages.filter(Boolean);
+            const payload = {
+                name: document.getElementById('new-space-name').value,
+                type: document.getElementById('new-space-type').value,
+                location: document.getElementById('new-space-location').value,
+                price_per_day: document.getElementById('new-space-price').value,
+                capacity: document.getElementById('new-space-capacity').value,
+                contact_email: document.getElementById('new-space-email').value,
+                contact_phone: document.getElementById('new-space-phone').value,
+                website_url: document.getElementById('new-space-website').value,
+                description: document.getElementById('new-space-desc').value,
+                images: validImages,
+                image_url: validImages[0] || ''
+            };
+
+            try {
+                const res = await fetch('/api/spaces', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Workspace published successfully!', 'success');
+                    modal.classList.remove('open');
+                    document.getElementById('add-space-form').reset();
+                    uploadedImages = ['', '', ''];
+                    [0, 1, 2].forEach(i => {
+                        const slot = document.getElementById(`slot-${i}`);
+                        slot.style.backgroundImage = 'none';
+                        slot.innerHTML = `<i data-lucide="image-plus" size="20" color="var(--gray)"></i><span>Photo ${i+1}</span>`;
+                    });
+                    lucide.createIcons();
+                    fetchResults();
+                } else {
+                    showToast(data.message || 'Failed to publish workspace', 'error');
+                }
+            } catch (err) {
+                showToast('Error submitting form', 'error');
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('main-search-btn').addEventListener('click', () => { 
+            currentFilters.location = document.getElementById('location-input').value; 
+            fetchResults(); 
+        });
+        
+        document.getElementById('apply-price-btn').addEventListener('click', () => { 
+            currentFilters.minPrice = document.getElementById('min-price').value; 
+            currentFilters.maxPrice = document.getElementById('max-price').value; 
+            fetchResults(); 
+        });
+
+        document.getElementById('sort-select').addEventListener('change', (e) => {
+            currentFilters.sort = e.target.value;
+            fetchResults();
+        });
+
         document.querySelectorAll('.type-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -194,18 +582,8 @@
                 fetchResults();
             });
         });
+
         document.addEventListener('DOMContentLoaded', fetchResults);
     </script>
-
-    <!-- Footer -->
-        <footer class="footer" style="padding: 2rem 0; background-color: var(--color-surface); border-top: 1px solid var(--color-border); text-align: center; color: var(--color-muted); font-size: 0.85rem; font-weight: 600;">
-        <div class="container">
-            <p>&copy; 2026 CoWorkConnect. All rights reserved.</p>
-        </div>
-    </footer>
 </body>
 </html>
-
-
-
-

@@ -23,5 +23,41 @@ def run():
         except Exception as e:
             print("Error adding expertise:", e)
 
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN images TEXT;")
+            print("Added spaces.images column")
+        except Exception as e:
+            print("Error adding spaces.images:", e)
+
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN rating REAL DEFAULT 4.9;")
+            print("Added spaces.rating column")
+        except Exception as e:
+            print("Error adding spaces.rating:", e)
+
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN user_id INT;")
+            print("Added spaces.user_id column")
+        except Exception as e:
+            print("Error adding spaces.user_id:", e)
+
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN contact_email TEXT;")
+            print("Added spaces.contact_email column")
+        except Exception as e:
+            print("Error adding spaces.contact_email:", e)
+
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN contact_phone TEXT;")
+            print("Added spaces.contact_phone column")
+        except Exception as e:
+            print("Error adding spaces.contact_phone:", e)
+
+        try:
+            cursor.execute("ALTER TABLE spaces ADD COLUMN website_url TEXT;")
+            print("Added spaces.website_url column")
+        except Exception as e:
+            print("Error adding spaces.website_url:", e)
+
 if __name__ == '__main__':
     run()

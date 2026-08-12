@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from django.conf import settings
@@ -122,6 +123,7 @@ def spaces(request):
         space_type = request.GET.get("type")
         min_price = request.GET.get("minPrice")
         max_price = request.GET.get("maxPrice")
+        sort = request.GET.get("sort")
 
         if location:
             sql += " AND location LIKE %s"
@@ -136,19 +138,37 @@ def spaces(request):
             sql += " AND price_per_day <= %s"
             params.append(max_price)
 
+        if sort == "price_asc":
+            sql += " ORDER BY price_per_day ASC"
+        elif sort == "price_desc":
+            sql += " ORDER BY price_per_day DESC"
+        elif sort == "rating":
+            sql += " ORDER BY rating DESC, id DESC"
+        else:
+            sql += " ORDER BY rating DESC, id DESC"
+
         rows = fetch_all(sql, params)
+        for row in rows:
+            raw_imgs = row.get("images")
+            imgs_list = []
+            if raw_imgs:
+                try:
+                    imgs_list = json.loads(raw_imgs) if raw_imgs.startswith("[") else [s.strip() for s in raw_imgs.split(",") if s.strip()]
+                except Exception:
+                    imgs_list = [raw_imgs]
+            if not imgs_list and row.get("image_url"):
+                imgs_list = [row["image_url"]]
+            row["images_list"] = imgs_list[:3]
+
         return api_response({"success": True, "count": len(rows), "data": rows})
 
     if request.method == "POST":
         user, error = auth_user(request)
         if error:
             return error
-        admin_error = require_admin(user)
-        if admin_error:
-            return admin_error
 
         data = read_data(request)
-        missing = require_fields(data, ["name", "type", "price_per_day", "capacity"])
+        missing = require_fields(data, ["name", "type", "price_per_day", "capacity", "contact_email", "contact_phone"])
         if missing:
             return missing
         if data.get("type") not in VALID_SPACE_TYPES:
@@ -159,10 +179,21 @@ def spaces(request):
         capacity, error = parse_positive_number(data.get("capacity"), "Capacity")
         if error:
             return error
+
+        images_input = data.get("images") or []
+        if isinstance(images_input, list):
+            images_str = json.dumps(images_input[:3])
+            primary_image = images_input[0] if images_input else data.get("image_url")
+        else:
+            images_str = str(images_input)
+            primary_image = data.get("image_url")
+
+        rating_val = 5.0  # Automatic default rating for new listings
+
         _, space_id = execute(
             """
-            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url, images, rating, user_id, contact_email, contact_phone, website_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             [
                 data.get("name"),
@@ -171,23 +202,41 @@ def spaces(request):
                 price,
                 int(capacity),
                 data.get("description"),
-                data.get("image_url"),
+                primary_image,
+                images_str,
+                rating_val,
+                user["id"],
+                (data.get("contact_email") or "").strip().lower(),
+                (data.get("contact_phone") or "").strip(),
+                (data.get("website_url") or "").strip() or None
             ],
         )
         return api_response(
             {
                 "success": True,
                 "message": "Space created successfully",
-                "data": {
-                    "id": space_id,
-                    "name": data.get("name"),
-                    "type": data.get("type"),
-                    "price_per_day": data.get("price_per_day"),
-                    "capacity": data.get("capacity"),
-                },
+                "data": {"id": space_id},
             },
             201,
         )
+
+    return method_not_allowed()
+
+
+def upload_file(request):
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    if request.method == "POST":
+        file_obj = request.FILES.get("file") or request.FILES.get("avatar") or request.FILES.get("image")
+        if not file_obj:
+            return api_response({"success": False, "message": "No file uploaded"}, 400)
+        try:
+            url = save_upload(file_obj, "uploads")
+            return api_response({"success": True, "url": url, "avatar_url": url, "message": "File uploaded successfully"})
+        except Exception as e:
+            return api_response({"success": False, "message": str(e)}, 400)
 
     return method_not_allowed()
 
@@ -197,14 +246,33 @@ def space_detail(request, space_id):
         space = fetch_one("SELECT * FROM spaces WHERE id = %s", [space_id])
         if not space:
             return api_response({"success": False, "message": "Space not found"}, 404)
+        
+        raw_imgs = space.get("images")
+        imgs_list = []
+        if raw_imgs:
+            try:
+                imgs_list = json.loads(raw_imgs) if raw_imgs.startswith("[") else [s.strip() for s in raw_imgs.split(",") if s.strip()]
+            except Exception:
+                imgs_list = [raw_imgs]
+        if not imgs_list and space.get("image_url"):
+            imgs_list = [space["image_url"]]
+        space["images_list"] = imgs_list
+
         return api_response({"success": True, "data": space})
 
     user, error = auth_user(request)
     if error:
         return error
-    admin_error = require_admin(user)
-    if admin_error:
-        return admin_error
+
+    space = fetch_one("SELECT * FROM spaces WHERE id = %s", [space_id])
+    if not space:
+        return api_response({"success": False, "message": "Space not found"}, 404)
+
+    is_creator = space.get("user_id") is not None and int(space.get("user_id")) == int(user["id"])
+    is_admin = user.get("role") == "admin"
+
+    if not is_creator and not is_admin:
+        return api_response({"success": False, "message": "You are not authorized to modify or delete this workspace"}, 403)
 
     if request.method == "PUT":
         data = read_data(request)
@@ -215,15 +283,11 @@ def space_detail(request, space_id):
         if "type" in data and data.get("type") not in VALID_SPACE_TYPES:
             return api_response({"success": False, "message": "Invalid workspace type"}, 400)
         sql = "UPDATE spaces SET " + ", ".join(f"{field} = %s" for field in updates) + " WHERE id = %s"
-        rowcount, _ = execute(sql, [data[field] for field in updates] + [space_id])
-        if rowcount == 0:
-            return api_response({"success": False, "message": "Space not found"}, 404)
+        execute(sql, [data[field] for field in updates] + [space_id])
         return api_response({"success": True, "message": "Space updated successfully"})
 
     if request.method == "DELETE":
-        rowcount, _ = execute("DELETE FROM spaces WHERE id = %s", [space_id])
-        if rowcount == 0:
-            return api_response({"success": False, "message": "Space not found"}, 404)
+        execute("DELETE FROM spaces WHERE id = %s", [space_id])
         return api_response({"success": True, "message": "Space deleted successfully"})
 
     return method_not_allowed()
@@ -372,6 +436,24 @@ def profile(request):
     return method_not_allowed()
 
 
+def profile_avatar(request):
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    if request.method == "POST":
+        if "avatar" not in request.FILES:
+            return api_response({"success": False, "message": "No avatar file provided"}, 400)
+        try:
+            avatar_url = save_upload(request.FILES["avatar"], "avatars")
+            execute("UPDATE users SET avatar_url = %s WHERE id = %s", [avatar_url, user["id"]])
+            return api_response({"success": True, "avatar_url": avatar_url, "message": "Avatar uploaded successfully"})
+        except Exception as e:
+            return api_response({"success": False, "message": str(e)}, 500)
+
+    return method_not_allowed()
+
+
 def update_password(request):
     if request.method != "PUT":
         return method_not_allowed()
@@ -406,11 +488,11 @@ def posts(request):
         tag = request.GET.get("tag")
         params = []
         sql = """
-            SELECT p.*, u.name as user_name,
+            SELECT p.*, COALESCE(u.name, 'Community Member') as user_name,
               (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count,
               (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count
             FROM posts p
-            JOIN users u ON p.user_id = u.id
+            LEFT JOIN users u ON p.user_id = u.id
         """
         if tag:
             sql += " WHERE p.tags LIKE %s"
@@ -418,6 +500,22 @@ def posts(request):
         sql += " ORDER BY p.created_at DESC LIMIT 50"
 
         rows = fetch_all(sql, params)
+        if not rows and not tag:
+            # Seed initial vibrant posts if database has no posts yet
+            admin_user = fetch_one("SELECT id FROM users LIMIT 1")
+            user_id_to_use = admin_user["id"] if admin_user else 1
+            seed_posts = [
+                ("Welcome to CoWorkConnect Network! Share your projects, workspace reviews, and collaboration opportunities with local professionals across Pakistan.", "#community #networking"),
+                ("Looking for recommended coworking spots in Islamabad with high-speed internet and quiet meeting rooms for client calls. Any suggestions?", "#islamabad #remote"),
+                ("Hosted our team design sprint at Hive Mind Hub today. Great ergonomic setups and coffee!", "#startup #coworking")
+            ]
+            for text, t_tags in seed_posts:
+                try:
+                    execute("INSERT INTO posts (user_id, content, tags) VALUES (%s, %s, %s)", [user_id_to_use, text, t_tags])
+                except Exception:
+                    pass
+            rows = fetch_all(sql, params)
+
         for post in rows:
             post["liked_by_me"] = False
             if current_user:
@@ -426,10 +524,10 @@ def posts(request):
                 )
             post["comments"] = fetch_all(
                 """
-                SELECT c.*, u.name as user_name,
+                SELECT c.*, COALESCE(u.name, 'Community Member') as user_name,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count
                 FROM comments c
-                JOIN users u ON c.user_id = u.id
+                LEFT JOIN users u ON c.user_id = u.id
                 WHERE c.post_id = %s ORDER BY c.created_at ASC
                 """,
                 [post["id"]],
@@ -447,7 +545,8 @@ def posts(request):
         if error:
             return error
         data = read_data(request)
-        content = (data.get("content") or "").strip()
+        content = (data.get("content") or request.POST.get("content") or "").strip()
+        tags_val = data.get("tags") or request.POST.get("tags") or None
         if not content:
             return api_response({"success": False, "message": "Post content is required"}, 400)
         try:
@@ -456,13 +555,13 @@ def posts(request):
             return api_response({"success": False, "message": str(exc)}, 400)
         _, post_id = execute(
             "INSERT INTO posts (user_id, content, tags, image_url) VALUES (%s, %s, %s, %s)",
-            [user["id"], content, data.get("tags") or None, image_url],
+            [user["id"], content, tags_val, image_url],
         )
         return api_response(
             {
                 "success": True,
                 "message": "Post shared",
-                "data": {"id": post_id, "content": content, "tags": data.get("tags"), "image_url": image_url},
+                "data": {"id": post_id, "content": content, "tags": tags_val, "image_url": image_url},
             },
             201,
         )

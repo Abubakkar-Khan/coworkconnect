@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace Details | CoWorkConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
+    <style>
+        .sp-header { padding-top: 130px; padding-bottom: 25px; background: white; border-bottom: 1px solid var(--border); }
+        .gallery-grid { display: grid; gap: 12px; margin-top: 1.5rem; height: 420px; border-radius: 20px; overflow: hidden; }
+        .gallery-grid.multi { grid-template-columns: 2fr 1fr; }
+        .gallery-grid.single { grid-template-columns: 1fr; }
+        .gallery-hero { background-size: cover; background-position: center; height: 100%; position: relative; cursor: pointer; transition: transform 0.3s ease; border-radius: 16px; }
+        .gallery-side { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; height: 100%; }
+        .gallery-sub { background-size: cover; background-position: center; height: 100%; cursor: pointer; position: relative; }
+        
+        .amenities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+        .amenity-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 14px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.88rem; color: #334155; }
+        .amenity-card i { color: var(--primary); }
+
+        .sticky-card { position: sticky; top: 110px; background: white; border-radius: 24px; border: 1px solid var(--border); padding: 1.75rem; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); }
+        .badge-verified { background: #065f46; color: white; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-new { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 0.3rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+        
+        .option-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .option-card:hover { border-color: var(--primary); background: #f8fafc; }
+
+        /* Full Screen Lightbox Slider */
+        .lightbox-modal { position: fixed; inset: 0; background: rgba(11, 15, 25, 0.94); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: space-between; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.25s ease; padding: 1.5rem; }
+        .lightbox-modal.open { opacity: 1; pointer-events: auto; }
+        .lightbox-header { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .lightbox-counter { font-size: 0.9rem; font-weight: 700; background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 50px; }
+        .lightbox-close-btn { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .lightbox-close-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .lightbox-stage { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; width: 100%; max-width: 1100px; margin: 1rem 0; }
+        .lightbox-img { max-height: 72vh; max-width: 100%; border-radius: 16px; object-fit: contain; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transition: opacity 0.2s ease; }
+        
+        .lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.2); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10; }
+        .lightbox-nav-btn:hover { background: var(--primary); border-color: var(--primary); }
+        .lightbox-nav-btn.prev { left: 1rem; }
+        .lightbox-nav-btn.next { right: 1rem; }
+
+        .lightbox-thumbs { display: flex; gap: 10px; padding: 0.5rem; background: rgba(255,255,255,0.1); border-radius: 14px; max-width: 100%; overflow-x: auto; }
+        .lightbox-thumb { width: 54px; height: 42px; border-radius: 8px; background-size: cover; background-position: center; cursor: pointer; opacity: 0.5; border: 2px solid transparent; transition: 0.2s; }
+        .lightbox-thumb.active { opacity: 1; border-color: var(--primary); }
+
+        /* Contact Options Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.25s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-card { background: white; border-radius: 24px; width: 100%; max-width: 480px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.95); transition: 0.25s ease; }
+        .modal-overlay.open .modal-card { transform: scale(1); }
+
+        .contact-action-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.95rem 1.2rem; border-radius: 14px; font-weight: 800; font-size: 0.95rem; text-decoration: none; border: 1px solid transparent; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .contact-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 15px -3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body style="background-color: #f8fafc;">
+    <!-- Shared Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i data-lucide="layout"></i>
+                <span>CoWorkConnect</span>
+            </a>
+            <div class="nav-links">
+                <a href="spaces.html" class="nav-link active">Explore Spaces</a>
+                <a href="community.html" class="nav-link">Networking</a>
+                <a href="groups.html" class="nav-link">Groups</a>
+                <a href="events.html" class="nav-link">Events</a>
+                
+                <div id="auth-links" class="auth-links hidden"></div>
+                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Space Header -->
+    <header class="sp-header">
+        <div class="container">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--gray); font-weight: 600; margin-bottom: 1rem;">
+                <a href="spaces.html" style="color: var(--gray); text-decoration: none;">Workspaces</a>
+                <i data-lucide="chevron-right" size="14"></i>
+                <span id="breadcrumb-title" style="color: var(--dark); font-weight: 700;">Loading...</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                        <h1 id="sp-name" style="font-size: 2.2rem; font-weight: 800; color: var(--dark);">Workspace Name</h1>
+                        <span class="badge-verified">Verified</span>
+                        <span class="badge-new"><i data-lucide="sparkles" size="13"></i> Top Ranked</span>
+                    </div>
+                    <p style="display: flex; align-items: center; gap: 6px; color: var(--gray); font-weight: 600; font-size: 0.95rem;">
+                        <i data-lucide="map-pin" size="16" color="var(--primary)"></i> <span id="sp-location">Location</span>
+                        <span style="color: #cbd5e1;">•</span>
+                        <i data-lucide="users" size="16"></i> Capacity: <span id="sp-capacity">--</span> seats
+                        <span style="color: #cbd5e1;">•</span>
+                        <span style="color: #d97706; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="star" fill="#f59e0b" size="15"></i> <span id="sp-rating">5.0</span></span>
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <!-- Creator / Admin Delete Button -->
+                    <button id="delete-space-btn" class="btn" style="display: none; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 12px; font-weight: 800; align-items: center; gap: 6px; padding: 0.7rem 1.2rem;">
+                        <i data-lucide="trash-2" size="16"></i> Delete Workspace
+                    </button>
+                    
+                    <button class="btn btn-outline" onclick="copyShareLink()" style="border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        <i data-lucide="share-2" size="16"></i> Share
+                    </button>
+                    <button class="btn btn-primary" onclick="openContactModal()" style="border-radius: 12px; font-weight: 800; padding: 0.7rem 1.5rem; display: inline-flex; align-items: center; gap: 6px;">
+                        <i data-lucide="phone-call" size="16"></i> Contact Space
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Gallery Grid Container -->
+            <div id="gallery-container" class="gallery-grid single">
+                <!-- Dynamically populated by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="container" style="display: grid; grid-template-columns: 1fr 380px; gap: 2.5rem; padding-top: 2.5rem; padding-bottom: 5rem;">
+        <!-- Left Column: Details -->
+        <div>
+            <!-- Overview -->
+            <section style="background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 2rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 1rem;">About This Workspace</h3>
+                <p id="sp-description" style="color: #475569; line-height: 1.7; font-size: 1rem;">
+                    Loading workspace description...
+                </p>
+            </section>
+
+            <!-- Amenities -->
+            <section style="background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 2rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">Included Amenities</h3>
+                <p style="color: var(--gray); font-size: 0.9rem; font-weight: 600;">Everything you need for productive daily work.</p>
+                
+                <div class="amenities-grid">
+                    <div class="amenity-card"><i data-lucide="wifi" size="18"></i> High-Speed WiFi</div>
+                    <div class="amenity-card"><i data-lucide="clock" size="18"></i> 24/7 Member Access</div>
+                    <div class="amenity-card"><i data-lucide="coffee" size="18"></i> Premium Coffee & Tea</div>
+                    <div class="amenity-card"><i data-lucide="users" size="18"></i> Meeting Rooms</div>
+                    <div class="amenity-card"><i data-lucide="printer" size="18"></i> Color Printing & Scan</div>
+                    <div class="amenity-card"><i data-lucide="snowflake" size="18"></i> Climate Control / AC</div>
+                    <div class="amenity-card"><i data-lucide="armchair" size="18"></i> Ergonomic Seating</div>
+                    <div class="amenity-card"><i data-lucide="shield-check" size="18"></i> Secure On-site Parking</div>
+                </div>
+            </section>
+
+            <!-- Workspace Options -->
+            <section style="background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 2rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 1.2rem;">Workspace Options & Pricing</h3>
+                
+                <div class="option-card">
+                    <div>
+                        <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--dark);">Hot Desk / Open Seating</h4>
+                        <p style="font-size: 0.85rem; color: var(--gray); font-weight: 600;">Flexible desk space in collaborative area</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.25rem; font-weight: 800; color: var(--dark);" id="opt-price-desk">Rs --</span>
+                        <span style="font-size: 0.75rem; color: var(--gray); display: block; font-weight: 700;">per day</span>
+                    </div>
+                </div>
+
+                <div class="option-card">
+                    <div>
+                        <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--dark);">Private Office Suite</h4>
+                        <p style="font-size: 0.85rem; color: var(--gray); font-weight: 600;">Lockable private office for teams</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 1.25rem; font-weight: 800; color: var(--dark);" id="opt-price-office">Rs --</span>
+                        <span style="font-size: 0.75rem; color: var(--gray); display: block; font-weight: 700;">per day</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Location Map -->
+            <section style="background: white; padding: 2rem; border-radius: 24px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark);">Location & Map</h3>
+                        <p id="sp-map-address" style="color: var(--gray); font-weight: 600; font-size: 0.9rem;">Workspace location address</p>
+                    </div>
+                    <a id="sp-map-link" href="#" target="_blank" class="btn btn-outline" style="border-radius: 10px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        Open Map <i data-lucide="external-link" size="14"></i>
+                    </a>
+                </div>
+                
+                <div style="height: 320px; border-radius: 16px; overflow: hidden; border: 1px solid #cbd5e1; margin-top: 1rem;">
+                    <iframe id="sp-map-iframe" width="100%" height="100%" frameborder="0" style="border:0;" allowfullscreen="" loading="lazy" src=""></iframe>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column: Sticky Contact Card -->
+        <div>
+            <div class="sticky-card" id="quote-card-section">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px dashed #e2e8f0;">
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--gray); font-weight: 700; text-transform: uppercase;">Starting From</span>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--dark);" id="sp-price-main">Rs --</div>
+                    </div>
+                    <span class="badge-new"><i data-lucide="check-circle" size="13"></i> Best Price</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.2rem; margin-top: 0.5rem;">
+                    <div style="background: #f8fafc; padding: 1.2rem; border-radius: 16px; border: 1px solid #e2e8f0;">
+                        <p style="font-size: 0.85rem; color: #475569; font-weight: 600; line-height: 1.5; margin: 0;">
+                            Connect directly with the host to get pricing quotes, tour availability, and member discounts.
+                        </p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="openContactModal()" style="width: 100%; padding: 1rem; border-radius: 14px; font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i data-lucide="phone-call" size="18"></i> Contact Space
+                    </button>
+                </div>
+
+                <p style="text-align: center; font-size: 0.75rem; color: var(--gray); margin-top: 1.25rem; font-weight: 600;">
+                    <i data-lucide="shield-check" size="14" style="vertical-align: middle; color: var(--primary);"></i> Direct host connection with zero platform fees
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Contact Popup Modal -->
+    <div id="contact-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin: 0;">Contact Workspace</h3>
+                <button onclick="closeContactModal()" style="background: none; border: none; cursor: pointer; color: var(--gray);"><i data-lucide="x" size="22"></i></button>
+            </div>
+            
+            <p style="font-size: 0.9rem; color: var(--gray); font-weight: 600; margin-bottom: 1.5rem;">
+                Connect directly with <strong id="modal-space-name" style="color: var(--dark);">Workspace</strong>:
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- WhatsApp / Phone Call Button -->
+                <a id="contact-btn-whatsapp" href="#" target="_blank" class="contact-action-btn" style="background: #25d366; color: white;">
+                    <i data-lucide="message-square" size="20"></i>
+                    <span>Chat on WhatsApp / Call</span>
+                </a>
+
+                <!-- Email Button -->
+                <a id="contact-btn-email" href="#" target="_blank" class="contact-action-btn" style="background: #3b82f6; color: white;">
+                    <i data-lucide="mail" size="20"></i>
+                    <span>Send Email Inquiry</span>
+                </a>
+
+                <!-- Website Link (Optional) -->
+                <a id="contact-btn-website" href="#" target="_blank" class="contact-action-btn" style="background: #f8fafc; color: var(--dark); border-color: #cbd5e1;">
+                    <i data-lucide="globe" size="20" color="var(--primary)"></i>
+                    <span>Visit Official Website</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Photo Slider Modal -->
+    <div id="lightbox-modal" class="lightbox-modal">
+        <div class="lightbox-header">
+            <span class="lightbox-counter" id="lightbox-counter">Photo 1 of 1</span>
+            <button class="lightbox-close-btn" onclick="closeLightbox()"><i data-lucide="x" size="22"></i></button>
+        </div>
+
+        <div class="lightbox-stage">
+            <button class="lightbox-nav-btn prev" id="lightbox-prev-btn" onclick="prevLightboxSlide()"><i data-lucide="chevron-left" size="28"></i></button>
+            <img id="lightbox-main-img" class="lightbox-img" src="" alt="Workspace photo preview">
+            <button class="lightbox-nav-btn next" id="lightbox-next-btn" onclick="nextLightboxSlide()"><i data-lucide="chevron-right" size="28"></i></button>
+        </div>
+
+        <div class="lightbox-thumbs" id="lightbox-thumbs-strip">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+
+    <script src="app.js?v=route-images-2"></script>
+    <script>
+        lucide.createIcons();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const spaceId = urlParams.get('id');
+
+        let currentSpace = null;
+        let currentSpaceImages = [];
+        let currentSlideIndex = 0;
+
+        async function loadSpaceDetails() {
+            if (!spaceId) {
+                window.location.href = 'spaces.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/spaces/${spaceId}`);
+                const data = await res.json();
+                if (!res.ok || !data.data) {
+                    showToast('Workspace not found', 'error');
+                    setTimeout(() => window.location.href = 'spaces.html', 1500);
+                    return;
+                }
+
+                const space = data.data;
+                currentSpace = space;
+                document.title = `${space.name} | CoWorkConnect`;
+
+                // Check Creator or Admin authorization for Delete button
+                const currentUser = getCurrentUser();
+                const isCreator = space.user_id && currentUser && Number(currentUser.id) === Number(space.user_id);
+                const isAdmin = currentUser && currentUser.role === 'admin';
+
+                const deleteBtn = document.getElementById('delete-space-btn');
+                if (isCreator || isAdmin) {
+                    deleteBtn.style.display = 'inline-flex';
+                    deleteBtn.onclick = () => deleteWorkspace(space.id, space.name);
+                }
+
+                // Populate Fields
+                document.getElementById('breadcrumb-title').textContent = space.name;
+                document.getElementById('sp-name').textContent = space.name;
+                document.getElementById('modal-space-name').textContent = space.name;
+                document.getElementById('sp-location').textContent = space.location || 'General Area';
+                document.getElementById('sp-map-address').textContent = space.location || 'General Area';
+                document.getElementById('sp-capacity').textContent = space.capacity || 10;
+                document.getElementById('sp-rating').textContent = space.rating || '5.0';
+                document.getElementById('sp-description').textContent = space.description || 'Modern flexible workspace with high-speed internet, ergonomic desks, and community access.';
+                document.getElementById('sp-price-main').textContent = `Rs ${space.price_per_day}`;
+                document.getElementById('opt-price-desk').textContent = `Rs ${space.price_per_day}`;
+                document.getElementById('opt-price-office').textContent = `Rs ${Math.round(space.price_per_day * 2.2)}`;
+
+                // Handle Contact Links Setup
+                setupContactLinks(space);
+
+                // Handle Gallery Images Adaptively (No Duplicates!)
+                const imgs = space.images_list && space.images_list.length > 0 ? space.images_list : [safeImageUrl(space.image_url, fallbackImage('workspace'))];
+                currentSpaceImages = imgs;
+
+                const galleryContainer = document.getElementById('gallery-container');
+
+                if (imgs.length === 1) {
+                    galleryContainer.className = 'gallery-grid single';
+                    galleryContainer.innerHTML = `
+                        <div class="gallery-hero image-surface" style="background-image: url('${imgs[0]}');" onclick="openLightbox(0)"></div>
+                    `;
+                } else {
+                    galleryContainer.className = 'gallery-grid multi';
+                    galleryContainer.innerHTML = `
+                        <div class="gallery-hero image-surface" style="background-image: url('${imgs[0]}');" onclick="openLightbox(0)"></div>
+                        <div class="gallery-side">
+                            <div class="gallery-sub image-surface" style="background-image: url('${imgs[1]}'); border-top-right-radius: 20px;" onclick="openLightbox(1)"></div>
+                            <div class="gallery-sub image-surface" style="background-image: url('${imgs[2] || imgs[1]}'); border-bottom-right-radius: 20px;" onclick="openLightbox(${imgs[2] ? 2 : 1})"></div>
+                        </div>
+                    `;
+                }
+
+                // Update Map Embed
+                const locQuery = encodeURIComponent(space.location || 'Pakistan');
+                document.getElementById('sp-map-iframe').src = `https://maps.google.com/maps?q=${locQuery}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                document.getElementById('sp-map-link').href = `https://www.google.com/maps/search/?api=1&query=${locQuery}`;
+
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to load workspace details', 'error');
+            }
+        }
+
+        function setupContactLinks(space) {
+            const rawPhone = space.contact_phone || '+923001234567';
+            const cleanPhone = rawPhone.replace(/[^0-9+]/g, '');
+            const email = space.contact_email || 'info@coworkconnect.com';
+            const website = space.website_url;
+
+            // WhatsApp / Call Button
+            const waBtn = document.getElementById('contact-btn-whatsapp');
+            if (cleanPhone) {
+                waBtn.href = `https://wa.me/${cleanPhone.replace('+', '')}`;
+            } else {
+                waBtn.style.display = 'none';
+            }
+
+            // Email Button
+            const emailBtn = document.getElementById('contact-btn-email');
+            if (email) {
+                emailBtn.href = `mailto:${email}?subject=${encodeURIComponent('Inquiry regarding ' + space.name)}`;
+            } else {
+                emailBtn.style.display = 'none';
+            }
+
+            // Website Button
+            const webBtn = document.getElementById('contact-btn-website');
+            if (website && website.trim() !== '') {
+                webBtn.href = website.startsWith('http') ? website : `https://${website}`;
+                webBtn.style.display = 'flex';
+            } else {
+                webBtn.style.display = 'none';
+            }
+        }
+
+        function openContactModal() {
+            document.getElementById('contact-modal').classList.add('open');
+        }
+
+        function closeContactModal() {
+            document.getElementById('contact-modal').classList.remove('open');
+        }
+
+        // Delete Workspace Handler
+        async function deleteWorkspace(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/spaces/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Workspace deleted successfully!', 'success');
+                    setTimeout(() => window.location.href = 'spaces.html', 1200);
+                } else {
+                    showToast(data.message || 'Failed to delete workspace.', 'error');
+                }
+            } catch (err) {
+                showToast('Error deleting workspace.', 'error');
+            }
+        }
+
+        // Lightbox Slider Functions
+        function openLightbox(index) {
+            if (!currentSpaceImages || currentSpaceImages.length === 0) return;
+            currentSlideIndex = index;
+            const lightbox = document.getElementById('lightbox-modal');
+            lightbox.classList.add('open');
+            renderLightboxSlide();
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox-modal').classList.remove('open');
+        }
+
+        function renderLightboxSlide() {
+            const mainImg = document.getElementById('lightbox-main-img');
+            const counter = document.getElementById('lightbox-counter');
+            const thumbsStrip = document.getElementById('lightbox-thumbs-strip');
+
+            mainImg.style.opacity = '0';
+            setTimeout(() => {
+                mainImg.src = currentSpaceImages[currentSlideIndex];
+                mainImg.style.opacity = '1';
+            }, 100);
+
+            counter.textContent = `Photo ${currentSlideIndex + 1} of ${currentSpaceImages.length}`;
+
+            document.getElementById('lightbox-prev-btn').style.display = currentSpaceImages.length > 1 ? 'flex' : 'none';
+            document.getElementById('lightbox-next-btn').style.display = currentSpaceImages.length > 1 ? 'flex' : 'none';
+
+            thumbsStrip.innerHTML = currentSpaceImages.map((url, i) => `
+                <div class="lightbox-thumb ${i === currentSlideIndex ? 'active' : ''}" style="background-image: url('${url}');" onclick="goToLightboxSlide(${i})"></div>
+            `).join('');
+        }
+
+        function nextLightboxSlide() {
+            currentSlideIndex = (currentSlideIndex + 1) % currentSpaceImages.length;
+            renderLightboxSlide();
+        }
+
+        function prevLightboxSlide() {
+            currentSlideIndex = (currentSlideIndex - 1 + currentSpaceImages.length) % currentSpaceImages.length;
+            renderLightboxSlide();
+        }
+
+        function goToLightboxSlide(index) {
+            currentSlideIndex = index;
+            renderLightboxSlide();
+        }
+
+        // Keyboard Shortcut Navigation for Lightbox
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox-modal');
+            if (lightbox.classList.contains('open')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowRight') nextLightboxSlide();
+                if (e.key === 'ArrowLeft') prevLightboxSlide();
+            }
+            const contactModal = document.getElementById('contact-modal');
+            if (contactModal.classList.contains('open') && e.key === 'Escape') {
+                closeContactModal();
+            }
+        });
+
+        function copyShareLink() {
+            navigator.clipboard.writeText(window.location.href);
+            showToast('Workspace link copied to clipboard!', 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSpaceDetails);
+    </script>
+</body>
+</html>

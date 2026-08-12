@@ -362,6 +362,8 @@ window.safeImageUrl = safeImageUrl;
 window.fallbackImage = fallbackImage;
 window.applyImageFallbacks = applyImageFallbacks;
 window.showToast = showToast;
+window.getStoredUser = getStoredUser;
+window.getCurrentUser = getStoredUser;
 
 enforceAuth();
 
