@@ -3,457 +3,732 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Groups & Chat | CoWorkConnect</title>
+    <title>Community Circles & Chat | CoWorkConnect</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
     <style>
-        body { background: #f8fafc; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; }
+        body { background: #f0f2f5; height: 100vh; margin: 0; overflow: hidden; font-family: 'Outfit', sans-serif; }
 
-        /* Main Workspace Shell */
-        .chat-layout {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            height: calc(100vh - 145px);
-            min-height: 560px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.06);
+        /* Full Page Layout */
+        .chat-app-shell {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+            width: 100vw;
+            background: #efeae2;
             overflow: hidden;
+            position: relative;
         }
 
-        /* Sidebar Directory */
+        /* Left Directory Panel */
         .chat-sidebar {
+            width: 360px;
+            min-width: 300px;
             background: #ffffff;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid #d1d7db;
             display: flex;
             flex-direction: column;
             height: 100%;
-            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .sidebar-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .sidebar-title-row {
+            padding: 0.85rem 1rem;
+            background: #f0f2f5;
+            border-bottom: 1px solid #d1d7db;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
         }
 
-        .search-box {
+        .my-profile-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.65rem 0.9rem;
-            transition: 0.2s ease;
+            gap: 0.65rem;
         }
-        .search-box:focus-within {
-            border-color: var(--primary);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+
+        .user-nav-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #ecfdf5;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 2px solid #bbf7d0;
+            overflow: hidden;
         }
-        .search-box input {
+
+        .search-container {
+            padding: 0.6rem 0.85rem;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .whatsapp-search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f0f2f5;
+            border-radius: 8px;
+            padding: 0.5rem 0.85rem;
+        }
+        .whatsapp-search-box input {
             border: none;
             outline: none;
             background: transparent;
             width: 100%;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 600;
-            color: var(--dark);
+            color: #0f172a;
         }
 
-        /* Group Cards List */
         .group-list {
             flex: 1;
             overflow-y: auto;
-            padding: 0.75rem;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
         }
 
-        .group-card {
+        .group-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.85rem;
             padding: 0.85rem 1rem;
-            border-radius: 16px;
-            border: 1px solid transparent;
+            border-bottom: 1px solid #f1f5f9;
             background: transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.15s ease;
             text-align: left;
             width: 100%;
+            border-left: 4px solid transparent;
         }
-        .group-card:hover {
-            background: #f8fafc;
-            border-color: #e2e8f0;
-        }
-        .group-card.active {
-            background: #f0fdf4;
-            border-color: #a7f3d0;
-        }
+        .group-item:hover { background: #f8fafc; }
+        .group-item.active { background: #f0fdf4; border-left-color: var(--primary); }
 
-        .group-card-avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
+        .group-item-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             object-fit: cover;
-            background: #cbd5e1;
-            flex-shrink: 0;
-        }
-
-        .group-card-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .group-card-title {
-            font-weight: 800;
-            font-size: 0.95rem;
-            color: var(--dark);
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .group-card-preview {
-            font-size: 0.8rem;
-            color: var(--gray);
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .group-badge-member {
             background: #e2e8f0;
-            color: #475569;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.2rem 0.5rem;
-            border-radius: 50px;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #0f766e;
         }
 
-        /* Right Chat Panel */
-        .chat-main {
+        .group-item-info { flex: 1; min-width: 0; }
+        .group-item-name { font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .group-item-sub { font-size: 0.8rem; color: #64748b; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .role-badge-pill {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 0.15rem 0.45rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+        .role-badge-pill.admin { background: #dcfce7; color: #166534; }
+        .role-badge-pill.co-admin { background: #e0f2fe; color: #075985; }
+        .role-badge-pill.member { background: #f1f5f9; color: #475569; }
+
+        /* Main Chat Viewport */
+        .chat-main-viewport {
+            flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            background: #ffffff;
+            background: #efeae2;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+            min-width: 0;
+        }
+
+        /* Top WhatsApp Group Bar */
+        .whatsapp-group-bar {
+            height: 54px;
+            background: #f0f2f5;
+            border-bottom: 1px solid #d1d7db;
+            padding: 0.4rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 10;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+        .whatsapp-group-bar:hover {
+            background: #e4e8ec;
+        }
+
+        .group-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .group-bar-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .group-bar-title-wrap h4 { margin: 0; font-size: 0.98rem; font-weight: 800; color: #0f172a; }
+        .group-bar-title-wrap p { margin: 0; font-size: 0.76rem; font-weight: 600; color: #64748b; }
+
+        .group-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Messages Feed */
+        .messages-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .chat-msg-row {
+            display: flex;
+            gap: 0.65rem;
+            max-width: 72%;
+        }
+        .chat-msg-row.sent {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .chat-msg-row.received {
+            align-self: flex-start;
+        }
+
+        .msg-author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            color: #0f766e;
+            flex-shrink: 0;
             overflow: hidden;
         }
 
-        .chat-header {
-            padding: 1rem 1.5rem;
+        .msg-bubble-box {
+            display: flex;
+            flex-direction: column;
+            min-width: 140px;
+        }
+
+        .msg-author-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 2px;
+        }
+        .sent .msg-author-header { justify-content: flex-end; }
+
+        .msg-author-name { font-size: 0.74rem; font-weight: 800; color: #0f766e; }
+        .sent .msg-author-name { color: #047857; }
+
+        .msg-bubble {
+            padding: 0.7rem 0.95rem;
+            font-size: 0.92rem;
+            line-height: 1.48;
+            font-weight: 600;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .sent .msg-bubble {
+            background: #d9fdd3;
+            color: #111b21;
+            border-radius: 12px 0 12px 12px;
+        }
+        .received .msg-bubble {
+            background: #ffffff;
+            color: #111b21;
+            border-radius: 0 12px 12px 12px;
+        }
+
+        .msg-time-stamp {
+            font-size: 0.68rem;
+            color: #667781;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+        .sent .msg-time-stamp { text-align: right; }
+
+        .msg-photo-attach {
+            max-width: 320px;
+            max-height: 320px;
+            border-radius: 10px;
+            margin-top: 4px;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Sticky Composer Bar - Compact & Themed */
+        .whatsapp-composer {
+            padding: 0.45rem 0.85rem;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.02);
+        }
+
+        .composer-input {
+            width: 100%;
+            height: 38px;
+            border: 1.5px solid #cbd5e1;
+            outline: none;
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 0.4rem 0.95rem;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+        .composer-input:focus {
+            border-color: var(--primary, #10b981);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .composer-attach-btn {
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #64748b;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .composer-attach-btn:hover {
+            border-color: var(--primary, #10b981);
+            color: var(--primary, #10b981);
+            background: #f0fdf4;
+        }
+
+        .composer-send-btn {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            height: 38px;
+            padding: 0.45rem 1.1rem;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .composer-send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(16, 185, 129, 0.35);
+        }
+        .composer-send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Right Slide-Out Group Info Drawer */
+        .group-info-drawer {
+            width: 360px;
+            background: #ffffff;
+            border-left: 1px solid #d1d7db;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
+        }
+        .group-info-drawer.hidden { display: none; }
+
+        .drawer-header {
+            padding: 1rem 1.25rem;
+            background: #f0f2f5;
+            border-bottom: 1px solid #d1d7db;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .drawer-avatar-wrap {
+            text-align: center;
+            position: relative;
+        }
+        .drawer-avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #f0f2f5;
+            background: var(--primary);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .member-item-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .member-item-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #ecfdf5;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .btn-icon-sm {
+            border: 1px solid #d1d7db;
+            background: white;
+            color: #475569;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s ease;
+        }
+        .btn-icon-sm:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+
+        /* Modals */
+        .modal-backdrop-custom {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 2400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-backdrop-custom.hidden { display: none; }
+
+        .modal-card-custom {
+            background: white;
+            width: min(520px, 95vw);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+        }
+
+        .modal-custom-head {
+            padding: 1.1rem 1.3rem;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
         }
+        .modal-custom-body { padding: 1.3rem; }
 
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            background: #f8fafc;
+        @media (max-width: 900px) {
+            .group-info-drawer { position: absolute; right: 0; top: 0; bottom: 0; z-index: 50; }
         }
-
-        /* Message Bubbles */
-        .msg-row {
-            display: flex;
-            gap: 10px;
-            max-width: 75%;
+        @media (max-width: 680px) {
+            .chat-sidebar { width: 100%; }
+            .chat-main-viewport { display: none; }
+            .chat-app-shell.in-chat .chat-sidebar { display: none; }
+            .chat-app-shell.in-chat .chat-main-viewport { display: flex; }
         }
-        .msg-row.sent {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-        .msg-row.received {
-            align-self: flex-start;
-        }
-
-        .msg-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .msg-bubble-wrap {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .msg-author {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--gray);
-            margin-bottom: 3px;
-        }
-        .sent .msg-author {
-            text-align: right;
-        }
-
-        .msg-bubble {
-            padding: 0.85rem 1.15rem;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            font-weight: 500;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        }
-        .sent .msg-bubble {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white;
-            border-radius: 18px 18px 4px 18px;
-        }
-        .received .msg-bubble {
-            background: white;
-            color: var(--dark);
-            border: 1px solid #e2e8f0;
-            border-radius: 18px 18px 18px 4px;
-        }
-
-        .msg-time {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-top: 4px;
-            font-weight: 600;
-        }
-        .sent .msg-time { text-align: right; }
-
-        .msg-img {
-            max-width: 280px;
-            border-radius: 14px;
-            margin-top: 6px;
-            border: 1px solid #cbd5e1;
-        }
-
-        /* Composer */
-        .chat-composer {
-            padding: 1rem 1.5rem;
-            background: white;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .composer-input {
-            flex: 1;
-            border: 1px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 0.8rem 1.1rem;
-            font-family: inherit;
-            font-size: 0.95rem;
-            font-weight: 500;
-            outline: none;
-            transition: 0.2s ease;
-        }
-        .composer-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-
-        /* Empty State */
-        .empty-chat-state {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 3rem;
-            background: #f8fafc;
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: 0.25s ease;
-        }
-        .modal-overlay.open { opacity: 1; pointer-events: auto; }
-        .modal-card {
-            background: white;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 480px;
-            padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            transform: scale(0.95);
-            transition: 0.25s ease;
-        }
-        .modal-overlay.open .modal-card { transform: scale(1); }
     </style>
 </head>
 <body>
-    <!-- Shared Navbar -->
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="index.html" class="logo">
+    <nav class="navbar" style="background: white; border-bottom: 1px solid #e2e8f0; height: 60px; padding: 0 1.5rem;">
+        <div class="container nav-container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
+            <a href="index.html" class="logo" style="color: var(--dark);">
                 <i data-lucide="layout"></i>
                 <span>CoWorkConnect</span>
             </a>
-            <div class="nav-links">
-                <a href="spaces.html" class="nav-link">Explore Spaces</a>
-                <a href="community.html" class="nav-link">Networking</a>
-                <a href="groups.html" class="nav-link active">Groups</a>
-                <a href="events.html" class="nav-link">Events</a>
-                
-                <div id="auth-links" class="auth-links hidden"></div>
-                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
-                    <!-- Populated dynamically by app.js -->
-                </div>
+            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
+                <a href="spaces.html" class="nav-link" style="color: var(--dark);">Explore Spaces</a>
+                <a href="community.html" class="nav-link" style="color: var(--dark);">Networking</a>
+                <a href="groups.html" class="nav-link active" style="color: var(--primary);">Groups</a>
+                <a href="events.html" class="nav-link" style="color: var(--dark);">Events</a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content Container -->
-    <main class="container" style="padding-top: 110px; padding-bottom: 2rem;">
-        <div class="chat-layout">
-            
-            <!-- Left Sidebar: Directory -->
-            <div class="chat-sidebar">
-                <div class="sidebar-header">
-                    <div class="sidebar-title-row">
-                        <div>
-                            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--dark); margin: 0;">Community Groups</h2>
-                            <p style="font-size: 0.8rem; color: var(--gray); font-weight: 600; margin-top: 2px;">Connect with local space members</p>
-                        </div>
-                        <button onclick="openGroupModal()" class="btn btn-primary" style="padding: 0.5rem 0.9rem; border-radius: 10px; font-size: 0.85rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                            <i data-lucide="plus" size="16"></i> Create
-                        </button>
-                    </div>
-
-                    <div class="search-box">
-                        <i data-lucide="search" size="16" color="var(--gray)"></i>
-                        <input type="text" id="group-search" placeholder="Search groups & topics..." oninput="filterGroups()">
+    <div class="chat-app-shell" id="chat-app-shell">
+        <!-- Left Sidebar Directory -->
+        <aside class="chat-sidebar">
+            <div class="sidebar-header">
+                <div class="my-profile-info">
+                    <div id="my-avatar" class="user-nav-avatar">U</div>
+                    <div>
+                        <strong id="my-name" style="font-size:0.95rem;color:#0f172a;display:block;">User Name</strong>
+                        <span style="font-size:0.75rem;color:#059669;font-weight:700;">● Online</span>
                     </div>
                 </div>
+                <button class="btn-icon-sm" type="button" onclick="openCreateGroupModal()" title="Create New Circle"><i data-lucide="plus" size="18"></i></button>
+            </div>
 
-                <!-- Scrollable Group List -->
-                <div class="group-list" id="group-list-container">
-                    <!-- Dynamically populated by JS -->
+            <div class="search-container">
+                <div class="whatsapp-search-box">
+                    <i data-lucide="search" size="16" style="color:#64748b;"></i>
+                    <input type="text" id="group-search-input" placeholder="Search circles or topics..." oninput="filterGroupsList()">
                 </div>
             </div>
 
-            <!-- Right Column: Active Chat Feed -->
-            <div class="chat-main">
-                
-                <!-- Placeholder Empty State -->
-                <div id="chat-empty-state" class="empty-chat-state">
-                    <div style="width: 70px; height: 70px; border-radius: 20px; background: #ecfdf5; color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                        <i data-lucide="messages-square" size="36"></i>
+            <div class="group-list" id="groups-directory-list">
+                <div style="text-align:center;padding:3rem 1rem;color:#64748b;font-weight:700;">
+                    <i data-lucide="loader-circle" class="spin" size="24"></i>
+                    <p style="margin-top:0.5rem;">Loading circles...</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Active Chat Viewport -->
+        <main class="chat-main-viewport">
+            <!-- Empty Chat Selected State -->
+            <div id="chat-no-group-selected" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;">
+                <i data-lucide="messages-square" size="56" style="color:#94a3b8;margin-bottom:1rem;"></i>
+                <h3 style="margin:0 0 0.4rem;color:#0f172a;font-size:1.3rem;font-weight:800;">CoWorkConnect Circles</h3>
+                <p style="margin:0;color:#64748b;font-weight:600;max-width:400px;">Select a circle from the sidebar to start chatting, attach photos, and collaborate with members.</p>
+                <button class="btn btn-primary" type="button" onclick="openCreateGroupModal()" style="margin-top:1.25rem;border-radius:10px;font-weight:800;">
+                    <i data-lucide="plus" size="17"></i> Create a New Circle
+                </button>
+            </div>
+
+            <!-- Active Chat State -->
+            <div id="chat-active-panel" style="display:none;flex-direction:column;height:100%;min-width:0;">
+                <!-- Top WhatsApp Mini Header Bar - Clean -->
+                <header class="whatsapp-group-bar" onclick="toggleGroupDrawer()" title="Click to view circle details & roster">
+                    <div class="group-bar-info">
+                        <div id="bar-group-avatar" class="group-bar-avatar">G</div>
+                        <div class="group-bar-title-wrap">
+                            <h4 id="bar-group-name">Circle Name</h4>
+                            <p id="bar-group-meta">0 members</p>
+                        </div>
                     </div>
-                    <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">Select a Community Group</h2>
-                    <p style="font-size: 0.95rem; color: var(--gray); max-width: 380px; line-height: 1.6; font-weight: 600; margin-bottom: 1.5rem;">
-                        Join member circles to share resources, coordinate workspace meetups, and network with tech professionals.
-                    </p>
-                    <button onclick="openGroupModal()" class="btn btn-primary" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-                        <i data-lucide="plus-circle" size="18"></i> Create New Group
+                    <div style="display:flex;align-items:center;color:#64748b;">
+                        <i data-lucide="chevron-right" size="18"></i>
+                    </div>
+                </header>
+
+                <!-- Messages Feed -->
+                <div class="messages-feed" id="messages-feed-container">
+                    <!-- Bubbles loaded dynamically -->
+                </div>
+
+                <!-- Sticky Composer -->
+                <form id="group-message-form" class="whatsapp-composer" ondragover="event.preventDefault()" ondrop="handleDropImage(event)">
+                    <input type="file" id="msg-image-file-input" hidden accept="image/*" onchange="handleImageSelection(event)">
+                    <button class="composer-attach-btn" type="button" onclick="document.getElementById('msg-image-file-input').click()" title="Attach Photo"><i data-lucide="image" size="20"></i></button>
+                    
+                    <div style="flex:1;position:relative;">
+                        <input type="text" id="group-message-input" class="composer-input" placeholder="Type a message or paste/drag an image..." autocomplete="off" onpaste="handlePasteImage(event)">
+                        <div id="image-attachment-tag" style="display:none;position:absolute;top:-48px;left:0;background:rgba(15, 23, 42, 0.92);color:white;padding:5px 14px;border-radius:20px;font-size:0.78rem;font-weight:700;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,0.2);backdrop-filter:blur(6px);border:1px solid rgba(16, 185, 129, 0.4);">
+                            <i data-lucide="image" size="14" style="color:#10b981;"></i><span id="attached-filename">Photo attached</span>
+                            <button type="button" onclick="clearImageSelection()" style="background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;display:flex;align-items:center;"><i data-lucide="x" size="13"></i></button>
+                        </div>
+                    </div>
+
+                    <button id="send-msg-btn" type="submit" class="composer-send-btn">
+                        <span>Send</span>
+                        <i data-lucide="send" size="16"></i>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- Right Slide-Out Group Info Sidebar -->
+        <aside class="group-info-drawer hidden" id="group-info-drawer">
+            <div class="drawer-header">
+                <strong style="color:#0f172a;font-size:1rem;font-weight:800;">Circle Details</strong>
+                <button class="btn-icon-sm" type="button" onclick="toggleGroupDrawer(false)"><i data-lucide="x" size="18"></i></button>
+            </div>
+            <div class="drawer-body">
+                <div class="drawer-avatar-wrap">
+                    <div id="drawer-group-avatar" class="drawer-avatar-img">G</div>
+                    <h3 id="drawer-group-name" style="margin:0.8rem 0 0.2rem;color:#0f172a;font-size:1.15rem;font-weight:800;">Group Name</h3>
+                    <span id="drawer-group-members-count" class="role-badge-pill admin" style="margin-bottom:0.5rem;">0 Members</span>
+                    
+                    <div id="admin-group-action-btns" style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.6rem;">
+                        <input type="file" id="group-avatar-upload-input" accept="image/*" style="display:none;" onchange="uploadGroupPictureFile(event)">
+                        <button class="btn btn-outline" type="button" style="font-size:0.78rem;padding:0.35rem 0.75rem;border-radius:8px;font-weight:700;" onclick="document.getElementById('group-avatar-upload-input').click()">
+                            <i data-lucide="camera" size="14"></i> Change Photo
+                        </button>
+                        <button class="btn btn-outline" type="button" style="font-size:0.78rem;padding:0.35rem 0.75rem;border-radius:8px;font-weight:700;" onclick="openEditGroupModal()">
+                            <i data-lucide="edit-3" size="14"></i> Edit Details
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc;padding:1rem;border-radius:12px;border:1px solid #e2e8f0;margin-top:0.8rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                        <strong style="font-size:0.82rem;color:#475569;text-transform:uppercase;">Description</strong>
+                    </div>
+                    <p id="drawer-group-desc" style="margin:0;font-size:0.88rem;color:#0f172a;font-weight:600;white-space:pre-wrap;">Group description will appear here...</p>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                        <strong style="font-size:0.85rem;color:#0f172a;font-weight:800;">Circle Members</strong>
+                        <button class="btn btn-primary" type="button" onclick="openAddMemberModal()" style="font-size:0.78rem;padding:0.35rem 0.65rem;border-radius:8px;">
+                            <i data-lucide="user-plus" size="13"></i> Add Member
+                        </button>
+                    </div>
+                    <div id="drawer-members-list">
+                        <!-- Members list dynamically loaded -->
+                    </div>
+                </div>
+
+                <div id="admin-delete-group-section" style="display:none;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #fee2e2;">
+                    <button type="button" class="btn" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;width:100%;border-radius:10px;padding:0.65rem;font-weight:800;font-size:0.88rem;" onclick="promptDeleteGroup()">
+                        <i data-lucide="trash-2" size="16"></i> Delete Circle
                     </button>
                 </div>
-
-                <!-- Active Chat Panel (Hidden by default until selected) -->
-                <div id="chat-active-panel" style="display: none; flex-direction: column; height: 100%;">
-                    
-                    <!-- Chat Header -->
-                    <div class="chat-header">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <img id="active-group-avatar" class="group-card-avatar" src="" alt="Group avatar">
-                            <div>
-                                <h3 id="active-group-name" style="font-size: 1.15rem; font-weight: 800; color: var(--dark); margin: 0;">Group Name</h3>
-                                <p id="active-group-meta" style="font-size: 0.8rem; color: var(--gray); font-weight: 600; margin: 0;">0 members</p>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <button id="join-group-btn" class="btn btn-outline" style="border-radius: 10px; font-size: 0.85rem; font-weight: 800; padding: 0.5rem 1rem;">
-                                Join Group
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Messages Feed -->
-                    <div class="chat-messages" id="messages-container">
-                        <!-- Message bubbles rendered by JS -->
-                    </div>
-
-                    <!-- Composer -->
-                    <form id="message-form" class="chat-composer">
-                        <input type="file" id="message-image-input" accept="image/*" style="display: none;" onchange="handleImageSelection(event)">
-                        
-                        <button type="button" onclick="document.getElementById('message-image-input').click()" class="btn" style="background: #f1f5f9; color: var(--gray); padding: 0.7rem; border-radius: 12px;" title="Attach Image">
-                            <i data-lucide="image-plus" size="20"></i>
-                        </button>
-
-                        <div style="flex: 1; position: relative;">
-                            <input type="text" id="message-input-text" class="composer-input" placeholder="Write a message..." required autocomplete="off">
-                            <div id="image-attachment-preview" style="display: none; position: absolute; top: -45px; left: 0; background: rgba(15, 23, 42, 0.85); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; backdrop-filter: blur(4px); align-items: center; gap: 6px;">
-                                <i data-lucide="image" size="14"></i> <span id="image-file-name">Photo attached</span>
-                                <button type="button" onclick="clearImageSelection()" style="background: none; border: none; color: white; cursor: pointer; padding: 0;"><i data-lucide="x" size="12"></i></button>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.25rem; border-radius: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>Send</span>
-                            <i data-lucide="send" size="16"></i>
-                        </button>
-                    </form>
-
-                </div>
-
             </div>
+        </aside>
+    </div>
 
-        </div>
-    </main>
-
-    <!-- Create Group Modal Popup -->
-    <div id="create-group-modal" class="modal-overlay">
-        <div class="modal-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--dark); margin: 0;">Create Community Group</h3>
-                <button onclick="closeGroupModal()" style="background: none; border: none; cursor: pointer; color: var(--gray);"><i data-lucide="x" size="22"></i></button>
+    <!-- Create Group Modal -->
+    <div id="create-group-modal" class="modal-backdrop-custom hidden">
+        <div class="modal-card-custom">
+            <div class="modal-custom-head">
+                <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;">Create New Circle</h3>
+                <button class="btn-icon-sm" type="button" onclick="closeCreateGroupModal()"><i data-lucide="x" size="18"></i></button>
             </div>
-
-            <form id="create-group-form" style="display: flex; flex-direction: column; gap: 1.2rem;">
+            <form id="create-group-form" class="modal-custom-body" style="display:flex;flex-direction:column;gap:1rem;">
                 <div>
-                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Group Name</label>
-                    <input type="text" id="new-group-name" placeholder="e.g. Islamabad Tech Founders Circle" class="input-field" required>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Circle Name *</label>
+                    <input type="text" id="new-group-name" class="input-field" placeholder="e.g. Islamabad Founders & Freelancers" required>
                 </div>
-
                 <div>
-                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.3rem;">Description & Purpose</label>
-                    <textarea id="new-group-desc" rows="3" placeholder="Describe the topics and members for this circle..." class="input-field" style="resize: vertical;"></textarea>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Circle Description</label>
+                    <textarea id="new-group-desc" class="input-field" rows="3" placeholder="What is this circle about?"></textarea>
                 </div>
-
-                <button type="submit" class="btn btn-primary" style="padding: 0.85rem; border-radius: 12px; font-weight: 800; font-size: 1rem; margin-top: 0.5rem;">
-                    Create Group
-                </button>
+                <div>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Group Image URL (Optional)</label>
+                    <input type="url" id="new-group-image-url" class="input-field" placeholder="https://images.unsplash.com/...">
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding:0.8rem;border-radius:10px;font-weight:800;margin-top:0.5rem;">Create Circle</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Edit Group Bar & Description Modal -->
+    <div id="edit-group-modal" class="modal-backdrop-custom hidden">
+        <div class="modal-card-custom">
+            <div class="modal-custom-head">
+                <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;">Edit Group Details</h3>
+                <button class="btn-icon-sm" type="button" onclick="closeEditGroupModal()"><i data-lucide="x" size="18"></i></button>
+            </div>
+            <form id="edit-group-form" class="modal-custom-body" style="display:flex;flex-direction:column;gap:1rem;">
+                <div>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Group Name</label>
+                    <input type="text" id="edit-group-name-input" class="input-field" required>
+                </div>
+                <div>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Group Description</label>
+                    <textarea id="edit-group-desc-input" class="input-field" rows="3"></textarea>
+                </div>
+                <div>
+                    <label style="font-size:0.85rem;font-weight:800;color:#0f172a;display:block;margin-bottom:0.3rem;">Group Picture URL</label>
+                    <input type="url" id="edit-group-image-input" class="input-field" placeholder="https://images.unsplash.com/...">
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding:0.8rem;border-radius:10px;font-weight:800;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Group Confirmation Modal -->
+    <div id="delete-group-modal" class="modal-backdrop-custom hidden">
+        <div class="modal-card-custom">
+            <div class="modal-custom-head" style="background:#fef2f2;border-bottom:1px solid #fee2e2;">
+                <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#991b1b;display:flex;align-items:center;gap:0.4rem;">
+                    <i data-lucide="alert-triangle" size="19"></i> Delete Circle
+                </h3>
+                <button class="btn-icon-sm" type="button" onclick="closeDeleteGroupModal()"><i data-lucide="x" size="18"></i></button>
+            </div>
+            <div class="modal-custom-body">
+                <p style="margin:0 0 1.25rem;color:#1e293b;font-weight:600;line-height:1.5;">
+                    Are you sure you want to delete <strong id="delete-group-name-target">this circle</strong>? All messages and member records will be permanently deleted.
+                </p>
+                <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeDeleteGroupModal()" style="border-radius:8px;font-weight:700;">Cancel</button>
+                    <button type="button" class="btn" id="confirm-delete-btn" style="background:#dc2626;color:white;border-radius:8px;font-weight:800;" onclick="confirmDeleteGroup()">Delete Circle</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -461,148 +736,160 @@
     <script>
         lucide.createIcons();
 
-        let groupsList = [];
-        let selectedGroup = null;
-        let selectedImageFile = null;
+        let allGroupsList = [];
+        let activeGroup = null;
+        let activeGroupMembers = [];
+        let selectedMessageImage = null;
+        let isSendingMessage = false;
 
-        async function fetchGroups() {
+        function getStoredUser() {
+            try {
+                return JSON.parse(localStorage.getItem('user'));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updateMyUserInfo() {
+            const me = getStoredUser();
+            if (!me) return;
+            document.getElementById('my-name').textContent = me.name || 'Member';
+            const avatarEl = document.getElementById('my-avatar');
+            if (avatarEl) {
+                if (me.avatar_url) {
+                    avatarEl.innerHTML = `<img src="${safeImageUrl(me.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">`;
+                } else {
+                    avatarEl.textContent = (me.name || 'U')[0].toUpperCase();
+                }
+            }
+        }
+
+        async function fetchGroupsList() {
             try {
                 const token = localStorage.getItem('token');
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
                 const res = await fetch('/api/groups', { headers });
                 const data = await res.json();
                 if (res.ok && data.data) {
-                    groupsList = data.data;
-                    renderGroupsList(groupsList);
+                    allGroupsList = data.data;
+                    renderGroupsList(allGroupsList);
+                    if (!activeGroup && allGroupsList.length > 0) {
+                        selectGroupChat(allGroupsList[0].id);
+                    }
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Failed to load groups', 'error');
+            } catch (e) {
+                console.error(e);
             }
         }
 
         function renderGroupsList(groups) {
-            const container = document.getElementById('group-list-container');
-            if (!groups || groups.length === 0) {
+            const container = document.getElementById('groups-directory-list');
+            if (!groups || !groups.length) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem 1rem; color: var(--gray); font-size: 0.9rem; font-weight: 600;">
-                        No groups found. Be the first to create one!
+                    <div style="text-align:center;padding:2.5rem 1rem;color:#64748b;font-weight:700;">
+                        No circles found. Create one to get started!
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = groups.map(g => {
-                const isActive = selectedGroup && selectedGroup.id === g.id;
-                const avatarUrl = g.image_url ? safeImageUrl(g.image_url) : fallbackImage('community');
+                const isActive = activeGroup && activeGroup.id === g.id;
+                const initial = (g.name || 'G')[0].toUpperCase();
+                const avatarContent = g.image_url 
+                    ? `<img src="${safeImageUrl(g.image_url)}" style="width:100%;height:100%;object-fit:cover;">` 
+                    : initial;
+                const roleBadge = g.my_role ? `<span class="role-badge-pill ${g.my_role}">${g.my_role}</span>` : '';
 
                 return `
-                    <div class="group-card ${isActive ? 'active' : ''}" onclick="selectGroup(${g.id})">
-                        <img class="group-card-avatar" src="${avatarUrl}" data-fallback="${fallbackImage('community')}" alt="${escapeHtml(g.name)}">
-                        <div class="group-card-info">
-                            <div class="group-card-title">${escapeHtml(g.name)}</div>
-                            <div class="group-card-preview">${escapeHtml(g.description || 'Community discussion group')}</div>
+                    <div class="group-item ${isActive ? 'active' : ''}" onclick="selectGroupChat(${g.id})">
+                        <div class="group-item-avatar">${avatarContent}</div>
+                        <div class="group-item-info">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div class="group-item-name">${escapeHtml(g.name)}</div>
+                                ${roleBadge}
+                            </div>
+                            <div class="group-item-sub">${escapeHtml(g.description || 'Community circle')}</div>
                         </div>
-                        <span class="group-badge-member">${g.member_count || 1} m</span>
                     </div>
                 `;
             }).join('');
-
-            applyImageFallbacks(container);
         }
 
-        function filterGroups() {
-            const q = document.getElementById('group-search').value.toLowerCase().trim();
-            const filtered = groupsList.filter(g => 
+        function filterGroupsList() {
+            const q = (document.getElementById('group-search-input').value || '').toLowerCase().trim();
+            const filtered = allGroupsList.filter(g => 
                 (g.name && g.name.toLowerCase().includes(q)) || 
                 (g.description && g.description.toLowerCase().includes(q))
             );
             renderGroupsList(filtered);
         }
 
-        async function selectGroup(groupId) {
-            const group = groupsList.find(g => g.id === groupId);
+        async function selectGroupChat(groupId) {
+            const group = allGroupsList.find(g => g.id === groupId);
             if (!group) return;
 
-            selectedGroup = group;
-            renderGroupsList(groupsList);
+            activeGroup = group;
+            renderGroupsList(allGroupsList);
+            document.getElementById('chat-app-shell').classList.add('in-chat');
 
-            document.getElementById('chat-empty-state').style.display = 'none';
-            const activePanel = document.getElementById('chat-active-panel');
-            activePanel.style.display = 'flex';
+            document.getElementById('chat-no-group-selected').style.display = 'none';
+            document.getElementById('chat-active-panel').style.display = 'flex';
 
-            document.getElementById('active-group-name').textContent = group.name;
-            document.getElementById('active-group-meta').textContent = `${group.member_count || 1} members`;
-            document.getElementById('active-group-avatar').src = group.image_url ? safeImageUrl(group.image_url) : fallbackImage('community');
-
-            const joinBtn = document.getElementById('join-group-btn');
-            if (group.joined_by_me || group.created_by_me) {
-                joinBtn.innerHTML = '<i data-lucide="check" size="14"></i> Joined';
-                joinBtn.className = 'btn btn-outline';
-                joinBtn.disabled = true;
+            // Top Bar
+            document.getElementById('bar-group-name').textContent = group.name;
+            document.getElementById('bar-group-meta').textContent = `${group.member_count || 1} members`;
+            const barAvatar = document.getElementById('bar-group-avatar');
+            if (group.image_url) {
+                barAvatar.innerHTML = `<img src="${safeImageUrl(group.image_url)}" style="width:100%;height:100%;object-fit:cover;">`;
             } else {
-                joinBtn.innerHTML = '<i data-lucide="user-plus" size="14"></i> Join Group';
-                joinBtn.className = 'btn btn-primary';
-                joinBtn.disabled = false;
-                joinBtn.onclick = () => joinGroup(group.id);
+                barAvatar.textContent = (group.name || 'G')[0].toUpperCase();
+            }
+
+            const me = getStoredUser();
+            const isMeAdmin = group.is_admin || group.created_by === (me && me.id) || group.my_role === 'admin' || group.my_role === 'co-admin';
+            const actionBtns = document.getElementById('admin-group-action-btns');
+            if (actionBtns) {
+                actionBtns.style.display = isMeAdmin ? 'flex' : 'none';
+            }
+
+            // Drawer
+            document.getElementById('drawer-group-name').textContent = group.name;
+            document.getElementById('drawer-group-desc').textContent = group.description || 'No description provided yet.';
+            document.getElementById('drawer-group-members-count').textContent = `${group.member_count || 1} Members`;
+            const drawerAv = document.getElementById('drawer-group-avatar');
+            if (group.image_url) {
+                drawerAv.innerHTML = `<img src="${safeImageUrl(group.image_url)}" style="width:100%;height:100%;object-fit:cover;">`;
+            } else {
+                drawerAv.textContent = (group.name || 'G')[0].toUpperCase();
             }
 
             lucide.createIcons();
-            await fetchMessages(group.id);
+            await fetchGroupMessages(groupId);
+            await fetchGroupMembers(groupId);
         }
 
-        async function joinGroup(groupId) {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please sign in to join groups.', 'error');
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/groups/${groupId}/join`, {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast('Joined group successfully!', 'success');
-                    fetchGroups();
-                    selectGroup(groupId);
-                } else {
-                    showToast(data.message || 'Failed to join group.', 'error');
-                }
-            } catch (err) {
-                showToast('Error joining group.', 'error');
-            }
-        }
-
-        async function fetchMessages(groupId) {
-            const container = document.getElementById('messages-container');
+        async function fetchGroupMessages(groupId) {
+            const container = document.getElementById('messages-feed-container');
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
             try {
                 const res = await fetch(`/api/groups/${groupId}/messages`, { headers });
                 const data = await res.json();
-
                 if (!res.ok) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 3rem; color: var(--gray); font-weight: 600;">
-                            ${data.message || 'Join this group to view messages.'}
-                        </div>
-                    `;
+                    container.innerHTML = `<div style="text-align:center;padding:3rem;color:#64748b;font-weight:700;">${data.message || 'Join circle to view messages.'}</div>`;
                     return;
                 }
 
                 const messages = data.data || [];
-                const currentUser = getStoredUser();
-                const currentUserId = currentUser ? currentUser.id : null;
+                const me = getStoredUser();
 
-                if (messages.length === 0) {
+                if (!messages.length) {
                     container.innerHTML = `
-                        <div style="text-align: center; padding: 4rem; color: var(--gray); font-weight: 600;">
-                            <i data-lucide="message-square" size="32" style="margin-bottom: 0.5rem;"></i>
-                            <p>No messages yet. Start the conversation!</p>
+                        <div style="text-align:center;padding:4rem 1rem;color:#64748b;font-weight:700;">
+                            <i data-lucide="message-square" size="36"></i>
+                            <p style="margin-top:0.5rem;">No messages yet. Send a message to start chatting!</p>
                         </div>
                     `;
                     lucide.createIcons();
@@ -610,49 +897,102 @@
                 }
 
                 container.innerHTML = messages.map(m => {
-                    const isSent = currentUserId && Number(m.user_id) === Number(currentUserId);
-                    const avatarUrl = m.avatar_url ? safeImageUrl(m.avatar_url) : fallbackImage('avatar');
+                    const isSent = me && Number(m.user_id) === Number(me.id);
+                    const userName = m.user_name || 'Member';
+                    const initial = userName[0].toUpperCase();
+                    const avatarContent = m.user_avatar 
+                        ? `<img src="${safeImageUrl(m.user_avatar)}" style="width:100%;height:100%;object-fit:cover;">` 
+                        : escapeHtml(initial);
                     const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const roleBadge = m.member_role && m.member_role !== 'member' ? `<span class="role-badge-pill ${m.member_role}">${m.member_role}</span>` : '';
 
                     return `
-                        <div class="msg-row ${isSent ? 'sent' : 'received'}">
-                            <img class="msg-avatar" src="${avatarUrl}" data-fallback="${fallbackImage('avatar')}" alt="User avatar">
-                            <div class="msg-bubble-wrap">
-                                <div class="msg-author">${isSent ? 'You' : escapeHtml(m.user_name || 'Member')}</div>
+                        <div class="chat-msg-row ${isSent ? 'sent' : 'received'}">
+                            <div class="msg-author-avatar">${avatarContent}</div>
+                            <div class="msg-bubble-box">
+                                <div class="msg-author-header">
+                                    <span class="msg-author-name">${isSent ? 'You' : escapeHtml(userName)}</span>
+                                    ${roleBadge}
+                                </div>
                                 <div class="msg-bubble">${escapeHtml(m.content)}</div>
-                                ${m.image_url ? `<img class="msg-img" src="${safeImageUrl(m.image_url)}" alt="Attached photo">` : ''}
-                                <div class="msg-time">${timeStr}</div>
+                                ${m.image_url ? `<img class="msg-photo-attach" src="${safeImageUrl(m.image_url)}" alt="Photo">` : ''}
+                                <div class="msg-time-stamp">${timeStr}</div>
                             </div>
                         </div>
                     `;
                 }).join('');
 
-                applyImageFallbacks(container);
                 container.scrollTop = container.scrollHeight;
-            } catch (err) {
-                console.error(err);
+            } catch (e) {
+                console.error(e);
             }
         }
 
-        // Image Attachment Handler
+        async function fetchGroupMembers(groupId) {
+            try {
+                const res = await fetch(`/api/groups/${groupId}/members`);
+                const data = await res.json();
+                if (res.ok && data.data) {
+                    activeGroupMembers = data.data;
+                    renderDrawerMembers(activeGroupMembers);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderDrawerMembers(members) {
+            const container = document.getElementById('drawer-members-list');
+            const me = getStoredUser();
+            const isMeAdmin = activeGroup && (activeGroup.is_admin || activeGroup.created_by === (me && me.id));
+
+            const deleteSec = document.getElementById('admin-delete-group-section');
+            if (deleteSec) {
+                deleteSec.style.display = isMeAdmin ? 'block' : 'none';
+            }
+
+            container.innerHTML = members.map(m => {
+                const initial = (m.user_name || 'M')[0].toUpperCase();
+                const avatarContent = m.user_avatar ? `<img src="${safeImageUrl(m.user_avatar)}" style="width:100%;height:100%;object-fit:cover;">` : initial;
+                const roleClass = m.member_role || 'member';
+
+                return `
+                    <div class="member-item-row">
+                        <div class="member-item-avatar">${avatarContent}</div>
+                        <div style="flex:1;min-width:0;">
+                            <strong style="font-size:0.88rem;color:#0f172a;display:block;">${escapeHtml(m.user_name)}</strong>
+                            <span class="role-badge-pill ${roleClass}">${m.member_role}</span>
+                        </div>
+                        ${isMeAdmin && m.user_id !== (me && me.id) ? `
+                            <div style="display:flex;gap:0.3rem;">
+                                <button class="btn-icon-sm" style="width:28px;height:28px;" title="Toggle Co-Admin" onclick="toggleMemberRole(${m.user_id}, '${m.member_role}')"><i data-lucide="shield" size="13"></i></button>
+                                <button class="btn-icon-sm" style="width:28px;height:28px;color:#dc2626;" title="Remove Member" onclick="removeGroupMember(${m.user_id})"><i data-lucide="user-x" size="13"></i></button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
         function handleImageSelection(e) {
             const file = e.target.files[0];
             if (!file) return;
-            selectedImageFile = file;
-            document.getElementById('image-file-name').textContent = file.name;
-            document.getElementById('image-attachment-preview').style.display = 'flex';
+            selectedMessageImage = file;
+            document.getElementById('attached-filename').textContent = file.name;
+            document.getElementById('image-attachment-tag').style.display = 'flex';
         }
 
         function clearImageSelection() {
-            selectedImageFile = null;
-            document.getElementById('message-image-input').value = '';
-            document.getElementById('image-attachment-preview').style.display = 'none';
+            selectedMessageImage = null;
+            document.getElementById('msg-image-file-input').value = '';
+            document.getElementById('image-attachment-tag').style.display = 'none';
         }
 
-        // Send Message
-        document.getElementById('message-form').addEventListener('submit', async (e) => {
+        document.getElementById('group-message-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!selectedGroup) return;
+            if (!activeGroup || isSendingMessage) return;
 
             const token = localStorage.getItem('token');
             if (!token) {
@@ -660,16 +1000,18 @@
                 return;
             }
 
-            const textInput = document.getElementById('message-input-text');
+            const textInput = document.getElementById('group-message-input');
             const content = textInput.value.trim();
-            if (!content && !selectedImageFile) return;
+            if (!content && !selectedMessageImage) return;
+
+            isSendingMessage = true;
+            const sendBtn = document.getElementById('send-msg-btn');
+            sendBtn.disabled = true;
 
             let uploadedImageUrl = null;
-
-            // Handle image upload if selected
-            if (selectedImageFile) {
+            if (selectedMessageImage) {
                 const formData = new FormData();
-                formData.append('file', selectedImageFile);
+                formData.append('file', selectedMessageImage);
                 try {
                     const uploadRes = await fetch('/api/upload', {
                         method: 'POST',
@@ -681,12 +1023,12 @@
                         uploadedImageUrl = uploadData.url;
                     }
                 } catch (err) {
-                    console.error("Image upload failed:", err);
+                    console.error(err);
                 }
             }
 
             try {
-                const res = await fetch(`/api/groups/${selectedGroup.id}/messages`, {
+                const res = await fetch(`/api/groups/${activeGroup.id}/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                     body: JSON.stringify({ content, image_url: uploadedImageUrl })
@@ -695,59 +1037,374 @@
                 if (res.ok && data.success) {
                     textInput.value = '';
                     clearImageSelection();
-                    fetchMessages(selectedGroup.id);
+                    fetchGroupMessages(activeGroup.id);
                 } else {
                     showToast(data.message || 'Failed to send message', 'error');
                 }
             } catch (err) {
                 showToast('Error sending message', 'error');
+            } finally {
+                isSendingMessage = false;
+                sendBtn.disabled = false;
             }
         });
 
-        // Group Modal Controls
-        function openGroupModal() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast('Please sign in to create a group.', 'error');
-                return;
+        // Toggle Drawer
+        function toggleGroupDrawer(show) {
+            const drawer = document.getElementById('group-info-drawer');
+            if (typeof show === 'boolean') {
+                drawer.classList.toggle('hidden', !show);
+            } else {
+                drawer.classList.toggle('hidden');
             }
-            document.getElementById('create-group-modal').classList.add('open');
         }
 
-        function closeGroupModal() {
-            document.getElementById('create-group-modal').classList.remove('open');
+        // Admin Edit Group Modal
+        function openEditGroupModal() {
+            if (!activeGroup) return;
+            document.getElementById('edit-group-name-input').value = activeGroup.name || '';
+            document.getElementById('edit-group-desc-input').value = activeGroup.description || '';
+            document.getElementById('edit-group-image-input').value = activeGroup.image_url || '';
+            document.getElementById('edit-group-modal').classList.remove('hidden');
         }
+
+        function closeEditGroupModal() {
+            document.getElementById('edit-group-modal').classList.add('hidden');
+        }
+
+        document.getElementById('edit-group-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            if (!token || !activeGroup) return;
+
+            const name = document.getElementById('edit-group-name-input').value.trim();
+            const description = document.getElementById('edit-group-desc-input').value.trim();
+            const image_url = document.getElementById('edit-group-image-input').value.trim();
+
+            try {
+                const res = await fetch(`/api/groups/${activeGroup.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ name, description, image_url })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Group updated successfully!');
+                    closeEditGroupModal();
+                    await fetchGroupsList();
+                    selectGroupChat(activeGroup.id);
+                } else {
+                    showToast(data.message || 'Failed to update group', 'error');
+                }
+            } catch (err) {
+                showToast('Network error while updating group', 'error');
+            }
+        });
+
+        // Add Member Modal
+        function openAddMemberModal() {
+            if (!activeGroup) return;
+            document.getElementById('add-member-search').value = '';
+            document.getElementById('add-member-results').innerHTML = '';
+            document.getElementById('add-member-modal').classList.remove('hidden');
+        }
+
+        function closeAddMemberModal() {
+            document.getElementById('add-member-modal').classList.add('hidden');
+        }
+
+        async function searchUsersToAdd() {
+            const query = document.getElementById('add-member-search').value.trim();
+            const resultsBox = document.getElementById('add-member-results');
+            if (query.length < 2) {
+                resultsBox.innerHTML = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                const users = data.data || [];
+
+                if (!users.length) {
+                    resultsBox.innerHTML = '<p style="font-size:0.8rem;color:#64748b;text-align:center;">No users found.</p>';
+                    return;
+                }
+
+                resultsBox.innerHTML = users.map(u => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem;background:#f8fafc;border-radius:8px;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div class="user-nav-avatar" style="width:32px;height:32px;">${(u.name || 'U')[0].toUpperCase()}</div>
+                            <strong style="font-size:0.85rem;color:#0f172a;">${escapeHtml(u.name)}</strong>
+                        </div>
+                        <button class="btn btn-primary" type="button" style="font-size:0.75rem;padding:0.3rem 0.6rem;border-radius:6px;" onclick="addUserToGroup(${u.id})">Add</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function addUserToGroup(userId) {
+            const token = localStorage.getItem('token');
+            if (!token || !activeGroup) return;
+
+            try {
+                const res = await fetch(`/api/groups/${activeGroup.id}/members`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('User added to circle!');
+                    closeAddMemberModal();
+                    fetchGroupMembers(activeGroup.id);
+                } else {
+                    showToast(data.message || 'Failed to add user', 'error');
+                }
+            } catch (e) {
+                showToast('Error adding user', 'error');
+            }
+        }
+
+        async function toggleMemberRole(userId, currentRole) {
+            const token = localStorage.getItem('token');
+            if (!token || !activeGroup) return;
+
+            const newRole = currentRole === 'co-admin' ? 'member' : 'co-admin';
+
+            try {
+                const res = await fetch(`/api/groups/${activeGroup.id}/members/${userId}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ role: newRole })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(`Role updated to ${newRole}`);
+                    fetchGroupMembers(activeGroup.id);
+                } else {
+                    showToast(data.message || 'Failed to update role', 'error');
+                }
+            } catch (e) {
+                showToast('Error updating role', 'error');
+            }
+        }
+
+        async function removeGroupMember(userId) {
+            const token = localStorage.getItem('token');
+            if (!token || !activeGroup) return;
+
+            try {
+                const res = await fetch(`/api/groups/${activeGroup.id}/members/${userId}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Member removed');
+                    fetchGroupMembers(activeGroup.id);
+                } else {
+                    showToast(data.message || 'Failed to remove member', 'error');
+                }
+            } catch (e) {
+                showToast('Error removing member', 'error');
+            }
+        }
+
+        function openCreateGroupModal() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please sign in to create a circle.', 'error');
+                return;
+            }
+            const modal = document.getElementById('create-group-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeCreateGroupModal() {
+            const modal = document.getElementById('create-group-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        let isCreatingGroup = false;
 
         document.getElementById('create-group-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (isCreatingGroup) return;
+
             const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please sign in to create a circle.', 'error');
+                return;
+            }
+
             const name = document.getElementById('new-group-name').value.trim();
             const description = document.getElementById('new-group-desc').value.trim();
+            const image_url = document.getElementById('new-group-image-url').value.trim();
+
+            if (!name) {
+                showToast('Circle name is required.', 'error');
+                return;
+            }
+
+            isCreatingGroup = true;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i data-lucide="loader-2" class="spin" size="17"></i> Creating...`;
+            lucide.createIcons();
 
             try {
                 const res = await fetch('/api/groups', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ name, description })
+                    body: JSON.stringify({ name, description, image_url })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    showToast('Group created successfully!', 'success');
-                    closeGroupModal();
+                    showToast('Circle created successfully!');
+                    closeCreateGroupModal();
                     document.getElementById('create-group-form').reset();
-                    await fetchGroups();
+                    await fetchGroupsList();
                     if (data.data && data.data.id) {
-                        selectGroup(data.data.id);
+                        selectGroupChat(data.data.id);
                     }
                 } else {
-                    showToast(data.message || 'Failed to create group', 'error');
+                    showToast(data.message || 'Failed to create circle', 'error');
                 }
             } catch (err) {
-                showToast('Error creating group', 'error');
+                showToast('Error creating circle', 'error');
+            } finally {
+                isCreatingGroup = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Circle';
             }
         });
 
-        document.addEventListener('DOMContentLoaded', fetchGroups);
+        // Delete Group Handler
+        function promptDeleteGroup() {
+            if (!activeGroup) return;
+            document.getElementById('delete-group-name-target').textContent = activeGroup.name || 'this circle';
+            document.getElementById('delete-group-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDeleteGroupModal() {
+            document.getElementById('delete-group-modal').classList.add('hidden');
+        }
+
+        async function confirmDeleteGroup() {
+            if (!activeGroup) return;
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="spin" size="16"></i> Deleting...`;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch(`/api/groups/${activeGroup.id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Circle deleted');
+                    closeDeleteGroupModal();
+                    toggleGroupDrawer(false);
+                    activeGroup = null;
+                    document.getElementById('chat-active-panel').style.display = 'none';
+                    document.getElementById('chat-no-group-selected').style.display = 'flex';
+                    await fetchGroupsList();
+                } else {
+                    showToast(data.message || 'Failed to delete circle', 'error');
+                }
+            } catch (e) {
+                showToast('Error deleting circle', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete Circle';
+            }
+        }
+
+        // Handle Paste and Drop Image in Chat
+        function handlePasteImage(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const blob = item.getAsFile();
+                    selectedMessageImage = blob;
+                    document.getElementById('attached-filename').textContent = 'Pasted photo';
+                    document.getElementById('image-attachment-tag').style.display = 'flex';
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+
+        function handleDropImage(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0 && files[0].type.indexOf('image') === 0) {
+                selectedMessageImage = files[0];
+                document.getElementById('attached-filename').textContent = files[0].name;
+                document.getElementById('image-attachment-tag').style.display = 'flex';
+            }
+        }
+
+        async function uploadGroupPictureFile(e) {
+            const file = e.target.files[0];
+            if (!file || !activeGroup) return;
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            showToast('Uploading group picture...');
+
+            try {
+                const compressedFile = window.compressImageFile ? await window.compressImageFile(file) : file;
+                const formData = new FormData();
+                formData.append('file', compressedFile);
+                formData.append('image', compressedFile);
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData
+                });
+                const uploadData = await uploadRes.json();
+                
+                const imageUrl = uploadData.url;
+                if (!imageUrl) {
+                    showToast(uploadData.message || 'Failed to upload image', 'error');
+                    return;
+                }
+
+                const res = await fetch(`/api/groups/${activeGroup.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ image_url: imageUrl })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Group picture updated!');
+                    activeGroup.image_url = imageUrl;
+                    await fetchGroupsList();
+                    selectGroupChat(activeGroup.id);
+                } else {
+                    showToast(data.message || 'Failed to update group picture', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Upload error', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateMyUserInfo();
+            fetchGroupsList();
+        });
     </script>
 </body>
 </html>

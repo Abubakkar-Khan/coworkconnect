@@ -59,5 +59,23 @@ def run():
         except Exception as e:
             print("Error adding spaces.website_url:", e)
 
+        try:
+            cursor.execute("ALTER TABLE community_groups ADD COLUMN image_url TEXT;")
+            print("Added community_groups.image_url column")
+        except Exception as e:
+            print("Error adding community_groups.image_url:", e)
+
+        try:
+            cursor.execute("ALTER TABLE community_groups ADD COLUMN cover_url TEXT;")
+            print("Added community_groups.cover_url column")
+        except Exception as e:
+            print("Error adding community_groups.cover_url:", e)
+
+        try:
+            cursor.execute("ALTER TABLE group_members ADD COLUMN role TEXT DEFAULT 'member';")
+            print("Added group_members.role column")
+        except Exception as e:
+            print("Error adding group_members.role:", e)
+
 if __name__ == '__main__':
     run()

@@ -651,21 +651,21 @@ def groups(request):
         current_user, _ = auth_user(request, required=False)
         rows = fetch_all(
             """
-            SELECT g.*, u.name as creator_name,
+            SELECT g.*, u.name as creator_name, u.avatar_url as creator_avatar,
               (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
             FROM community_groups g
-            JOIN users u ON g.created_by = u.id
+            LEFT JOIN users u ON g.created_by = u.id
             ORDER BY g.created_at DESC
             """
         )
         if current_user:
             for group in rows:
-                group["joined_by_me"] = bool(
-                    fetch_one(
-                        "SELECT id FROM group_members WHERE group_id = %s AND user_id = %s",
-                        [group["id"], current_user["id"]],
-                    )
+                member_rec = fetch_one(
+                    "SELECT id, role FROM group_members WHERE group_id = %s AND user_id = %s",
+                    [group["id"], current_user["id"]],
                 )
+                group["joined_by_me"] = bool(member_rec)
+                group["my_role"] = member_rec.get("role") if member_rec else None
                 group["created_by_me"] = group.get("created_by") == current_user["id"]
         return api_response({"success": True, "count": len(rows), "data": rows})
 
@@ -674,16 +674,182 @@ def groups(request):
         if error:
             return error
         data = read_data(request)
-        if not (data.get("name") or "").strip():
+        name = (data.get("name") or "").strip()
+        if not name:
             return api_response({"success": False, "message": "Group name is required"}, 400)
+        
+        image_url = data.get("image_url") or None
+        if "image" in request.FILES:
+            try:
+                image_url = save_upload(request.FILES["image"], "groups")
+            except Exception as e:
+                return api_response({"success": False, "message": str(e)}, 400)
+
+        description = data.get("description") or None
+        
         _, group_id = execute(
-            "INSERT INTO community_groups (name, description, created_by) VALUES (%s, %s, %s)",
-            [data.get("name"), data.get("description"), user["id"]],
+            "INSERT INTO community_groups (name, description, image_url, created_by) VALUES (%s, %s, %s, %s)",
+            [name, description, image_url, user["id"]],
         )
-        execute("INSERT INTO group_members (group_id, user_id) VALUES (%s, %s)", [group_id, user["id"]])
-        return api_response({"success": True, "data": {"id": group_id, "name": data.get("name"), "description": data.get("description")}}, 201)
+        execute("INSERT INTO group_members (group_id, user_id, role) VALUES (%s, %s, %s)", [group_id, user["id"], "admin"])
+        return api_response({"success": True, "data": {"id": group_id, "name": name, "description": description, "image_url": image_url}}, 201)
 
     return method_not_allowed()
+
+
+def group_detail(request, group_id):
+    group = fetch_one("SELECT g.*, u.name as creator_name, u.avatar_url as creator_avatar FROM community_groups g LEFT JOIN users u ON g.created_by = u.id WHERE g.id = %s", [group_id])
+    if not group:
+        return api_response({"success": False, "message": "Group not found"}, 404)
+
+    if request.method == "GET":
+        current_user, _ = auth_user(request, required=False)
+        if current_user:
+            member_rec = fetch_one("SELECT role FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, current_user["id"]])
+            group["joined_by_me"] = bool(member_rec)
+            group["my_role"] = member_rec.get("role") if member_rec else None
+            group["is_admin"] = group["created_by"] == current_user["id"] or (member_rec and member_rec.get("role") in ["admin", "co-admin"])
+        return api_response({"success": True, "data": group})
+
+    if request.method == "PUT":
+        user, error = auth_user(request)
+        if error:
+            return error
+        
+        member_rec = fetch_one("SELECT role FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]])
+        is_authorized = group["created_by"] == user["id"] or (member_rec and member_rec.get("role") in ["admin", "co-admin"]) or user.get("role") == "admin"
+        if not is_authorized:
+            return api_response({"success": False, "message": "Only admins can update group details"}, 403)
+
+        data = read_data(request)
+        name = data.get("name") or group.get("name")
+        description = data.get("description") if "description" in data else group.get("description")
+        image_url = data.get("image_url") if "image_url" in data else group.get("image_url")
+
+        if "image" in request.FILES:
+            try:
+                image_url = save_upload(request.FILES["image"], "groups")
+            except Exception as e:
+                return api_response({"success": False, "message": str(e)}, 400)
+        elif "file" in request.FILES:
+            try:
+                image_url = save_upload(request.FILES["file"], "groups")
+            except Exception as e:
+                return api_response({"success": False, "message": str(e)}, 400)
+
+        execute(
+            "UPDATE community_groups SET name = %s, description = %s, image_url = %s WHERE id = %s",
+            [name, description, image_url, group_id],
+        )
+        return api_response({"success": True, "message": "Group details updated successfully", "image_url": image_url})
+
+    if request.method == "DELETE":
+        user, error = auth_user(request)
+        if error:
+            return error
+
+        member_rec = fetch_one("SELECT role FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]])
+        is_authorized = group["created_by"] == user["id"] or (member_rec and member_rec.get("role") in ["admin", "co-admin"]) or user.get("role") == "admin"
+        if not is_authorized:
+            return api_response({"success": False, "message": "Only group admins can delete this group"}, 403)
+
+        execute("DELETE FROM community_groups WHERE id = %s", [group_id])
+        return api_response({"success": True, "message": "Group deleted successfully"})
+
+    return method_not_allowed()
+
+
+def group_members_list(request, group_id):
+    if not fetch_one("SELECT id FROM community_groups WHERE id = %s", [group_id]):
+        return api_response({"success": False, "message": "Group not found"}, 404)
+
+    if request.method == "GET":
+        rows = fetch_all(
+            """
+            SELECT gm.id, gm.group_id, gm.user_id, COALESCE(gm.role, 'member') as member_role, gm.joined_at,
+                   u.name as user_name, u.email as user_email, u.avatar_url as user_avatar, u.status as user_status
+            FROM group_members gm
+            JOIN users u ON gm.user_id = u.id
+            WHERE gm.group_id = %s
+            ORDER BY (CASE WHEN gm.role = 'admin' THEN 1 WHEN gm.role = 'co-admin' THEN 2 ELSE 3 END), u.name ASC
+            """,
+            [group_id],
+        )
+        return api_response({"success": True, "data": rows})
+
+    if request.method == "POST":
+        user, error = auth_user(request)
+        if error:
+            return error
+        
+        data = read_data(request)
+        target_id = data.get("user_id")
+        target_email = (data.get("email") or "").strip().lower()
+
+        if not target_id and target_email:
+            found_u = fetch_one("SELECT id FROM users WHERE LOWER(email) = %s", [target_email])
+            if found_u:
+                target_id = found_u["id"]
+
+        if not target_id:
+            return api_response({"success": False, "message": "User not found to add"}, 404)
+
+        if fetch_one("SELECT id FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, target_id]):
+            return api_response({"success": False, "message": "User is already in group"}, 400)
+
+        execute("INSERT INTO group_members (group_id, user_id, role) VALUES (%s, %s, 'member')", [group_id, target_id])
+        return api_response({"success": True, "message": "Member added successfully"})
+
+    return method_not_allowed()
+
+
+def group_member_detail(request, group_id, target_user_id):
+    if request.method != "DELETE":
+        return method_not_allowed()
+    
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    group = fetch_one("SELECT created_by FROM community_groups WHERE id = %s", [group_id])
+    if not group:
+        return api_response({"success": False, "message": "Group not found"}, 404)
+
+    my_rec = fetch_one("SELECT role FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]])
+    is_self = user["id"] == target_user_id
+    is_admin = group["created_by"] == user["id"] or (my_rec and my_rec.get("role") in ["admin", "co-admin"]) or user.get("role") == "admin"
+
+    if not is_self and not is_admin:
+        return api_response({"success": False, "message": "Not authorized to remove member"}, 403)
+
+    execute("DELETE FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, target_user_id])
+    return api_response({"success": True, "message": "Member removed"})
+
+
+def group_member_role(request, group_id, target_user_id):
+    if request.method != "PUT":
+        return method_not_allowed()
+    
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    group = fetch_one("SELECT created_by FROM community_groups WHERE id = %s", [group_id])
+    if not group:
+        return api_response({"success": False, "message": "Group not found"}, 404)
+
+    my_rec = fetch_one("SELECT role FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]])
+    is_admin = group["created_by"] == user["id"] or (my_rec and my_rec.get("role") in ["admin", "co-admin"]) or user.get("role") == "admin"
+    if not is_admin:
+        return api_response({"success": False, "message": "Only admins can manage roles"}, 403)
+
+    data = read_data(request)
+    new_role = data.get("role") or "co-admin"
+    if new_role not in ["admin", "co-admin", "member"]:
+        new_role = "co-admin"
+
+    execute("UPDATE group_members SET role = %s WHERE group_id = %s AND user_id = %s", [new_role, group_id, target_user_id])
+    return api_response({"success": True, "message": f"Role updated to {new_role}"})
 
 
 def join_group(request, group_id):
@@ -696,7 +862,7 @@ def join_group(request, group_id):
         return api_response({"success": False, "message": "Group not found"}, 404)
     if fetch_one("SELECT id FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]]):
         return api_response({"success": False, "message": "Already a member"}, 400)
-    execute("INSERT INTO group_members (group_id, user_id) VALUES (%s, %s)", [group_id, user["id"]])
+    execute("INSERT INTO group_members (group_id, user_id, role) VALUES (%s, %s, 'member')", [group_id, user["id"]])
     return api_response({"success": True, "message": "Joined group successfully"})
 
 
@@ -712,9 +878,10 @@ def group_messages(request, group_id):
             return api_response({"success": False, "message": "Join the group to view messages"}, 403)
         rows = fetch_all(
             """
-            SELECT m.*, u.name as user_name
+            SELECT m.*, u.name as user_name, u.avatar_url as user_avatar, gm.role as member_role
             FROM messages m
-            JOIN users u ON m.user_id = u.id
+            LEFT JOIN users u ON m.user_id = u.id
+            LEFT JOIN group_members gm ON gm.group_id = m.group_id AND gm.user_id = m.user_id
             WHERE m.group_id = %s
             ORDER BY m.created_at ASC
             """,
@@ -726,12 +893,15 @@ def group_messages(request, group_id):
         if not fetch_one("SELECT id FROM community_groups WHERE id = %s", [group_id]):
             return api_response({"success": False, "message": "Group not found"}, 404)
         if not fetch_one("SELECT id FROM group_members WHERE group_id = %s AND user_id = %s", [group_id, user["id"]]):
-            execute("INSERT INTO group_members (group_id, user_id) VALUES (%s, %s)", [group_id, user["id"]])
-        content = (read_data(request).get("content") or "").strip()
-        try:
-            image_url = save_upload(request.FILES["image"], "messages") if "image" in request.FILES else None
-        except ValueError as exc:
-            return api_response({"success": False, "message": str(exc)}, 400)
+            execute("INSERT INTO group_members (group_id, user_id, role) VALUES (%s, %s, 'member')", [group_id, user["id"]])
+        data = read_data(request)
+        content = (data.get("content") or "").strip()
+        image_url = data.get("image_url") or None
+        if "image" in request.FILES:
+            try:
+                image_url = save_upload(request.FILES["image"], "messages")
+            except ValueError as exc:
+                return api_response({"success": False, "message": str(exc)}, 400)
         if not content and not image_url:
             return api_response({"success": False, "message": "Write a message or attach an image"}, 400)
         _, message_id = execute(
@@ -740,9 +910,10 @@ def group_messages(request, group_id):
         )
         row = fetch_one(
             """
-            SELECT m.*, u.name as user_name
+            SELECT m.*, u.name as user_name, u.avatar_url as user_avatar, gm.role as member_role
             FROM messages m
-            JOIN users u ON m.user_id = u.id
+            LEFT JOIN users u ON m.user_id = u.id
+            LEFT JOIN group_members gm ON gm.group_id = m.group_id AND gm.user_id = m.user_id
             WHERE m.id = %s
             """,
             [message_id],

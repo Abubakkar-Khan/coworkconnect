@@ -346,6 +346,64 @@ if (registerForm) {
     });
 }
 
+/**
+ * Client-Side Image Compression using HTML5 Canvas
+ * Resizes images exceeding maxWidth x maxHeight and compresses raster output to ~82% quality.
+ */
+async function compressImageFile(file, maxWidth = 1920, maxHeight = 1920, quality = 0.82) {
+    if (!file || !file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.size < 150 * 1024) {
+        return file; // Return original if small, non-image, or vector SVG
+    }
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth || height > maxHeight) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob || blob.size >= file.size) {
+                            resolve(file); // Keep original if compression yields larger size
+                        } else {
+                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + (mimeType === 'image/png' ? '.png' : '.jpg'), {
+                                type: mimeType,
+                                lastModified: Date.now(),
+                            });
+                            resolve(compressedFile);
+                        }
+                    },
+                    mimeType,
+                    quality
+                );
+            };
+            img.onerror = () => resolve(file);
+        };
+        reader.onerror = () => resolve(file);
+    });
+}
+
 window.CoWorkConnect = {
     apiFetch,
     escapeHtml,
@@ -356,6 +414,7 @@ window.CoWorkConnect = {
     getStoredUser,
     getToken,
     renderInlineLoginGate,
+    compressImageFile,
 };
 window.escapeHtml = escapeHtml;
 window.safeImageUrl = safeImageUrl;
@@ -364,6 +423,7 @@ window.applyImageFallbacks = applyImageFallbacks;
 window.showToast = showToast;
 window.getStoredUser = getStoredUser;
 window.getCurrentUser = getStoredUser;
+window.compressImageFile = compressImageFile;
 
 enforceAuth();
 

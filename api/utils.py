@@ -154,17 +154,62 @@ def save_upload(file_obj, folder=""):
         except Exception as e:
             raise ValueError(f"Cloudinary upload failed: {e}")
 
-    # Fallback to local storage
+    # Fallback to local storage with PIL image compression
     upload_dir = Path(settings.MEDIA_ROOT) / folder
     upload_dir.mkdir(parents=True, exist_ok=True)
-    suffix = Path(file_obj.name).suffix.lower()
+    suffix = Path(file_obj.name).suffix.lower() if getattr(file_obj, "name", None) else ".jpg"
     prefix = f"{folder.rstrip('/')}-" if folder else ""
     filename = f"{prefix}{int(time.time() * 1000)}-{uuid4().hex}{suffix}"
     destination = upload_dir / filename
 
-    with destination.open("wb+") as target:
-        for chunk in file_obj.chunks():
-            target.write(chunk)
+    try:
+        from PIL import Image, ImageOps
+
+        if suffix in [".svg", ".gif"]:
+            # Write SVGs and animated GIFs directly without altering frames
+            with destination.open("wb+") as target:
+                for chunk in file_obj.chunks():
+                    target.write(chunk)
+        else:
+            # Compress raster image using PIL
+            file_obj.seek(0)
+            img = Image.open(file_obj)
+
+            # Auto-orient EXIF camera photos
+            img = ImageOps.exif_transpose(img)
+
+            # Resize if dimensions exceed 1920x1920
+            max_dim = 1920
+            width, height = img.size
+            if width > max_dim or height > max_dim:
+                img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+            # Mode handling
+            if img.mode in ("RGBA", "LA", "P") and suffix not in [".png", ".webp"]:
+                bg = Image.new("RGB", img.size, (255, 255, 255))
+                bg.paste(img, mask=img.split()[-1] if img.mode in ("RGBA", "LA") else None)
+                img = bg
+            elif img.mode not in ("RGB", "RGBA"):
+                img = img.convert("RGB")
+
+            # Compress and save
+            if suffix == ".webp":
+                img.save(destination, "WEBP", quality=82)
+            elif suffix in [".jpg", ".jpeg", ".jfif", ".pjpeg"]:
+                img.save(destination, "JPEG", quality=82, optimize=True)
+            elif suffix == ".png":
+                img.save(destination, "PNG", optimize=True)
+            else:
+                destination = destination.with_suffix(".jpg")
+                filename = destination.name
+                img.save(destination, "JPEG", quality=82, optimize=True)
+
+    except Exception as e:
+        # Direct stream fallback on error
+        file_obj.seek(0)
+        with destination.open("wb+") as target:
+            for chunk in file_obj.chunks():
+                target.write(chunk)
 
     if folder:
         return f"/uploads/{folder}/{filename}"

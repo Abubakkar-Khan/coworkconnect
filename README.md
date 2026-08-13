@@ -118,6 +118,127 @@ coworkconnect/
     admin.html
     app.js
     community.html
+# CoWorkConnect
+
+CoWorkConnect is a web-based coworking space management and professional networking platform. The system is designed to help users discover coworking spaces, book workspaces, create community posts, join discussion groups, exchange group messages, and register for professional events. It also provides an admin-side workflow for managing workspace inventory.
+
+This project is suitable for a final year project or thesis because it combines user management, role-based authorization, booking workflows, community interaction, event management, file uploads, database design, and a complete web interface.
+
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Problem Statement](#problem-statement)
+- [Objectives](#objectives)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Project Structure](#project-structure)
+- [Main Modules](#main-modules)
+  - [1. Authentication Module](#1-authentication-module)
+  - [2. User Profile Module](#2-user-profile-module)
+  - [3. Space Management Module](#3-space-management-module)
+  - [4. Booking Module](#4-booking-module)
+  - [5. Community Posts Module](#5-community-posts-module)
+  - [6. Groups and Messaging Module](#6-groups-and-messaging-module)
+  - [7. Dual-Layer Image Compression Engine](#7-dual-layer-image-compression-engine)
+  - [8. Events Module](#8-events-module)
+- [Database Design](#database-design)
+- [Authentication and Authorization](#authentication-and-authorization)
+- [API Summary](#api-summary)
+- [Setup Instructions](#setup-instructions)
+- [Deployment on Vercel](#deployment-on-vercel)
+- [User Interface Pages](#user-interface-pages)
+- [Testing and Validation](#testing-and-validation)
+- [Security Features](#security-features)
+- [Limitations](#limitations)
+- [Future Enhancements](#future-enhancements)
+- [Conclusion](#conclusion)
+
+## Project Overview
+
+The main purpose of CoWorkConnect is to provide a centralized digital platform for coworking users, space owners, freelancers, startups, and remote professionals. Instead of using separate tools for workspace booking, event discovery, and community communication, CoWorkConnect brings these features into one integrated system.
+
+The platform supports two main user roles:
+
+- `user`: A normal member who can browse spaces, book spaces, create posts, join groups, send messages, and register for events.
+- `admin`: A privileged user who can manage coworking spaces and view or update booking records.
+
+## Problem Statement
+
+Many coworking spaces rely on manual communication, social media pages, or disconnected tools for bookings, member interaction, and event promotion. This creates problems such as duplicate bookings, limited visibility of available spaces, weak community engagement, and inefficient administration.
+
+CoWorkConnect addresses these issues by providing a single web application where users can:
+
+- Search and view available coworking spaces.
+- Book a workspace for a selected date.
+- Manage their profile.
+- Share posts and interact with community content.
+- Join discussion groups and communicate with members.
+- Discover and register for coworking-related events.
+- Allow administrators to manage available workspace resources.
+
+## Objectives
+
+The key objectives of the project are:
+
+- To design and develop a coworking space management system.
+- To implement secure user registration and login using JWT authentication.
+- To provide role-based access control for users and administrators.
+- To allow users to browse, filter, and book coworking spaces.
+- To support community engagement through posts, comments, likes, and groups.
+- To provide event creation and registration functionality.
+- To store all important system data in a MySQL relational database.
+- To create a responsive frontend using HTML, CSS, and JavaScript.
+- To implement the backend using Django and Python.
+
+## Technology Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Django, Python |
+| Database | MySQL |
+| Authentication | JWT, bcrypt password hashing |
+| File Uploads | Django file handling |
+| API Style | REST-style JSON endpoints |
+| Server | Django development server |
+
+The current project does not use Node.js. The frontend is plain HTML, CSS, and JavaScript, while the backend is Django.
+
+## System Architecture
+
+CoWorkConnect follows a client-server architecture.
+
+```mermaid
+flowchart TD
+    A[Browser UI<br/>HTML, CSS, JavaScript] -->|"fetch() API requests"| B[Django Backend<br/>REST APIs]
+    B -->|"SQL Queries"| C[(MySQL Database)]
+    B -->|"File I/O"| D[Local File System<br/>Uploads Directory]
+```
+
+The frontend pages are stored in the `ui/` directory. These pages communicate with the backend through `/api/...` endpoints using JavaScript `fetch()` requests. The Django backend receives the requests, validates input, checks authentication where required, performs database operations, and returns JSON responses.
+
+## Project Structure
+
+```text
+coworkconnect/
+  api/
+    management/
+      commands/
+        seed.py
+    apps.py
+    middleware.py
+    schema.py
+    urls.py
+    utils.py
+    views.py
+  coworkconnect/
+    asgi.py
+    settings.py
+    urls.py
+    wsgi.py
+  ui/
+    admin.html
+    app.js
+    community.html
     event-details.html
     events.html
     groups.html
@@ -153,7 +274,6 @@ sequenceDiagram
 ```
 
 Main features:
-
 - User registration
 - User login
 - Password hashing
@@ -165,7 +285,6 @@ Main features:
 The profile module allows authenticated users to view and update their personal information.
 
 Main features:
-
 - View profile
 - Update name, email, status, and bio
 - Change password
@@ -176,7 +295,6 @@ Main features:
 The space management module handles coworking space records.
 
 Main features:
-
 - View all available spaces
 - Filter spaces by location, type, and price
 - View details of one space
@@ -186,30 +304,7 @@ Main features:
 
 The booking module allows users to reserve coworking spaces.
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant DB as Database
-
-    User->>Frontend: Select Workspace & Date
-    Frontend->>Backend: POST /api/bookings (JWT Token)
-    Backend->>DB: Check availability (Space, Date)
-    alt is available
-        DB-->>Backend: Space is free
-        Backend->>DB: Create Booking Record
-        Backend-->>Frontend: 201 Created
-        Frontend-->>User: Show Success
-    else already booked
-        DB-->>Backend: Space is taken
-        Backend-->>Frontend: 400 Bad Request
-        Frontend-->>User: Show Error (Duplicate)
-    end
-```
-
 Main features:
-
 - Create a booking for a selected space and date
 - Prevent duplicate active bookings for the same space and date
 - View current user's bookings
@@ -217,45 +312,42 @@ Main features:
 - Admin can update booking status
 - User or admin can cancel a booking
 
-Booking statuses:
-
-- `pending`
-- `confirmed`
-- `cancelled`
-
 ### 5. Community Posts Module
 
 The community module allows users to share posts and interact with other members.
 
 Main features:
-
-- View community feed
-- Create posts
-- Upload optional post images
-- Like or unlike posts
-- Comment on posts
+- View community feed with paginated lazy loading
+- In-app photo editor card (zoom, rotate, aspect ratio crop)
+- Like or unlike posts with 0ms optimistic UI
+- Comment on posts with collapsed comment hierarchy
 - Delete own posts
 
-### 6. Groups and Messaging Module
+### 6. Groups and Messaging Module (WhatsApp Web Layout)
 
-The groups module supports community discussion circles. Users can create groups, join groups, and send messages inside groups.
+The groups module provides a full-page (100vh) WhatsApp Web interface for community discussion circles.
 
 Main features:
+- Full-page WhatsApp Web 100vh chat layout
+- Group Header Bar with active group image, name, member count, and action controls
+- User profile avatars and role badges (`Admin`, `Co-Admin`, `Member`) on every message bubble
+- Direct file upload for group pictures
+- Drag & Drop and Clipboard Image Paste (`Ctrl+V`) into message composer
+- Member drawer with role management (Promote to Co-Admin, Remove Member, Add Member via search)
+- Admin group deletion with confirmation popup modal
+- Request debouncing to eliminate multi-group creation on rapid clicks
 
-- View groups
-- Create groups
-- Join groups
-- View group messages
-- Send group messages
+### 7. Dual-Layer Image Compression Engine
 
-The current implementation uses REST API calls and lightweight polling from the frontend for group messaging.
+CoWorkConnect includes an automatic dual-layer image compression pipeline across the whole website:
+1. **Client-Side Canvas Compression (`ui/app.js`)**: High-resolution camera photos (3MB–10MB+) are compressed using an HTML5 Canvas pipeline (`compressImageFile`) down to max 1920x1920 resolution at ~82% quality before transmitting over the network.
+2. **Server-Side Pillow Optimization (`api/utils.py`)**: The backend processes all uploaded raster images using Pillow (`PIL.Image` & `ImageOps.exif_transpose`), auto-orients smartphone camera photos, resizes oversized dimensions, and outputs optimized JPEGs/WebPs at ~82% quality.
 
-### 7. Events Module
+### 8. Events Module
 
 The events module allows users to create and register for professional events.
 
 Main features:
-
 - View all events
 - Create events
 - Upload optional event image
@@ -298,19 +390,9 @@ erDiagram
     EVENTS ||--o{ EVENT_REGISTRATIONS : "has"
 ```
 
-- A user can create many bookings.
-- A space can have many bookings.
-- A user can create many posts.
-- A post can have many comments and likes.
-- A user can create many groups.
-- A group can have many members.
-- A group can have many messages.
-- A user can create many events.
-- An event can have many registered participants.
-
 ## Authentication and Authorization
 
-Protected routes require a JWT token in the request header.
+Protected routes require a JWT token in the request header:
 
 ```text
 Authorization: Bearer <token>
