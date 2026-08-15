@@ -120,125 +120,197 @@ coworkconnect/
     community.html
 # CoWorkConnect
 
-CoWorkConnect is a web-based coworking space management and professional networking platform. The system is designed to help users discover coworking spaces, book workspaces, create community posts, join discussion groups, exchange group messages, and register for professional events. It also provides an admin-side workflow for managing workspace inventory.
+CoWorkConnect is a web-based coworking space management, social networking, and community collaboration platform. The system helps users discover coworking spaces, book workspaces, create community posts, join discussion groups (Circles), exchange group messages, manage Facebook-style friend connections, showcase GitHub & LinkedIn portfolios, and register for professional events with compulsory Google Form verification.
 
-This project is suitable for a final year project or thesis because it combines user management, role-based authorization, booking workflows, community interaction, event management, file uploads, database design, and a complete web interface.
+---
 
 ## Table of Contents
 - [Project Overview](#project-overview)
-- [Problem Statement](#problem-statement)
-- [Objectives](#objectives)
+- [Key Features & Modules](#key-features--modules)
+  - [1. User Profile & Public Portfolios](#1-user-profile--public-portfolios)
+  - [2. Facebook-Style Friends System](#2-facebook-style-friends-system)
+  - [3. LinkedIn-Style User Activity & Networking Feed](#3-linkedin-style-user-activity--networking-feed)
+  - [4. Dual-Layer Image Compression Engine](#4-dual-layer-image-compression-engine)
+  - [5. Space Discovery & Workspace Bookings](#5-space-discovery--workspace-bookings)
+  - [6. Circles & Group Messaging](#6-circles--group-messaging)
+  - [7. Events Management & Verification Center](#7-events-management--verification-center)
 - [Technology Stack](#technology-stack)
 - [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
-- [Main Modules](#main-modules)
-  - [1. Authentication Module](#1-authentication-module)
-  - [2. User Profile Module](#2-user-profile-module)
-  - [3. Space Management Module](#3-space-management-module)
-  - [4. Booking Module](#4-booking-module)
-  - [5. Community Posts Module](#5-community-posts-module)
-  - [6. Groups and Messaging Module](#6-groups-and-messaging-module)
-  - [7. Dual-Layer Image Compression Engine](#7-dual-layer-image-compression-engine)
-  - [8. Events Module](#8-events-module)
-- [Database Design](#database-design)
-- [Authentication and Authorization](#authentication-and-authorization)
-- [API Summary](#api-summary)
-- [Setup Instructions](#setup-instructions)
-- [Deployment on Vercel](#deployment-on-vercel)
-- [User Interface Pages](#user-interface-pages)
-- [Testing and Validation](#testing-and-validation)
-- [Security Features](#security-features)
-- [Limitations](#limitations)
-- [Future Enhancements](#future-enhancements)
-- [Conclusion](#conclusion)
+- [Database Schema](#database-schema)
+- [API Endpoints Reference](#api-endpoints-reference)
+- [Setup & Local Development](#setup--local-development)
+
+---
 
 ## Project Overview
 
-The main purpose of CoWorkConnect is to provide a centralized digital platform for coworking users, space owners, freelancers, startups, and remote professionals. Instead of using separate tools for workspace booking, event discovery, and community communication, CoWorkConnect brings these features into one integrated system.
+CoWorkConnect brings together space reservation, social networking, event hosting, and team collaboration into a single, unified web platform.
 
-The platform supports two main user roles:
+### User Roles:
+- **Member (`user`)**: Browse and book spaces, publish posts, connect with friends, join Circles, send chat messages, and attend events.
+- **Administrator (`admin`)**: Manage space listings, edit/delete any community content, approve/reject event registrations, and review system logs.
 
-- `user`: A normal member who can browse spaces, book spaces, create posts, join groups, send messages, and register for events.
-- `admin`: A privileged user who can manage coworking spaces and view or update booking records.
+---
 
-## Problem Statement
+## Key Features & Modules
 
-Many coworking spaces rely on manual communication, social media pages, or disconnected tools for bookings, member interaction, and event promotion. This creates problems such as duplicate bookings, limited visibility of available spaces, weak community engagement, and inefficient administration.
+### 1. User Profile & Public Portfolios (`profile.html` & `user-profile.html`)
+- **Public Member Profile Page (`user-profile.html?id=X`)**: Clicking any user avatar or name across Circles, Network posts, or Event hosts opens their dedicated public profile page.
+- **Professional Headline & Bio**: Users can add a professional headline (e.g. *"Software Engineer @ TechCorp | Open to Collab"*) and catchy bio.
+- **GitHub 💻 & LinkedIn 💼 Links**: Interactive social badges on user profiles for instant portfolio viewing.
+- **Navbar Profile Avatar**: The top-right navbar profile button renders the user's actual uploaded avatar image across all pages.
 
-CoWorkConnect addresses these issues by providing a single web application where users can:
+### 2. Facebook-Style Friends System (`friendships`)
+- **Friend Requests Lifecycle**:
+  - `+ Add Friend`: Sends a friend request.
+  - `⏳ Request Sent`: Displays pending outgoing request status.
+  - `✓ Accept Friend Request`: Accepts incoming friend requests.
+  - `Friends ✓ (Unfriend)`: Allows managing or removing friends.
+- **My Friends Grid**: Dedicated card on `profile.html` and `user-profile.html` displaying accepted friends.
 
-- Search and view available coworking spaces.
-- Book a workspace for a selected date.
-- Manage their profile.
-- Share posts and interact with community content.
-- Join discussion groups and communicate with members.
-- Discover and register for coworking-related events.
-- Allow administrators to manage available workspace resources.
+### 3. LinkedIn-Style User Activity & Networking Feed (`community.html`)
+- **Full Feed Filtering**: Filter posts by `#hashtags`, Latest, Top, Questions, and Collaborations.
+- **User Activity Filter (`community.html?user_id=X`)**: Filter the entire networking feed specifically for posts authored by a single user, complete with likes, nested comments, and sharing.
+- **Text Wrapping Protection**: Line-wrapping CSS (`white-space: pre-wrap; word-break: break-word;`) prevents long text or URLs from distorting card layouts.
 
-## Objectives
+### 4. Dual-Layer Image Compression Engine
+- **Frontend Compression (`compressImageFile`)**: HTML5 Canvas resizes large uploads (max 1200x1200) and compresses blobs before network transmission.
+- **Backend Optimization (`save_upload`)**: Pillow/PIL resizes and saves images with JPEG `quality=82` and optimization flags.
 
-The key objectives of the project are:
+### 5. Space Discovery & Workspace Bookings (`spaces.html` & `spaces-details.html`)
+- **Workspace Filtering**: Search desks, private offices, meeting rooms, and virtual offices.
+- **Interactive Reservations**: Reserve spaces for selected dates with real-time price calculations and booking history on `my-bookings.html`.
 
-- To design and develop a coworking space management system.
-- To implement secure user registration and login using JWT authentication.
-- To provide role-based access control for users and administrators.
-- To allow users to browse, filter, and book coworking spaces.
-- To support community engagement through posts, comments, likes, and groups.
-- To provide event creation and registration functionality.
-- To store all important system data in a MySQL relational database.
-- To create a responsive frontend using HTML, CSS, and JavaScript.
-- To implement the backend using Django and Python.
+### 6. Circles & Group Messaging (`groups.html`)
+- **Discussion Circles**: Join or create public/private co-working circles.
+- **Group Chat & Media Attachments**: Send real-time group messages with image attachments.
+- **Circle Roster & Roles**: Manage member roles (Host, Co-Admin, Member) and click member rows to view profiles.
+
+### 7. Events Management & Verification Center (`events.html` & `event-details.html`)
+- **Compulsory Google Form Links**: Hosts must provide a valid Google Form registration URL when creating an event.
+- **Embedded Form Modal**: Participants fill out the Google Form directly inside an interactive iframe modal.
+- **Host Manual Verification Center**: Hosts review responses via direct Google Sheets links and approve/reject participant registration statuses (`pending`, `approved`, `rejected`).
+- **In-Page Host Controls**: Edit Event and Delete Event buttons with red confirmation modals sit directly in the event page header.
+
+---
 
 ## Technology Stack
 
 | Layer | Technology |
 | :--- | :--- |
-| Frontend | HTML, CSS, JavaScript |
-| Backend | Django, Python |
-| Database | MySQL |
-| Authentication | JWT, bcrypt password hashing |
-| File Uploads | Django file handling |
-| API Style | REST-style JSON endpoints |
-| Server | Django development server |
+| **Frontend** | HTML5, Vanilla CSS, JavaScript (ES6+) |
+| **Backend** | Python, Django, ASGI / Daphne |
+| **Database** | PostgreSQL / SQLite / MySQL |
+| **Authentication** | JWT (JSON Web Tokens), bcrypt hashing |
+| **Icons & Typography** | Lucide Icons, Google Fonts (Outfit) |
 
-The current project does not use Node.js. The frontend is plain HTML, CSS, and JavaScript, while the backend is Django.
+---
 
-## System Architecture
+## Database Schema
 
-CoWorkConnect follows a client-server architecture.
+```sql
+-- Users Table
+CREATE TABLE users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('user', 'admin') DEFAULT 'user',
+  status VARCHAR(50) DEFAULT 'Available',
+  bio TEXT,
+  headline VARCHAR(255),
+  avatar_url VARCHAR(255),
+  github_url VARCHAR(255),
+  linkedin_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-```mermaid
-flowchart TD
-    A[Browser UI<br/>HTML, CSS, JavaScript] -->|"fetch() API requests"| B[Django Backend<br/>REST APIs]
-    B -->|"SQL Queries"| C[(MySQL Database)]
-    B -->|"File I/O"| D[Local File System<br/>Uploads Directory]
+-- Friendships Table
+CREATE TABLE friendships (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  friend_id INT NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, friend_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Events Table
+CREATE TABLE events (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(150) NOT NULL,
+  event_type VARCHAR(50) NOT NULL,
+  city VARCHAR(50) NOT NULL,
+  location VARCHAR(150) NOT NULL,
+  event_date DATETIME NOT NULL,
+  end_time DATETIME,
+  description TEXT NOT NULL,
+  google_form_url VARCHAR(500) NOT NULL,
+  image_url VARCHAR(255),
+  created_by INT NOT NULL
+);
+
+-- Event Registrations Table
+CREATE TABLE event_registrations (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  event_id INT NOT NULL,
+  user_id INT NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (event_id, user_id)
+);
 ```
 
-The frontend pages are stored in the `ui/` directory. These pages communicate with the backend through `/api/...` endpoints using JavaScript `fetch()` requests. The Django backend receives the requests, validates input, checks authentication where required, performs database operations, and returns JSON responses.
+---
 
-## Project Structure
+## API Endpoints Reference
 
-```text
-coworkconnect/
-  api/
-    management/
-      commands/
-        seed.py
-    apps.py
-    middleware.py
-    schema.py
-    urls.py
-    utils.py
-    views.py
-  coworkconnect/
-    asgi.py
-    settings.py
-    urls.py
-    wsgi.py
-  ui/
-    admin.html
-    app.js
-    community.html
+### Authentication & Users
+- `POST /api/auth/register` — Register a new account.
+- `POST /api/auth/login` — Sign in and receive JWT token.
+- `GET /api/users/profile` — Fetch current user profile.
+- `PUT /api/users/profile` — Update name, bio, headline, GitHub/LinkedIn links, status.
+- `POST /api/users/profile/avatar` — Upload and compress profile avatar image.
+- `GET /api/users/<user_id>` — Fetch public user profile, headline, social links & friendship status.
+
+### Friends System
+- `GET /api/friends` — List accepted friends and pending requests.
+- `GET /api/users/<user_id>/friends` — List accepted friends for target user.
+- `POST /api/friends/request` — Send friend request to `friend_id`.
+- `PUT /api/friends/respond` — Accept, decline, or unfriend (`action`: `'accept'` | `'decline'` | `'unfriend'`).
+
+### Community Posts & Activity
+- `GET /api/posts` — Fetch community feed (supports optional `?tag=X` or `?user_id=X`).
+- `POST /api/posts` — Create a new post with text, tags, and compressed image.
+- `POST /api/posts/<post_id>/like` — Toggle post like.
+- `POST /api/posts/<post_id>/comments` — Add comment or nested reply.
+
+### Events & Host Control
+- `GET /api/events` — List upcoming events.
+- `POST /api/events` — Create event (enforces compulsory Google Form URL).
+- `GET /api/events/<event_id>` — Single event details.
+- `PUT /api/events/<event_id>` — Update event details (Host/Admin only).
+- `DELETE /api/events/<event_id>` — Delete event (Host/Admin only).
+- `POST /api/events/<event_id>/register` — Register for event (status defaults to `pending`).
+- `PUT /api/events/<event_id>/participants/<target_user_id>/status` — Update participant status (`approved`, `rejected`, `pending`).
+
+---
+
+## Setup & Local Development
+
+1. **Clone & Install Dependencies**:
+   ```bash
+   python -m pip install django daphne pillow pyjwt bcrypt cloudinary
+   ```
+2. **Run Migrations & Start Development Server**:
+   ```bash
+   python manage.py migrate
+   python manage.py runserver 5000
+   ```
+3. **Access Application**:
+   Open `http://127.0.0.1:5000/` in your web browser.
     event-details.html
     events.html
     groups.html

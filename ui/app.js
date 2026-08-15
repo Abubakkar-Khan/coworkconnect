@@ -187,10 +187,13 @@ function updateNavbar() {
         const isAdmin = user.role === 'admin';
         const displayName = user.name || 'Member';
         const initial = displayName[0].toUpperCase();
+        const avatarContent = user.avatar_url 
+            ? `<img src="${safeImageUrl(user.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
+            : escapeHtml(initial);
 
         userLinks.innerHTML = `
             <div class="user-menu" id="user-menu-trigger">
-                <div class="user-avatar">${escapeHtml(initial)}</div>
+                <div class="user-avatar" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-weight:800;color:#059669;">${avatarContent}</div>
                 <span id="user-name">${escapeHtml(displayName)}</span>
                 <i data-lucide="chevron-down" size="14"></i>
                 <div class="dropdown-menu">
@@ -415,6 +418,7 @@ window.CoWorkConnect = {
     getToken,
     renderInlineLoginGate,
     compressImageFile,
+    openUserProfileModal,
 };
 window.escapeHtml = escapeHtml;
 window.safeImageUrl = safeImageUrl;
@@ -424,6 +428,67 @@ window.showToast = showToast;
 window.getStoredUser = getStoredUser;
 window.getCurrentUser = getStoredUser;
 window.compressImageFile = compressImageFile;
+window.openUserProfileModal = openUserProfileModal;
+window.closeUserProfileModal = closeUserProfileModal;
+window.handleFriendAction = handleFriendAction;
+
+// Open User Profile Page (Page Navigation)
+function openUserProfileModal(userId) {
+    if (!userId) return;
+    window.location.href = `user-profile.html?id=${userId}`;
+}
+
+// Full-Screen Image Lightbox Popup Modal with Scroll & Download
+function openImageLightbox(src) {
+    if (!src) return;
+    let lightbox = document.getElementById('global-image-lightbox');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'global-image-lightbox';
+        lightbox.style.cssText = 'position: fixed; inset: 0; background: rgba(15, 23, 42, 0.94); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: 1.5rem; opacity: 0; transition: opacity 0.25s ease;';
+        lightbox.innerHTML = `
+            <div style="position: absolute; top: 1.5rem; right: 1.5rem; display: flex; gap: 0.75rem; z-index: 100000; align-items: center;">
+                <a id="lightbox-download-btn" href="" download="coworkconnect-image" target="_blank" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 0.55rem 1.2rem; font-size: 0.88rem; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(8px); transition: all 0.2s ease;">
+                    <span>⬇ Download Image</span>
+                </a>
+                <button type="button" onclick="closeImageLightbox()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; backdrop-filter: blur(8px);">✕</button>
+            </div>
+            <div style="max-width: 92vw; max-height: 88vh; overflow: auto; display: flex; align-items: center; justify-content: center; border-radius: 16px; padding: 0.5rem;">
+                <img id="lightbox-img-element" src="" style="max-width: 100%; max-height: 84vh; width: auto; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); cursor: default;">
+            </div>
+        `;
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeImageLightbox();
+        });
+        document.body.appendChild(lightbox);
+    }
+
+    const imgEl = document.getElementById('lightbox-img-element');
+    const downloadBtn = document.getElementById('lightbox-download-btn');
+    if (imgEl) imgEl.src = src;
+    if (downloadBtn) downloadBtn.href = src;
+    lightbox.style.display = 'flex';
+    setTimeout(() => { lightbox.style.opacity = '1'; }, 10);
+}
+
+function closeImageLightbox() {
+    const lightbox = document.getElementById('global-image-lightbox');
+    if (lightbox) {
+        lightbox.style.opacity = '0';
+        setTimeout(() => { lightbox.style.display = 'none'; }, 250);
+    }
+}
+
+window.openImageLightbox = openImageLightbox;
+window.closeImageLightbox = closeImageLightbox;
+
+// Delegate clickable image lightbox across all pages
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target instanceof HTMLImageElement && (target.classList.contains('post-image') || target.classList.contains('msg-photo-attach') || target.id === 'e-banner' || target.classList.contains('evt-card-img') || target.classList.contains('space-card-img'))) {
+        openImageLightbox(target.src);
+    }
+});
 
 enforceAuth();
 

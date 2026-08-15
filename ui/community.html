@@ -456,9 +456,13 @@
             line-height: 1.65;
             margin-bottom: 0.85rem;
             white-space: pre-wrap;
+            word-wrap: break-word;
             word-break: break-word;
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
             hyphens: auto;
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .tag-row {
@@ -1530,15 +1534,10 @@
                     <div class="post-body">
                         <div class="post-head">
                             <div class="post-author">
-                                <div class="post-avatar">${avatarContent}</div>
+                                <div class="post-avatar" style="cursor:pointer;" onclick="openUserProfileModal(${post.user_id})" title="View Profile">${avatarContent}</div>
                                 <div style="min-width:0;">
-                                    <h4>${escapeHtml(userName)}</h4>
-                                    <p>${timeStr} - CoWorkConnect network</p>
-                                </div>
-                            </div>
-                            <button class="icon-button" type="button" title="More"><i data-lucide="more-horizontal" size="19"></i></button>
-                        </div>4>
-                                    <p>${timeStr} - CoWorkConnect network</p>
+                                    <h4 style="cursor:pointer;" onclick="openUserProfileModal(${post.user_id})">${escapeHtml(userName)}</h4>
+                                    <p style="color:#64748b;font-size:0.75rem;font-weight:700;margin-top:2px;">${escapeHtml(post.user_headline || 'CoWorkConnect Member')} • ${timeStr}</p>
                                 </div>
                             </div>
                             <button class="icon-button" type="button" title="More"><i data-lucide="more-horizontal" size="19"></i></button>
@@ -1583,19 +1582,15 @@
         }
 
         function loadNextPostBatch() {
-            const feed = document.getElementById('posts-feed');
-            if (!feed || isLoadingMore) return;
-            if (visiblePostCount >= filteredPostsList.length) return;
-
+            if (isLoadingMore || visiblePostCount >= filteredPostsList.length) return;
             isLoadingMore = true;
 
-            const existingSentinel = document.getElementById('feed-sentinel');
-            if (existingSentinel) existingSentinel.remove();
-            const existingEnd = document.getElementById('feed-end-badge');
-            if (existingEnd) existingEnd.remove();
+            const sentinel = document.getElementById('feed-sentinel');
+            if (sentinel) sentinel.remove();
 
             const batch = filteredPostsList.slice(visiblePostCount, visiblePostCount + POSTS_PER_PAGE);
             const htmlSlice = batch.map(renderSinglePostCard).join('');
+            const feed = document.getElementById('posts-feed');
 
             if (visiblePostCount === 0) {
                 feed.innerHTML = htmlSlice;
@@ -1741,12 +1736,12 @@
 
             return `
                 <div class="comment-item">
-                    <div class="small-avatar" style="width:34px;height:34px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;overflow:hidden;">
+                    <div class="small-avatar" style="cursor:pointer;width:34px;height:34px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;overflow:hidden;" onclick="openUserProfileModal(${comment.user_id})" title="View Profile">
                         ${commentAvatarContent}
                     </div>
                     <div class="comment-content-wrap">
                         <div class="comment-header">
-                            <h5>${escapeHtml(comment.user_name || 'Member')}</h5>
+                            <h5 style="cursor:pointer;" onclick="openUserProfileModal(${comment.user_id})">${escapeHtml(comment.user_name || 'Member')}</h5>
                             <span>${comment.created_at ? new Date(comment.created_at).toLocaleDateString() : ''}</span>
                         </div>
                         <p class="comment-body collapsed">${escapeHtml(comment.content)}</p>

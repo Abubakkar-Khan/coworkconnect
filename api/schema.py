@@ -486,6 +486,7 @@ def postgres_statements():
           venue VARCHAR(255),
           event_type VARCHAR(100),
           description TEXT,
+          google_form_url VARCHAR(500),
           event_date TIMESTAMP NOT NULL,
           end_date TIMESTAMP,
           image_url VARCHAR(255),
@@ -501,9 +502,34 @@ def postgres_statements():
           id SERIAL PRIMARY KEY,
           event_id INTEGER NOT NULL,
           user_id INTEGER NOT NULL,
+          status VARCHAR(50) DEFAULT 'pending',
           registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           UNIQUE (event_id, user_id),
           FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS friendships (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          friend_id INTEGER NOT NULL,
+          status VARCHAR(50) DEFAULT 'pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (user_id, friend_id),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS message_reactions (
+          id SERIAL PRIMARY KEY,
+          message_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          emoji VARCHAR(20) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE (message_id, user_id, emoji),
+          FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
         """,
@@ -515,13 +541,31 @@ def compatibility_statements(vendor):
         return [
             "ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url VARCHAR(255)",
             "ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INT DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS google_form_url VARCHAR(500)",
+            "ALTER TABLE event_registrations ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending'",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS github_url VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_url VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS headline VARCHAR(255)",
         ]
     if vendor == "sqlite":
         return [
             "ALTER TABLE messages ADD COLUMN image_url TEXT",
             "ALTER TABLE comments ADD COLUMN parent_id INTEGER DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
+            "ALTER TABLE events ADD COLUMN google_form_url TEXT",
+            "ALTER TABLE event_registrations ADD COLUMN status TEXT DEFAULT 'pending'",
+            "ALTER TABLE users ADD COLUMN github_url TEXT",
+            "ALTER TABLE users ADD COLUMN linkedin_url TEXT",
+            "ALTER TABLE users ADD COLUMN avatar_url TEXT",
+            "ALTER TABLE users ADD COLUMN headline TEXT",
         ]
     return [
         "ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)",
         "ALTER TABLE comments ADD COLUMN parent_id INT DEFAULT NULL REFERENCES comments(id) ON DELETE CASCADE",
+        "ALTER TABLE events ADD COLUMN google_form_url VARCHAR(500)",
+        "ALTER TABLE event_registrations ADD COLUMN status VARCHAR(50) DEFAULT 'pending'",
+        "ALTER TABLE users ADD COLUMN github_url VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN headline VARCHAR(255)",
     ]

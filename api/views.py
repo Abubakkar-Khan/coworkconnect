@@ -392,7 +392,14 @@ def profile(request):
         return error
 
     if request.method == "GET":
-        row = fetch_one("SELECT id, name, email, role, status, bio, avatar_url, expertise, created_at FROM users WHERE id = %s", [user["id"]])
+        row = fetch_one(
+            """
+            SELECT id, name, email, role, status, bio, headline, avatar_url, expertise, github_url, linkedin_url, created_at,
+              (SELECT COUNT(*) FROM friendships WHERE (user_id = users.id OR friend_id = users.id) AND status = 'accepted') as friends_count
+            FROM users WHERE id = %s
+            """,
+            [user["id"]]
+        )
         if not row:
             return api_response({"success": False, "message": "User not found"}, 404)
         return api_response({"success": True, "data": row})
@@ -403,16 +410,6 @@ def profile(request):
         if email and fetch_one("SELECT id FROM users WHERE LOWER(email) = LOWER(%s) AND id != %s", [email, user["id"]]):
             return api_response({"success": False, "message": "Email already in use"}, 400)
         
-        # Determine if avatar_url or expertise are provided in the payload; if not, fallback to existing to allow partial updates
-        # Actually, using COALESCE handles missing keys if they are passed as None. 
-        # But for expertise which could be empty string, we should just update it if the key exists in data.
-        update_params = [
-            data.get("name"), email, data.get("status"), data.get("bio"),
-            data.get("avatar_url") if "avatar_url" in data else None,
-            data.get("expertise") if "expertise" in data else None,
-            user["id"]
-        ]
-        
         execute(
             """
             UPDATE users
@@ -420,20 +417,191 @@ def profile(request):
                 email = COALESCE(%s, email), 
                 status = COALESCE(%s, status), 
                 bio = COALESCE(%s, bio),
+                headline = CASE WHEN %s IS NOT NULL THEN %s ELSE headline END,
                 avatar_url = CASE WHEN %s IS NOT NULL THEN %s ELSE avatar_url END,
-                expertise = CASE WHEN %s IS NOT NULL THEN %s ELSE expertise END
+                expertise = CASE WHEN %s IS NOT NULL THEN %s ELSE expertise END,
+                github_url = CASE WHEN %s IS NOT NULL THEN %s ELSE github_url END,
+                linkedin_url = CASE WHEN %s IS NOT NULL THEN %s ELSE linkedin_url END
             WHERE id = %s
             """,
             [
                 data.get("name"), email, data.get("status"), data.get("bio"),
+                data.get("headline") if "headline" in data else None, data.get("headline") if "headline" in data else None,
                 data.get("avatar_url") if "avatar_url" in data else None, data.get("avatar_url") if "avatar_url" in data else None,
                 data.get("expertise") if "expertise" in data else None, data.get("expertise") if "expertise" in data else None,
+                data.get("github_url") if "github_url" in data else (data.get("githubUrl") if "githubUrl" in data else None),
+                data.get("github_url") if "github_url" in data else (data.get("githubUrl") if "githubUrl" in data else None),
+                data.get("linkedin_url") if "linkedin_url" in data else (data.get("linkedinUrl") if "linkedinUrl" in data else None),
+                data.get("linkedin_url") if "linkedin_url" in data else (data.get("linkedinUrl") if "linkedinUrl" in data else None),
                 user["id"]
             ],
         )
         return api_response({"success": True, "message": "Profile updated successfully"})
 
     return method_not_allowed()
+
+
+def public_profile(request, user_id):
+    if request.method != "GET":
+        return method_not_allowed()
+    current_user, _ = auth_user(request, required=False)
+    
+    target_user = fetch_one(
+        """
+        SELECT id, name, email, role, status, bio, headline, avatar_url, expertise, github_url, linkedin_url, created_at,
+          (SELECT COUNT(*) FROM friendships WHERE (user_id = users.id OR friend_id = users.id) AND status = 'accepted') as friends_count
+        FROM users WHERE id = %s
+        """,
+        [user_id]
+    )
+    if not target_user:
+        return api_response({"success": False, "message": "User not found"}, 404)
+
+    friendship_status = "none"
+    if current_user:
+        if current_user["id"] == user_id:
+            friendship_status = "self"
+        else:
+            rel = fetch_one(
+                """
+                SELECT id, user_id, friend_id, status FROM friendships
+                WHERE (user_id = %s AND friend_id = %s) OR (user_id = %s AND friend_id = %s)
+                """,
+                [current_user["id"], user_id, user_id, current_user["id"]]
+            )
+            if rel:
+                if rel["status"] == "accepted":
+                    friendship_status = "friends"
+                elif rel["user_id"] == current_user["id"]:
+                    friendship_status = "pending_sent"
+                else:
+                    friendship_status = "pending_received"
+
+    target_user["friendship_status"] = friendship_status
+    return api_response({"success": True, "data": target_user})
+
+
+def friends_list(request):
+    user, error = auth_user(request)
+    if error:
+        return error
+    if request.method != "GET":
+        return method_not_allowed()
+
+    friends = fetch_all(
+        """
+        SELECT u.id, u.name, u.email, u.status, u.avatar_url, u.bio, f.created_at as friendship_date
+        FROM friendships f
+        JOIN users u ON (CASE WHEN f.user_id = %s THEN f.friend_id ELSE f.user_id END) = u.id
+        WHERE (f.user_id = %s OR f.friend_id = %s) AND f.status = 'accepted'
+        ORDER BY f.created_at DESC
+        """,
+        [user["id"], user["id"], user["id"]]
+    )
+
+    pending_received = fetch_all(
+        """
+        SELECT f.id as request_id, u.id as user_id, u.name, u.email, u.avatar_url, f.created_at
+        FROM friendships f
+        JOIN users u ON f.user_id = u.id
+        WHERE f.friend_id = %s AND f.status = 'pending'
+        ORDER BY f.created_at DESC
+        """,
+        [user["id"]]
+    )
+
+    pending_sent = fetch_all(
+        """
+        SELECT f.id as request_id, u.id as user_id, u.name, u.email, u.avatar_url, f.created_at
+        FROM friendships f
+        JOIN users u ON f.friend_id = u.id
+        WHERE f.user_id = %s AND f.status = 'pending'
+        ORDER BY f.created_at DESC
+        """,
+        [user["id"]]
+    )
+
+    return api_response({
+        "success": True,
+        "friends": friends,
+        "pending_received": pending_received,
+        "pending_sent": pending_sent
+    })
+
+
+def user_friends(request, user_id):
+    if request.method != "GET":
+        return method_not_allowed()
+    
+    friends = fetch_all(
+        """
+        SELECT u.id, u.name, u.email, u.status, u.avatar_url, u.bio
+        FROM friendships f
+        JOIN users u ON (CASE WHEN f.user_id = %s THEN f.friend_id ELSE f.user_id END) = u.id
+        WHERE (f.user_id = %s OR f.friend_id = %s) AND f.status = 'accepted'
+        ORDER BY f.created_at DESC
+        """,
+        [user_id, user_id, user_id]
+    )
+    return api_response({"success": True, "count": len(friends), "data": friends})
+
+
+def send_friend_request(request):
+    if request.method != "POST":
+        return method_not_allowed()
+    user, error = auth_user(request)
+    if error:
+        return error
+    data = read_data(request)
+    friend_id = data.get("friend_id") or data.get("friendId")
+    if not friend_id or int(friend_id) == user["id"]:
+        return api_response({"success": False, "message": "Invalid friend ID"}, 400)
+
+    existing = fetch_one(
+        "SELECT * FROM friendships WHERE (user_id = %s AND friend_id = %s) OR (user_id = %s AND friend_id = %s)",
+        [user["id"], friend_id, friend_id, user["id"]]
+    )
+    if existing:
+        if existing["status"] == "accepted":
+            return api_response({"success": True, "message": "Already friends", "status": "friends"})
+        if existing["user_id"] == user["id"]:
+            return api_response({"success": True, "message": "Friend request already sent", "status": "pending_sent"})
+        else:
+            execute("UPDATE friendships SET status = 'accepted' WHERE id = %s", [existing["id"]])
+            return api_response({"success": True, "message": "Friend request accepted!", "status": "friends"})
+
+    execute("INSERT INTO friendships (user_id, friend_id, status) VALUES (%s, %s, 'pending')", [user["id"], friend_id])
+    return api_response({"success": True, "message": "Friend request sent!", "status": "pending_sent"})
+
+
+def respond_friend_request(request):
+    if request.method != "PUT":
+        return method_not_allowed()
+    user, error = auth_user(request)
+    if error:
+        return error
+    data = read_data(request)
+    friend_id = data.get("friend_id") or data.get("friendId")
+    action = (data.get("action") or "").strip().lower()
+
+    if not friend_id:
+        return api_response({"success": False, "message": "Friend ID is required"}, 400)
+
+    existing = fetch_one(
+        "SELECT * FROM friendships WHERE (user_id = %s AND friend_id = %s) OR (user_id = %s AND friend_id = %s)",
+        [user["id"], friend_id, friend_id, user["id"]]
+    )
+    if not existing:
+        return api_response({"success": False, "message": "No relationship found"}, 404)
+
+    if action == "accept":
+        execute("UPDATE friendships SET status = 'accepted' WHERE id = %s", [existing["id"]])
+        return api_response({"success": True, "message": "Friend request accepted!", "status": "friends"})
+    elif action in ["decline", "unfriend", "cancel"]:
+        execute("DELETE FROM friendships WHERE id = %s", [existing["id"]])
+        return api_response({"success": True, "message": "Relationship removed", "status": "none"})
+
+    return api_response({"success": False, "message": "Invalid action"}, 400)
 
 
 def profile_avatar(request):
@@ -486,21 +654,29 @@ def posts(request):
     if request.method == "GET":
         current_user, _ = auth_user(request, required=False)
         tag = request.GET.get("tag")
+        filter_user_id = request.GET.get("user_id") or request.GET.get("userId")
         params = []
         sql = """
-            SELECT p.*, COALESCE(u.name, 'Community Member') as user_name,
+            SELECT p.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar, u.status as user_status, u.headline as user_headline,
               (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count,
               (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count
             FROM posts p
             LEFT JOIN users u ON p.user_id = u.id
         """
+        conditions = []
         if tag:
-            sql += " WHERE p.tags LIKE %s"
+            conditions.append("p.tags LIKE %s")
             params.append(f"%{tag}%")
+        if filter_user_id:
+            conditions.append("p.user_id = %s")
+            params.append(filter_user_id)
+        if conditions:
+            sql += " WHERE " + " AND ".join(conditions)
+
         sql += " ORDER BY p.created_at DESC LIMIT 50"
 
         rows = fetch_all(sql, params)
-        if not rows and not tag:
+        if not rows and not tag and not filter_user_id:
             # Seed initial vibrant posts if database has no posts yet
             admin_user = fetch_one("SELECT id FROM users LIMIT 1")
             user_id_to_use = admin_user["id"] if admin_user else 1
@@ -524,7 +700,7 @@ def posts(request):
                 )
             post["comments"] = fetch_all(
                 """
-                SELECT c.*, COALESCE(u.name, 'Community Member') as user_name,
+                SELECT c.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count
                 FROM comments c
                 LEFT JOIN users u ON c.user_id = u.id
@@ -887,6 +1063,18 @@ def group_messages(request, group_id):
             """,
             [group_id],
         )
+        for msg in rows:
+            reactions = fetch_all(
+                """
+                SELECT emoji, COUNT(*) as count,
+                       SUM(CASE WHEN user_id = %s THEN 1 ELSE 0 END) as reacted_by_me
+                FROM message_reactions
+                WHERE message_id = %s
+                GROUP BY emoji
+                """,
+                [user["id"], msg["id"]],
+            )
+            msg["reactions"] = reactions
         return api_response({"success": True, "data": rows})
 
     if request.method == "POST":
@@ -918,28 +1106,115 @@ def group_messages(request, group_id):
             """,
             [message_id],
         )
-        try:
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
-            channel_layer = get_channel_layer()
-            if channel_layer:
-                created_at_val = row.get("created_at")
-                created_at_str = created_at_val.isoformat() if hasattr(created_at_val, "isoformat") else str(created_at_val)
-                async_to_sync(channel_layer.group_send)(
-                    f"chat_{group_id}",
-                    {
-                        "type": "chat_message",
-                        "message": content,
-                        "user_name": user["name"],
-                        "image_url": image_url,
-                        "created_at": created_at_str
-                    }
-                )
-        except Exception:
-            pass
-        return api_response({"success": True, "message": "Message sent", "data": row}, 201)
+        row["reactions"] = []
+        return api_response({"success": True, "data": row}, 201)
 
     return method_not_allowed()
+
+
+def message_detail(request, message_id):
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    msg = fetch_one("SELECT * FROM messages WHERE id = %s", [message_id])
+    if not msg:
+        return api_response({"success": False, "message": "Message not found"}, 404)
+
+    is_author = int(msg["user_id"]) == int(user["id"])
+    is_superadmin = user.get("role") == "admin"
+    is_circle_admin = bool(
+        fetch_one(
+            "SELECT id FROM group_members WHERE group_id = %s AND user_id = %s AND role IN ('admin', 'co-admin')",
+            [msg["group_id"], user["id"]],
+        )
+        or fetch_one(
+            "SELECT id FROM community_groups WHERE id = %s AND created_by = %s",
+            [msg["group_id"], user["id"]],
+        )
+    )
+
+    if request.method == "PUT" or request.method == "PATCH":
+        if not is_author:
+            return api_response({"success": False, "message": "Only the original author can edit this message"}, 403)
+        data = read_data(request)
+        content = (data.get("content") or "").strip()
+        if not content and not msg.get("image_url"):
+            return api_response({"success": False, "message": "Message content cannot be empty"}, 400)
+        execute("UPDATE messages SET content = %s WHERE id = %s", [content, message_id])
+        updated = fetch_one(
+            """
+            SELECT m.*, u.name as user_name, u.avatar_url as user_avatar, gm.role as member_role
+            FROM messages m
+            LEFT JOIN users u ON m.user_id = u.id
+            LEFT JOIN group_members gm ON gm.group_id = m.group_id AND gm.user_id = m.user_id
+            WHERE m.id = %s
+            """,
+            [message_id],
+        )
+        return api_response({"success": True, "message": "Message updated", "data": updated})
+
+    if request.method == "DELETE":
+        if not (is_author or is_superadmin or is_circle_admin):
+            return api_response({"success": False, "message": "Permission denied to delete this message"}, 403)
+        execute("DELETE FROM message_reactions WHERE message_id = %s", [message_id])
+        execute("DELETE FROM messages WHERE id = %s", [message_id])
+        return api_response({"success": True, "message": "Message deleted"})
+
+    return method_not_allowed()
+
+
+def toggle_message_reaction(request, message_id):
+    if request.method != "POST":
+        return method_not_allowed()
+
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    msg = fetch_one("SELECT * FROM messages WHERE id = %s", [message_id])
+    if not msg:
+        return api_response({"success": False, "message": "Message not found"}, 404)
+
+    data = read_data(request)
+    emoji = (data.get("emoji") or "👍").strip()
+
+    try:
+        existing = fetch_one(
+            "SELECT id FROM message_reactions WHERE message_id = %s AND user_id = %s AND emoji = %s",
+            [message_id, user["id"], emoji],
+        )
+        if existing:
+            execute("DELETE FROM message_reactions WHERE id = %s", [existing["id"]])
+            action = "removed"
+        else:
+            execute(
+                "INSERT INTO message_reactions (message_id, user_id, emoji) VALUES (%s, %s, %s)",
+                [message_id, user["id"], emoji],
+            )
+            action = "added"
+    except Exception:
+        action = "updated"
+
+    reactions = fetch_all(
+        """
+        SELECT emoji, COUNT(*) as count,
+               SUM(CASE WHEN user_id = %s THEN 1 ELSE 0 END) as reacted_by_me
+        FROM message_reactions
+        WHERE message_id = %s
+        GROUP BY emoji
+        """,
+        [user["id"], message_id],
+    )
+
+    return api_response({"success": True, "action": action, "reactions": reactions})
+
+
+def is_google_form_url(url):
+    if not url or not isinstance(url, str):
+        return False
+    u = url.strip().lower()
+    return "docs.google.com/forms" in u or "forms.gle" in u or u.startswith("https://")
 
 
 def events(request):
@@ -964,6 +1239,13 @@ def events(request):
         missing = require_fields(data, ["title", "description", "eventDate"])
         if missing:
             return missing
+        
+        google_form_url = (data.get("googleFormUrl") or data.get("google_form_url") or "").strip()
+        if not google_form_url:
+            return api_response({"success": False, "message": "Google Form URL is compulsory for event registration."}, 400)
+        if not is_google_form_url(google_form_url):
+            return api_response({"success": False, "message": "Please enter a valid Google Form URL (e.g. https://docs.google.com/forms/... or https://forms.gle/...)"}, 400)
+
         if data.get("endDate") and data.get("endDate") < data.get("eventDate"):
             return api_response({"success": False, "message": "End date and time cannot be earlier than start time"}, 400)
         try:
@@ -973,8 +1255,8 @@ def events(request):
         space_id = data.get("spaceId") or None
         _, event_id = execute(
             """
-            INSERT INTO events (title, city, venue, event_type, description, event_date, end_date, image_url, space_id, created_by)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO events (title, city, venue, event_type, description, google_form_url, event_date, end_date, image_url, space_id, created_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             [
                 data.get("title"),
@@ -982,6 +1264,7 @@ def events(request):
                 data.get("venue") or None,
                 data.get("eventType") or None,
                 data.get("description"),
+                google_form_url,
                 data.get("eventDate"),
                 data.get("endDate") or None,
                 image_url,
@@ -989,7 +1272,80 @@ def events(request):
                 user["id"],
             ],
         )
-        return api_response({"success": True, "data": {"id": event_id, "title": data.get("title"), "eventDate": data.get("eventDate")}}, 201)
+        return api_response({"success": True, "data": {"id": event_id, "title": data.get("title"), "google_form_url": google_form_url, "eventDate": data.get("eventDate")}}, 201)
+
+    return method_not_allowed()
+
+
+def event_detail(request, event_id):
+    event = fetch_one(
+        """
+        SELECT e.*, s.name as space_name, u.name as creator_name,
+          (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) as participant_count
+        FROM events e
+        LEFT JOIN spaces s ON e.space_id = s.id
+        JOIN users u ON e.created_by = u.id
+        WHERE e.id = %s
+        """,
+        [event_id],
+    )
+    if not event:
+        return api_response({"success": False, "message": "Event not found"}, 404)
+
+    if request.method == "GET":
+        return api_response({"success": True, "data": event})
+
+    if request.method == "PUT":
+        user, error = auth_user(request)
+        if error:
+            return error
+
+        if user.get("role") != "admin" and event["created_by"] != user["id"]:
+            return api_response({"success": False, "message": "Only the event host or admin can edit this event"}, 403)
+
+        data = read_data(request)
+        title = data.get("title") or event.get("title")
+        city = data.get("city") if "city" in data else event.get("city")
+        venue = data.get("venue") if "venue" in data else event.get("venue")
+        event_type = data.get("eventType") or data.get("event_type") or event.get("event_type")
+        description = data.get("description") if "description" in data else event.get("description")
+        
+        google_form_url = (data.get("googleFormUrl") or data.get("google_form_url") or event.get("google_form_url") or "").strip()
+        if google_form_url and not is_google_form_url(google_form_url):
+            return api_response({"success": False, "message": "Please enter a valid Google Form URL"}, 400)
+
+        event_date = data.get("eventDate") or data.get("event_date") or event.get("event_date")
+        end_date = data.get("endDate") or data.get("end_date") or event.get("end_date")
+
+        image_url = event.get("image_url")
+        if "image" in request.FILES:
+            try:
+                image_url = save_upload(request.FILES["image"], "events")
+            except Exception as e:
+                return api_response({"success": False, "message": str(e)}, 400)
+        elif data.get("image_url"):
+            image_url = data.get("image_url")
+
+        execute(
+            """
+            UPDATE events 
+            SET title = %s, city = %s, venue = %s, event_type = %s, description = %s, google_form_url = %s, event_date = %s, end_date = %s, image_url = %s
+            WHERE id = %s
+            """,
+            [title, city, venue, event_type, description, google_form_url, event_date, end_date, image_url, event_id],
+        )
+        return api_response({"success": True, "message": "Event updated successfully", "data": {"id": event_id, "title": title}})
+
+    if request.method == "DELETE":
+        user, error = auth_user(request)
+        if error:
+            return error
+
+        if user.get("role") != "admin" and event["created_by"] != user["id"]:
+            return api_response({"success": False, "message": "Only the event host or admin can delete this event"}, 403)
+
+        execute("DELETE FROM events WHERE id = %s", [event_id])
+        return api_response({"success": True, "message": "Event deleted successfully"})
 
     return method_not_allowed()
 
@@ -1000,12 +1356,24 @@ def register_event(request, event_id):
     user, error = auth_user(request)
     if error:
         return error
-    if not fetch_one("SELECT id FROM events WHERE id = %s", [event_id]):
+    event = fetch_one("SELECT id, google_form_url FROM events WHERE id = %s", [event_id])
+    if not event:
         return api_response({"success": False, "message": "Event not found"}, 404)
-    if fetch_one("SELECT id FROM event_registrations WHERE event_id = %s AND user_id = %s", [event_id, user["id"]]):
-        return api_response({"success": False, "message": "Already registered for this event"}, 400)
-    execute("INSERT INTO event_registrations (event_id, user_id) VALUES (%s, %s)", [event_id, user["id"]])
-    return api_response({"success": True, "message": "Successfully registered for event"})
+    
+    existing = fetch_one("SELECT id, COALESCE(status, 'pending') as status FROM event_registrations WHERE event_id = %s AND user_id = %s", [event_id, user["id"]])
+    if existing:
+        return api_response({
+            "success": True,
+            "message": f"Already registered for this event. Status: {existing.get('status', 'pending').upper()}",
+            "status": existing.get("status", "pending")
+        }, 200)
+
+    execute("INSERT INTO event_registrations (event_id, user_id, status) VALUES (%s, %s, 'pending')", [event_id, user["id"]])
+    return api_response({
+        "success": True,
+        "message": "Registration submitted! Your status is PENDING host verification.",
+        "status": "pending"
+    })
 
 
 def event_participants(request, event_id):
@@ -1021,11 +1389,36 @@ def event_participants(request, event_id):
         return api_response({"success": False, "message": "Only the event host or admin can view participants"}, 403)
     rows = fetch_all(
         """
-        SELECT u.id, u.name, u.email, r.registered_at
+        SELECT r.id as registration_id, u.id as user_id, u.name, u.email, u.avatar_url,
+               COALESCE(r.status, 'pending') as status, r.registered_at
         FROM event_registrations r
         JOIN users u ON r.user_id = u.id
         WHERE r.event_id = %s
+        ORDER BY (CASE WHEN r.status = 'pending' THEN 1 WHEN r.status = 'approved' THEN 2 ELSE 3 END), r.registered_at DESC
         """,
         [event_id],
     )
     return api_response({"success": True, "count": len(rows), "data": rows})
+
+
+def update_registration_status(request, event_id, target_user_id):
+    if request.method != "PUT":
+        return method_not_allowed()
+    user, error = auth_user(request)
+    if error:
+        return error
+
+    event = fetch_one("SELECT created_by FROM events WHERE id = %s", [event_id])
+    if not event:
+        return api_response({"success": False, "message": "Event not found"}, 404)
+
+    if user.get("role") != "admin" and event["created_by"] != user["id"]:
+        return api_response({"success": False, "message": "Only event host or admin can update registration status"}, 403)
+
+    data = read_data(request)
+    new_status = (data.get("status") or "").strip().lower()
+    if new_status not in ["pending", "approved", "confirmed", "rejected"]:
+        return api_response({"success": False, "message": "Invalid status value. Choose pending, approved, or rejected."}, 400)
+
+    execute("UPDATE event_registrations SET status = %s WHERE event_id = %s AND user_id = %s", [new_status, event_id, target_user_id])
+    return api_response({"success": True, "message": f"Participant status updated to {new_status.upper()}"})

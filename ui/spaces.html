@@ -324,6 +324,10 @@
 
         async function fetchResults() {
             const container = document.getElementById('listing-container');
+            container.innerHTML = `
+                <div class="skeleton-card" style="height: 380px;"></div>
+                <div class="skeleton-card" style="height: 380px;"></div>
+            `;
             const queryParams = new URLSearchParams(currentFilters).toString();
             try {
                 const res = await fetch(`/api/spaces?${queryParams}`);

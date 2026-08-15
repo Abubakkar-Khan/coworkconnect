@@ -33,7 +33,7 @@ if not DEBUG and (SECRET_KEY == DEV_SECRET_KEY or JWT_SECRET == DEV_SECRET_KEY):
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,.vercel.app").split(",")
+    for host in os.getenv("ALLOWED_HOSTS", "*" if DEBUG else "localhost,127.0.0.1,.vercel.app").split(",")
     if host.strip()
 ]
 CORS_ALLOWED_ORIGINS = [
