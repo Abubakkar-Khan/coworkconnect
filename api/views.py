@@ -140,26 +140,34 @@ def login(request):
 
 def spaces(request):
     if request.method == "GET":
-        sql = "SELECT * FROM spaces WHERE is_available = TRUE"
+        sql = "SELECT * FROM spaces WHERE (is_available IS TRUE OR is_available IS NULL)"
         params = []
-        location = request.GET.get("location")
-        space_type = request.GET.get("type")
-        min_price = request.GET.get("minPrice")
-        max_price = request.GET.get("maxPrice")
-        sort = request.GET.get("sort")
+        location = (request.GET.get("location") or "").strip()
+        space_type = (request.GET.get("type") or "").strip()
+        min_price = (request.GET.get("minPrice") or "").strip()
+        max_price = (request.GET.get("maxPrice") or "").strip()
+        sort = (request.GET.get("sort") or "").strip()
 
-        if location:
+        if location and location.lower() != "anywhere":
             sql += " AND location LIKE %s"
             params.append(f"%{location}%")
         if space_type and space_type != "all":
             sql += " AND type = %s"
             params.append(space_type)
         if min_price:
-            sql += " AND price_per_day >= %s"
-            params.append(min_price)
+            try:
+                if float(min_price) > 0:
+                    sql += " AND price_per_day >= %s"
+                    params.append(min_price)
+            except Exception:
+                pass
         if max_price:
-            sql += " AND price_per_day <= %s"
-            params.append(max_price)
+            try:
+                if float(max_price) > 0:
+                    sql += " AND price_per_day <= %s"
+                    params.append(max_price)
+            except Exception:
+                pass
 
         if sort == "price_asc":
             sql += " ORDER BY price_per_day ASC"
@@ -268,8 +276,8 @@ def spaces(request):
 
         _, space_id = execute(
             """
-            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url, images, rating, user_id, contact_email, contact_phone, website_url, amenities, pricing_plans)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url, images, rating, user_id, contact_email, contact_phone, website_url, amenities, pricing_plans, is_available)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             [
                 data.get("name"),
@@ -287,6 +295,7 @@ def spaces(request):
                 (data.get("website_url") or "").strip() or None,
                 amenities_str,
                 pricing_plans_str,
+                True,
             ],
         )
         return api_response(
@@ -820,14 +829,29 @@ def posts(request):
         current_user, _ = auth_user(request, required=False)
         tag = request.GET.get("tag")
         filter_user_id = request.GET.get("user_id") or request.GET.get("userId")
-        params = []
-        sql = """
-            SELECT p.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar, u.status as user_status, u.headline as user_headline,
-              (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count,
-              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count
-            FROM posts p
-            LEFT JOIN users u ON p.user_id = u.id
-        """
+        
+        if current_user:
+            sql = """
+                SELECT p.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar, u.status as user_status, u.headline as user_headline, u.bio as user_bio,
+                  (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count,
+                  (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
+                  CASE WHEN pl.id IS NOT NULL THEN 1 ELSE 0 END as liked_by_me
+                FROM posts p
+                LEFT JOIN users u ON p.user_id = u.id
+                LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = %s
+            """
+            params = [current_user["id"]]
+        else:
+            sql = """
+                SELECT p.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar, u.status as user_status, u.headline as user_headline, u.bio as user_bio,
+                  (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes_count,
+                  (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
+                  0 as liked_by_me
+                FROM posts p
+                LEFT JOIN users u ON p.user_id = u.id
+            """
+            params = []
+
         conditions = []
         if tag:
             conditions.append("p.tags LIKE %s")
@@ -858,11 +882,7 @@ def posts(request):
             rows = fetch_all(sql, params)
 
         for post in rows:
-            post["liked_by_me"] = False
-            if current_user:
-                post["liked_by_me"] = bool(
-                    fetch_one("SELECT id FROM post_likes WHERE post_id = %s AND user_id = %s", [post["id"], current_user["id"]])
-                )
+            post["liked_by_me"] = bool(post.get("liked_by_me"))
             post["comments"] = fetch_all(
                 """
                 SELECT c.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar,
@@ -945,8 +965,21 @@ def add_comment(request, post_id):
         "INSERT INTO comments (post_id, user_id, parent_id, content) VALUES (%s, %s, %s, %s)",
         [post_id, user["id"], parent_id, content],
     )
-    row = fetch_one("SELECT name FROM users WHERE id = %s", [user["id"]])
-    return api_response({"success": True, "data": {"id": comment_id, "parent_id": parent_id, "content": content, "user_name": row["name"]}}, 201)
+    row = fetch_one("SELECT name, avatar_url FROM users WHERE id = %s", [user["id"]])
+    return api_response({
+        "success": True,
+        "data": {
+            "id": comment_id,
+            "parent_id": parent_id,
+            "content": content,
+            "user_id": user["id"],
+            "user_name": row["name"] if row else "You",
+            "user_avatar": row.get("avatar_url") if row else None,
+            "created_at": "Just now",
+            "likes_count": 0,
+            "liked_by_me": False
+        }
+    }, 201)
 
 
 def toggle_comment_like(request, comment_id):

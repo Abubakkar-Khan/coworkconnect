@@ -553,6 +553,12 @@ def compatibility_statements(vendor):
             "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50)",
             "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS website_url VARCHAR(255)",
             "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS pricing_plans TEXT",
+            "CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)",
+            "CREATE INDEX IF NOT EXISTS idx_post_likes_composite ON post_likes(post_id, user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_messages_group ON messages(group_id, created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_spaces_avail_price ON spaces(is_available, price_per_day)",
         ]
     if vendor == "sqlite":
         return [
@@ -570,6 +576,12 @@ def compatibility_statements(vendor):
             "ALTER TABLE spaces ADD COLUMN contact_phone TEXT",
             "ALTER TABLE spaces ADD COLUMN website_url TEXT",
             "ALTER TABLE spaces ADD COLUMN pricing_plans TEXT",
+            "CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)",
+            "CREATE INDEX IF NOT EXISTS idx_post_likes_composite ON post_likes(post_id, user_id)",
+            "CREATE INDEX IF NOT EXISTS idx_messages_group ON messages(group_id, created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_spaces_avail_price ON spaces(is_available, price_per_day)",
         ]
     return [
         "ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)",

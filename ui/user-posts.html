@@ -123,7 +123,8 @@
                                 </div>
                                 <div>
                                     <strong style="font-size: 0.95rem; color: var(--dark); display: block;">${escapeHtml(p.user_name)}</strong>
-                                    <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">${new Date(p.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                    <span style="font-size: 0.78rem; color: #059669; font-weight: 700;">${escapeHtml(p.user_headline || p.user_bio || 'CoWorkConnect Member')}</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-left: 6px;">• ${new Date(p.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                 </div>
                             </div>
                         </div>

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <style>
         body {
             background: #eef2f7;
@@ -1641,7 +1642,7 @@
                 : '';
             const comments = post.comments || [];
 
-            let postCategory = 'General';
+            let postCategory = '';
             const tagsLower = (post.tags || '').toLowerCase();
             const contentLower = (post.content || '').toLowerCase();
             if (tagsLower.includes('question') || contentLower.includes('?')) {
@@ -1650,6 +1651,12 @@
                 postCategory = 'Collabs';
             }
 
+            const authorHeadline = (post.user_headline && post.user_headline.trim() && post.user_headline.trim().toLowerCase() !== 'general')
+                ? post.user_headline.trim()
+                : ((post.user_bio && post.user_bio.trim() && post.user_bio.trim().toLowerCase() !== 'general') 
+                    ? (post.user_bio.trim().length > 45 ? post.user_bio.trim().slice(0, 42) + '...' : post.user_bio.trim()) 
+                    : 'CoWorkConnect Member');
+
             return `
                 <article class="post-card" id="post-${post.id}">
                     <div class="post-body">
@@ -1657,14 +1664,20 @@
                             <div class="post-author">
                                 <div class="post-avatar" style="cursor:pointer;" onclick="openUserProfileModal(${post.user_id})" title="View Profile">${avatarContent}</div>
                                 <div style="min-width:0;">
-                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                                        <h4 style="cursor:pointer;margin:0;" onclick="openUserProfileModal(${post.user_id})">${escapeHtml(userName)}</h4>
-                                        <span class="post-cat-badge ${postCategory.toLowerCase()}">
-                                            <i data-lucide="${postCategory === 'Questions' ? 'help-circle' : postCategory === 'Collabs' ? 'users' : 'edit-3'}" size="11"></i>
-                                            ${postCategory === 'Questions' ? 'Question' : postCategory === 'Collabs' ? 'Collab' : 'General'}
-                                        </span>
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        <h4 style="cursor:pointer;margin:0;font-size:0.98rem;font-weight:800;color:var(--dark);" onclick="openUserProfileModal(${post.user_id})">${escapeHtml(userName)}</h4>
+                                        ${postCategory ? `
+                                            <span class="post-cat-badge ${postCategory.toLowerCase()}">
+                                                <i data-lucide="${postCategory === 'Questions' ? 'help-circle' : 'users'}" size="11"></i>
+                                                ${postCategory === 'Questions' ? 'Question' : 'Collab'}
+                                            </span>
+                                        ` : ''}
                                     </div>
-                                    <p style="color:#64748b;font-size:0.75rem;font-weight:700;margin-top:2px;">${escapeHtml(post.user_headline || 'CoWorkConnect Member')} • ${timeStr}</p>
+                                    <p style="color:#64748b;font-size:0.78rem;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                                        <span style="color:#059669;font-weight:700;">${escapeHtml(authorHeadline)}</span>
+                                        <span>•</span>
+                                        <span>${timeStr}</span>
+                                    </p>
                                 </div>
                             </div>
                             <button class="icon-button" type="button" title="More"><i data-lucide="more-horizontal" size="19"></i></button>
@@ -1689,7 +1702,7 @@
                             <div class="small-avatar user-avatar-small">U</div>
                             <textarea id="comment-input-${post.id}" rows="1" placeholder="Add a useful comment..." oninput="autoResize(this)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); addComment(${post.id}); }"></textarea>
                         </div>
-                        <div>
+                        <div id="comments-container-${post.id}" class="comments-tree-wrapper">
                             ${renderCommentsTree(comments, post.id)}
                         </div>
                     </div>
@@ -1923,7 +1936,47 @@
                     body: JSON.stringify({ content, parentId: parentId }),
                 });
                 if (response.ok) {
-                    fetchFeed({ silent: true });
+                    const resData = await response.json();
+                    input.value = '';
+                    const replyInputContainer = document.getElementById(`reply-input-container-${parentId}`);
+                    if (replyInputContainer) replyInputContainer.style.display = 'none';
+
+                    // Append reply in-place to replies container
+                    const commentItem = replyInputContainer ? replyInputContainer.closest('.comment-item') : null;
+                    if (commentItem) {
+                        let repliesContainer = commentItem.querySelector('.replies-container');
+                        if (!repliesContainer) {
+                            repliesContainer = document.createElement('div');
+                            repliesContainer.className = 'replies-container';
+                            repliesContainer.innerHTML = `
+                                <button class="toggle-replies-btn" onclick="toggleReplies(this)" type="button">
+                                    <i data-lucide="chevron-up" size="14"></i> Hide replies
+                                </button>
+                                <div class="replies-list"></div>
+                            `;
+                            commentItem.appendChild(repliesContainer);
+                        }
+                        const repliesList = repliesContainer.querySelector('.replies-list');
+                        if (repliesList) {
+                            repliesList.classList.remove('hidden');
+                            repliesList.insertAdjacentHTML('beforeend', renderComment(resData.data, postId));
+                            lucide.createIcons();
+                        }
+                    }
+
+                    // Increment post comment counter in-place
+                    const commentBtn = document.querySelector(`#post-${postId} button[onclick*="focusComment"]`);
+                    if (commentBtn) {
+                        let countSpan = commentBtn.querySelector('.action-count');
+                        let currentCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
+                        if (!countSpan) {
+                            countSpan = document.createElement('span');
+                            countSpan.className = 'action-count';
+                            commentBtn.appendChild(countSpan);
+                        }
+                        countSpan.textContent = currentCount + 1;
+                    }
+                    showToast('Reply added!', 'success');
                 } else {
                     const errData = await response.json().catch(() => ({}));
                     showToast(errData.message || 'Reply could not be posted.', 'error');
@@ -1937,28 +1990,31 @@
         }
 
         async function toggleCommentLike(commentId) {
-            if (pendingLikes.has(`c_${commentId}`)) return;
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please login to like comments.', 'error');
                 return;
             }
 
-            pendingLikes.add(`c_${commentId}`);
+            // In-place UI toggle
+            const actionSpan = event?.currentTarget || document.querySelector(`[onclick="toggleCommentLike(${commentId})"]`);
+            if (actionSpan) {
+                const isLiked = actionSpan.classList.contains('liked');
+                actionSpan.classList.toggle('liked', !isLiked);
+                let text = actionSpan.textContent.trim();
+                let count = parseInt(text) || 0;
+                let newCount = !isLiked ? count + 1 : Math.max(0, count - 1);
+                actionSpan.innerHTML = `<i data-lucide="thumbs-up" size="14"></i> ${newCount}`;
+                lucide.createIcons();
+            }
+
             try {
-                const response = await fetch(`/api/comments/${commentId}/like`, {
+                await fetch(`/api/comments/${commentId}/like`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (response.ok) {
-                    fetchFeed({ silent: true });
-                } else {
-                    showToast('Could not update like.', 'error');
-                }
             } catch (e) {
                 showToast('Network error.', 'error');
-            } finally {
-                pendingLikes.delete(`c_${commentId}`);
             }
         }
 
@@ -2095,15 +2151,10 @@
             }
 
             try {
-                const response = await fetch(`/api/posts/${postId}/like`, {
+                await fetch(`/api/posts/${postId}/like`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (response.ok) {
-                    fetchFeed({ silent: true });
-                } else {
-                    showToast('Could not update like.', 'error');
-                }
             } catch (e) {
                 showToast('Network error.', 'error');
             } finally {
@@ -2139,8 +2190,30 @@
                     body: JSON.stringify({ content }),
                 });
                 if (response.ok) {
+                    const resData = await response.json();
                     input.value = '';
-                    fetchFeed({ silent: true });
+                    input.style.height = 'auto';
+
+                    // Append comment in-place
+                    const commentsContainer = document.getElementById(`comments-container-${postId}`);
+                    if (commentsContainer) {
+                        commentsContainer.insertAdjacentHTML('beforeend', renderComment(resData.data, postId));
+                        lucide.createIcons();
+                    }
+
+                    // Increment comment counter on post card
+                    const commentBtn = document.querySelector(`#post-${postId} button[onclick*="focusComment"]`);
+                    if (commentBtn) {
+                        let countSpan = commentBtn.querySelector('.action-count');
+                        let currentCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
+                        if (!countSpan) {
+                            countSpan = document.createElement('span');
+                            countSpan.className = 'action-count';
+                            commentBtn.appendChild(countSpan);
+                        }
+                        countSpan.textContent = currentCount + 1;
+                    }
+                    showToast('Comment posted!', 'success');
                 } else {
                     const errData = await response.json().catch(() => ({}));
                     showToast(errData.message || 'Comment could not be posted.', 'error');
@@ -2317,20 +2390,6 @@
             updateProfileStats();
             fetchFeed();
             fetchSuggestedProfiles();
-            setInterval(() => {
-                if (document.hidden) return;
-                
-                // Prevent auto-refresh if the user is typing a comment or has a draft
-                const hasFocus = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
-                let hasDraft = false;
-                document.querySelectorAll('#posts-feed textarea, #posts-feed input').forEach(input => {
-                    if (input.value.trim() !== '') hasDraft = true;
-                });
-                
-                if (!hasFocus && !hasDraft) {
-                    fetchFeed({ silent: true });
-                }
-            }, 8000);
             document.getElementById('trigger-composer').addEventListener('click', () => toggleComposer(true));
             document.getElementById('post-image-input').addEventListener('change', handleFile);
             document.getElementById('post-image-input-modal').addEventListener('change', handleFile);

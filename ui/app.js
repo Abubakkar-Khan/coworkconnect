@@ -1,5 +1,31 @@
 const API_URL = '/api';
 
+// Alpine.js Global Stores & Reactivity
+document.addEventListener('alpine:init', () => {
+    if (window.Alpine) {
+        Alpine.store('auth', {
+            user: getStoredUser(),
+            token: getToken(),
+            isLoggedIn() {
+                return !!this.token;
+            },
+            setUser(userData, tokenVal) {
+                this.user = userData;
+                this.token = tokenVal;
+                if (userData) localStorage.setItem('user', JSON.stringify(userData));
+                if (tokenVal) localStorage.setItem('token', tokenVal);
+            },
+            logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.user = null;
+                this.token = null;
+                window.location.href = 'login.html';
+            }
+        });
+    }
+});
+
 const PROTECTED_PAGES = new Set(['community.html', 'groups.html']);
 const FALLBACK_IMAGES = {
     workspace: 'assets/fallback-workspace.svg',

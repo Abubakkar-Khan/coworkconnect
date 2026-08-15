@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
 
     <style>
@@ -1062,6 +1063,7 @@
             const token = localStorage.getItem('token');
             if (!token) {
                 showToast('Please sign in to list a workspace.', 'error');
+                setTimeout(() => window.location.href = 'login.html', 1200);
                 return;
             }
             modal.classList.add('open');
@@ -1095,7 +1097,12 @@
             });
         });
 
-        document.addEventListener('DOMContentLoaded', fetchResults);
+        // Initialize immediately
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchResults);
+        } else {
+            fetchResults();
+        }
     </script>
 </body>
 </html>
