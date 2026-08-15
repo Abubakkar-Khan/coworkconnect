@@ -547,6 +547,12 @@ def compatibility_statements(vendor):
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_url VARCHAR(255)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255)",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS headline VARCHAR(255)",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS amenities TEXT",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS images TEXT",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255)",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50)",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS website_url VARCHAR(255)",
+            "ALTER TABLE spaces ADD COLUMN IF NOT EXISTS pricing_plans TEXT",
         ]
     if vendor == "sqlite":
         return [
@@ -558,6 +564,12 @@ def compatibility_statements(vendor):
             "ALTER TABLE users ADD COLUMN linkedin_url TEXT",
             "ALTER TABLE users ADD COLUMN avatar_url TEXT",
             "ALTER TABLE users ADD COLUMN headline TEXT",
+            "ALTER TABLE spaces ADD COLUMN amenities TEXT",
+            "ALTER TABLE spaces ADD COLUMN images TEXT",
+            "ALTER TABLE spaces ADD COLUMN contact_email TEXT",
+            "ALTER TABLE spaces ADD COLUMN contact_phone TEXT",
+            "ALTER TABLE spaces ADD COLUMN website_url TEXT",
+            "ALTER TABLE spaces ADD COLUMN pricing_plans TEXT",
         ]
     return [
         "ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)",
@@ -568,4 +580,10 @@ def compatibility_statements(vendor):
         "ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)",
         "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(255)",
         "ALTER TABLE users ADD COLUMN headline VARCHAR(255)",
+        "ALTER TABLE spaces ADD COLUMN amenities TEXT",
+        "ALTER TABLE spaces ADD COLUMN images TEXT",
+        "ALTER TABLE spaces ADD COLUMN contact_email VARCHAR(255)",
+        "ALTER TABLE spaces ADD COLUMN contact_phone VARCHAR(50)",
+        "ALTER TABLE spaces ADD COLUMN website_url VARCHAR(255)",
+        "ALTER TABLE spaces ADD COLUMN pricing_plans TEXT",
     ]

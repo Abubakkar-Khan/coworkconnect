@@ -81,27 +81,48 @@
         function toggleModal(show) { document.getElementById('space-modal').classList.toggle('hidden', !show); }
 
         async function fetchAdminSpaces() {
-            const res = await fetch('/api/spaces');
-            const data = await res.json();
             const list = document.getElementById('admin-spaces-list');
-            list.innerHTML = (data.data || []).map(space => `
+            const skeletonRowHtml = `
                 <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1.5rem; font-weight: 800;">${escapeHtml(space.name)}</td>
-                    <td style="padding: 1.5rem;"><span style="background: #f0fdf4; color: var(--primary); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">${escapeHtml(space.type)}</span></td>
-                    <td style="padding: 1.5rem; color: var(--gray); font-weight: 600;">${escapeHtml(space.location || 'General')}</td>
-                    <td style="padding: 1.5rem; font-weight: 800; color: var(--dark);">Rs ${escapeHtml(space.price_per_day)}</td>
-                    <td style="padding: 1.5rem;"><button class="btn-icon" style="color: #ef4444;" onclick="deleteSpace(${Number(space.id)})"><i data-lucide="trash-2" size="20"></i></button></td>
+                    <td style="padding: 1.5rem;"><div class="skeleton-shimmer skeleton-line-sm" style="width: 140px; height: 14px;"></div></td>
+                    <td style="padding: 1.5rem;"><div class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 22px;"></div></td>
+                    <td style="padding: 1.5rem;"><div class="skeleton-shimmer skeleton-line-sm" style="width: 100px; height: 12px;"></div></td>
+                    <td style="padding: 1.5rem;"><div class="skeleton-shimmer skeleton-line-sm" style="width: 60px; height: 14px;"></div></td>
+                    <td style="padding: 1.5rem;"><div class="skeleton-shimmer" style="width: 24px; height: 24px; border-radius: 6px;"></div></td>
                 </tr>
-            `).join('');
-            lucide.createIcons();
+            `;
+            list.innerHTML = Array(4).fill(skeletonRowHtml).join('');
+
+            try {
+                const res = await fetch('/api/spaces');
+                const data = await res.json();
+                list.innerHTML = (data.data || []).map(space => `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 1.5rem; font-weight: 800;">${escapeHtml(space.name)}</td>
+                        <td style="padding: 1.5rem;"><span style="background: #f0fdf4; color: var(--primary); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">${escapeHtml(space.type)}</span></td>
+                        <td style="padding: 1.5rem; color: var(--gray); font-weight: 600;">${escapeHtml(space.location || 'General')}</td>
+                        <td style="padding: 1.5rem; font-weight: 800; color: var(--dark);">Rs ${escapeHtml(space.price_per_day)}</td>
+                        <td style="padding: 1.5rem;"><button class="btn-icon" style="color: #ef4444;" onclick="deleteSpace(${Number(space.id)})"><i data-lucide="trash-2" size="20"></i></button></td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (err) {
+                list.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align: center; color: #94a3b8;">Failed to load spaces.</td></tr>';
+            }
         }
 
         document.getElementById('add-space-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
             const payload = { name: document.getElementById('s-name').value, type: document.getElementById('s-type').value, price_per_day: document.getElementById('s-price').value, location: document.getElementById('s-location').value, capacity: document.getElementById('s-capacity').value };
-            const res = await fetch('/api/spaces', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
-            if (res.ok) { toggleModal(false); fetchAdminSpaces(); } else { alert('Access Denied: Only Admins can manage inventory.'); }
+            try {
+                const res = await fetch('/api/spaces', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
+                if (res.ok) { toggleModal(false); fetchAdminSpaces(); } else { alert('Access Denied: Only Admins can manage inventory.'); }
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
         });
 
         async function deleteSpace(id) {

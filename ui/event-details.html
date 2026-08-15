@@ -148,20 +148,23 @@
     <main class="container" style="padding-top: 120px; padding-bottom: 150px;">
         <!-- Banner and Header -->
         <!-- Banner -->
-        <div style="border-radius: 30px; overflow: hidden; margin-bottom: 3rem; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
-            <img id="e-banner" src="assets/fallback-event.svg" data-fallback="assets/fallback-event.svg" alt="banner" style="width: 100%; height: 400px; object-fit: cover; display: block;">
+        <div style="border-radius: 30px; overflow: hidden; margin-bottom: 3rem; box-shadow: 0 20px 40px rgba(0,0,0,0.1); position: relative; height: 400px; background: #f1f5f9;">
+            <div id="e-banner-skeleton" class="skeleton-shimmer" style="position: absolute; inset: 0; width: 100%; height: 100%;"></div>
+            <img id="e-banner" src="assets/fallback-event.svg" data-fallback="assets/fallback-event.svg" alt="banner" style="width: 100%; height: 400px; object-fit: cover; display: block; position: relative; z-index: 1;" onload="document.getElementById('e-banner-skeleton')?.remove()">
         </div>
 
         <!-- Event Header Info -->
         <div style="margin-bottom: 4rem;">
             <div style="margin-bottom: 1.5rem;"><span id="e-type" style="background: #e0f2fe; color: #0284c7; padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">Event</span></div>
-            <h1 id="e-title" style="font-size: 3.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; color: var(--dark);">Event Title Loading...</h1>
+            <h1 id="e-title" style="font-size: 3.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; color: var(--dark);">
+                <div class="skeleton-shimmer skeleton-line-lg" style="width: 70%; height: 48px; border-radius: 12px;"></div>
+            </h1>
             
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="assets/fallback-avatar.svg" data-fallback="assets/fallback-avatar.svg" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                <div class="skeleton-avatar skeleton-shimmer"></div>
                 <div>
                     <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 0.2rem;">Hosted by</p>
-                    <p id="e-host" style="font-weight: 700; color: var(--dark); font-size: 1.1rem;">Host Name</p>
+                    <p id="e-host" style="font-weight: 700; color: var(--dark); font-size: 1.1rem;"><span class="skeleton-shimmer skeleton-line-sm" style="width: 120px; height: 14px; display: inline-block;"></span></p>
                 </div>
             </div>
         </div>
@@ -186,7 +189,9 @@
                 <!-- Restructured Description Container -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 2rem; width: 100%; box-sizing: border-box; overflow: hidden;">
                     <div id="e-details" style="font-size: 1.1rem; line-height: 1.8; color: #334155; white-space: pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; hyphens: auto; width: 100%;">
-                        Event description loading...
+                        <div class="skeleton-shimmer skeleton-line-md" style="width: 95%;"></div>
+                        <div class="skeleton-shimmer skeleton-line-md" style="width: 88%;"></div>
+                        <div class="skeleton-shimmer skeleton-line-sm" style="width: 60%;"></div>
                     </div>
                 </div>
 
@@ -654,6 +659,13 @@
             if (rawDate) formData.set('eventDate', rawDate.replace('T', ' ') + ':00');
             if (rawEndDate) formData.set('endDate', rawEndDate.replace('T', ' ') + ':00');
 
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.dataset.origText = submitBtn.innerHTML;
+                submitBtn.innerHTML = 'Saving Changes...';
+            }
+
             try {
                 const res = await fetch(`/api/events/${eventId}`, {
                     method: 'PUT',
@@ -670,6 +682,11 @@
                 }
             } catch (err) {
                 alert('Error updating event');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.dataset.origText) submitBtn.innerHTML = submitBtn.dataset.origText;
+                }
             }
         });
 

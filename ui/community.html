@@ -142,13 +142,11 @@
         .people-list {
             display: flex;
             flex-direction: column;
-            gap: 0.45rem;
+            gap: 0.5rem;
         }
 
         .topic-chip,
-        .event-item,
-        .person-item,
-        .trend-item {
+        .event-item {
             display: grid;
             grid-template-columns: auto minmax(0, 1fr) auto;
             align-items: center;
@@ -162,9 +160,7 @@
         }
 
         .topic-chip:hover,
-        .event-item:hover,
-        .person-item:hover,
-        .trend-item:hover {
+        .event-item:hover {
             background: #f8fafc;
             border-color: #e2e8f0;
         }
@@ -175,9 +171,7 @@
         }
 
         .topic-chip strong,
-        .event-item strong,
-        .person-item strong,
-        .trend-item strong {
+        .event-item strong {
             display: block;
             color: #0f172a;
             font-size: 0.86rem;
@@ -188,9 +182,7 @@
         }
 
         .topic-chip span,
-        .event-item span,
-        .person-item span,
-        .trend-item span {
+        .event-item span {
             display: block;
             color: #64748b;
             font-size: 0.72rem;
@@ -198,6 +190,136 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        /* Discover Professionals Cards */
+        .person-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0.85rem;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .person-item:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .person-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #ecfdf5;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+        }
+
+        .person-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .person-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .person-name {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .person-headline {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .person-btn {
+            background: #f1f5f9;
+            border: none;
+            color: var(--primary);
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .person-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Category Filter Chips in Feed & Modal */
+        .category-chip {
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .category-chip:hover, .category-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .post-cat-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-cat-badge.general {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .post-cat-badge.questions {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+
+        .post-cat-badge.collabs {
+            background: #ecfdf5;
+            color: #059669;
         }
 
         .feed-header {
@@ -1121,25 +1243,24 @@
                         <button class="tool-btn" type="button" onclick="document.getElementById('post-image-input').click()">
                             <i data-lucide="image" size="18" style="color:#2563eb;"></i><span>Photo</span>
                         </button>
-                        <button class="tool-btn" type="button" onclick="quickCompose('I am looking for collaborators for ')">
-                            <i data-lucide="users" size="18" style="color:#0f766e;"></i><span>Collaborate</span>
+                        <button class="tool-btn" type="button" onclick="openComposerWithCategory('General')">
+                            <i data-lucide="edit-3" size="18" style="color:var(--primary);"></i><span>General</span>
                         </button>
-                        <button class="tool-btn" type="button" onclick="quickCompose('Can anyone recommend ')">
-                            <i data-lucide="help-circle" size="18" style="color:#7c3aed;"></i><span>Ask</span>
+                        <button class="tool-btn" type="button" onclick="openComposerWithCategory('Questions')">
+                            <i data-lucide="help-circle" size="18" style="color:#7c3aed;"></i><span>Question</span>
                         </button>
-                        <button class="tool-btn" type="button" onclick="quickCompose('Sharing a useful resource: ')">
-                            <i data-lucide="link" size="18" style="color:#f97316;"></i><span>Resource</span>
+                        <button class="tool-btn" type="button" onclick="openComposerWithCategory('Collabs')">
+                            <i data-lucide="users" size="18" style="color:#059669;"></i><span>Collab</span>
                         </button>
                     </div>
                     <input type="file" id="post-image-input" hidden accept="image/*">
                 </section>
 
                 <section class="feed-card feed-tabs no-scrollbar">
-                    <button class="feed-tab active" type="button">Top</button>
-                    <button class="feed-tab" type="button">Latest</button>
-                    <button class="feed-tab" type="button">Questions</button>
-                    <button class="feed-tab" type="button">Collaborations</button>
-                    <button class="feed-tab" type="button">Events</button>
+                    <button class="feed-tab active" data-filter="all" type="button">All Posts</button>
+                    <button class="feed-tab" data-filter="general" type="button">General</button>
+                    <button class="feed-tab" data-filter="questions" type="button">Questions</button>
+                    <button class="feed-tab" data-filter="collabs" type="button">Collabs</button>
                 </section>
 
                 <section id="posts-feed" class="posts-feed">
@@ -1155,55 +1276,38 @@
                 <section class="panel panel-section">
                     <div class="section-title">
                         <span>Discover Professionals</span>
-                        <i data-lucide="search" size="16"></i>
+                        <i data-lucide="users" size="16" style="color:var(--primary);"></i>
                     </div>
-                    <div class="search-box">
-                        <i data-lucide="search" size="16"></i>
-                        <input type="text" id="profile-search-input" placeholder="Search by name or skill">
+                    <div class="search-box" style="display:flex;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.8rem;">
+                        <i data-lucide="search" size="15" style="color:#94a3b8;"></i>
+                        <input type="text" id="profile-search-input" placeholder="Search by name, skill, or role..." style="border:none;outline:none;background:transparent;width:100%;font-family:inherit;font-size:0.84rem;font-weight:600;color:#0f172a;" oninput="handleProfileSearchInput(event)">
                     </div>
-                    <div id="search-results" class="people-list" style="margin-top:0.8rem;"></div>
-                </section>
-
-                <section class="panel panel-section">
-                    <div class="section-title">
-                        <span>Trending Now</span>
-                        <i data-lucide="trending-up" size="16"></i>
-                    </div>
-                    <div class="topic-list">
-                        <div class="trend-item">
-                            <div class="trend-rank">01</div>
-                            <span><strong>Freelance Market Surges</strong><span>1,240 readers - Networking</span></span>
-                        </div>
-                        <div class="trend-item">
-                            <div class="trend-rank">02</div>
-                            <span><strong>Best Coworking Spots</strong><span>840 readers - Workspace guide</span></span>
-                        </div>
-                        <div class="trend-item">
-                            <div class="trend-rank">03</div>
-                            <span><strong>CoWorkConnect 2.0</strong><span>New product features</span></span>
-                        </div>
+                    <div id="search-results" class="people-list" style="margin-top:0.85rem;display:flex;flex-direction:column;gap:0.5rem;">
+                        <div class="skeleton-box" style="height:55px;border-radius:12px;"></div>
+                        <div class="skeleton-box" style="height:55px;border-radius:12px;"></div>
+                        <div class="skeleton-box" style="height:55px;border-radius:12px;"></div>
                     </div>
                 </section>
 
                 <section class="panel panel-section">
                     <div class="section-title">
-                        <span>Suggested Actions</span>
-                        <i data-lucide="sparkles" size="16"></i>
+                        <span>Quick Explore</span>
+                        <i data-lucide="compass" size="16" style="color:var(--primary);"></i>
                     </div>
                     <div class="event-list">
                         <a class="event-item" href="groups.html">
                             <i data-lucide="messages-square" size="17"></i>
-                            <span><strong>Join a circle</strong><span>Discuss with members</span></span>
+                            <span><strong>Join a Circle</strong><span>Chat with members & admins</span></span>
                             <i data-lucide="arrow-up-right" size="15"></i>
                         </a>
                         <a class="event-item" href="spaces.html">
                             <i data-lucide="building-2" size="17"></i>
-                            <span><strong>Book a workspace</strong><span>Find your next desk</span></span>
+                            <span><strong>Explore Spaces</strong><span>Find verified desks & offices</span></span>
                             <i data-lucide="arrow-up-right" size="15"></i>
                         </a>
                         <a class="event-item" href="events.html">
-                            <i data-lucide="calendar-plus" size="17"></i>
-                            <span><strong>Attend an event</strong><span>Meet professionals</span></span>
+                            <i data-lucide="calendar" size="17"></i>
+                            <span><strong>Community Events</strong><span>Attend workshops & meetups</span></span>
                             <i data-lucide="arrow-up-right" size="15"></i>
                         </a>
                     </div>
@@ -1223,7 +1327,15 @@
                     <div class="user-avatar-small small-avatar">U</div>
                     <div>
                         <h4 class="user-name-small" style="font-size:0.95rem;font-weight:800;color:#0f172a;margin:0;">User Name</h4>
-                        <div class="audience-pill"><i data-lucide="globe" size="12"></i> Anyone</div>
+                        <div class="audience-pill"><i data-lucide="globe" size="12"></i> Public</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; margin: 0.75rem 0; flex-wrap:wrap;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Category:</span>
+                    <div class="composer-category-chips" style="display:flex; gap:0.4rem;">
+                        <button type="button" class="category-chip active" data-cat="General" onclick="setPostCategory('General', this)">General</button>
+                        <button type="button" class="category-chip" data-cat="Questions" onclick="setPostCategory('Questions', this)">Questions</button>
+                        <button type="button" class="category-chip" data-cat="Collabs" onclick="setPostCategory('Collabs', this)">Collabs</button>
                     </div>
                 </div>
                 <textarea id="modal-post-content" class="modal-textarea" placeholder="What do you want to talk about?"></textarea>
@@ -1529,6 +1641,15 @@
                 : '';
             const comments = post.comments || [];
 
+            let postCategory = 'General';
+            const tagsLower = (post.tags || '').toLowerCase();
+            const contentLower = (post.content || '').toLowerCase();
+            if (tagsLower.includes('question') || contentLower.includes('?')) {
+                postCategory = 'Questions';
+            } else if (tagsLower.includes('collab') || contentLower.includes('collaborat') || contentLower.includes('looking for') || contentLower.includes('partner') || contentLower.includes('team')) {
+                postCategory = 'Collabs';
+            }
+
             return `
                 <article class="post-card" id="post-${post.id}">
                     <div class="post-body">
@@ -1536,7 +1657,13 @@
                             <div class="post-author">
                                 <div class="post-avatar" style="cursor:pointer;" onclick="openUserProfileModal(${post.user_id})" title="View Profile">${avatarContent}</div>
                                 <div style="min-width:0;">
-                                    <h4 style="cursor:pointer;" onclick="openUserProfileModal(${post.user_id})">${escapeHtml(userName)}</h4>
+                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                        <h4 style="cursor:pointer;margin:0;" onclick="openUserProfileModal(${post.user_id})">${escapeHtml(userName)}</h4>
+                                        <span class="post-cat-badge ${postCategory.toLowerCase()}">
+                                            <i data-lucide="${postCategory === 'Questions' ? 'help-circle' : postCategory === 'Collabs' ? 'users' : 'edit-3'}" size="11"></i>
+                                            ${postCategory === 'Questions' ? 'Question' : postCategory === 'Collabs' ? 'Collab' : 'General'}
+                                        </span>
+                                    </div>
                                     <p style="color:#64748b;font-size:0.75rem;font-weight:700;margin-top:2px;">${escapeHtml(post.user_headline || 'CoWorkConnect Member')} • ${timeStr}</p>
                                 </div>
                             </div>
@@ -1839,18 +1966,25 @@
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
             if (!silent && !currentPosts.length) {
-                document.getElementById('posts-feed').innerHTML = `
-                    <div class="skeleton-card">
-                        <div style="display:flex;gap:0.75rem;align-items:center;">
-                            <div class="skeleton-bar" style="width:44px;height:44px;border-radius:8px;"></div>
-                            <div style="flex:1;display:flex;flex-direction:column;gap:0.4rem;">
-                                <div class="skeleton-bar" style="width:140px;height:16px;"></div>
-                                <div class="skeleton-bar" style="width:90px;height:12px;"></div>
+                const skeletonPostHtml = `
+                    <div class="skeleton-post-card">
+                        <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom: 12px;">
+                            <div class="skeleton-avatar skeleton-shimmer"></div>
+                            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+                                <div class="skeleton-shimmer skeleton-line-sm" style="width:140px; height: 14px;"></div>
+                                <div class="skeleton-shimmer skeleton-line-sm" style="width:85px; height: 10px;"></div>
                             </div>
                         </div>
-                        <div class="skeleton-bar" style="width:100%;height:40px;margin-top:0.4rem;"></div>
+                        <div class="skeleton-shimmer skeleton-line-md" style="width:96%; margin-bottom: 8px;"></div>
+                        <div class="skeleton-shimmer skeleton-line-md" style="width:88%; margin-bottom: 8px;"></div>
+                        <div class="skeleton-shimmer skeleton-line-sm" style="width:65%; margin-bottom: 14px;"></div>
+                        <div style="display: flex; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                            <div class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 28px;"></div>
+                            <div class="skeleton-shimmer skeleton-pill" style="width: 85px; height: 28px;"></div>
+                        </div>
                     </div>
                 `;
+                document.getElementById('posts-feed').innerHTML = Array(3).fill(skeletonPostHtml).join('');
             }
             try {
                 const response = await fetch('/api/posts?t=' + Date.now(), { headers });
@@ -1878,31 +2012,34 @@
             }
         }
 
-        let activeFilter = 'top';
+        let activeFilter = 'all';
 
         function applyFeedFilter() {
             let filtered = [...currentPosts];
             switch (activeFilter) {
-                case 'latest':
-                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
                 case 'questions':
-                    filtered = filtered.filter(p => (p.content || '').includes('?'));
-                    break;
-                case 'collaborations':
                     filtered = filtered.filter(p => {
                         const text = ((p.content || '') + ' ' + (p.tags || '')).toLowerCase();
-                        return text.includes('collaborat') || text.includes('partner') || text.includes('team') || text.includes('looking for');
+                        return text.includes('?') || text.includes('question');
                     });
                     break;
-                case 'events':
+                case 'collabs':
                     filtered = filtered.filter(p => {
                         const text = ((p.content || '') + ' ' + (p.tags || '')).toLowerCase();
-                        return text.includes('event') || text.includes('meetup') || text.includes('workshop') || text.includes('webinar');
+                        return text.includes('collab') || text.includes('collaborat') || text.includes('partner') || text.includes('team') || text.includes('looking for');
                     });
                     break;
+                case 'general':
+                    filtered = filtered.filter(p => {
+                        const text = ((p.content || '') + ' ' + (p.tags || '')).toLowerCase();
+                        const isQuestion = text.includes('?') || text.includes('question');
+                        const isCollab = text.includes('collab') || text.includes('collaborat') || text.includes('partner') || text.includes('team') || text.includes('looking for');
+                        return !isQuestion && !isCollab;
+                    });
+                    break;
+                case 'all':
                 default:
-                    filtered.sort((a, b) => ((b.likes_count || 0) + (b.comments_count || 0)) - ((a.likes_count || 0) + (a.comments_count || 0)));
+                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                     break;
             }
 
@@ -2042,9 +2179,16 @@
             lucide.createIcons();
 
             try {
+                let finalTags = tags;
+                if (selectedPostCategory === 'Questions' && !finalTags.toLowerCase().includes('question')) {
+                    finalTags = (finalTags + ' #question').trim();
+                } else if (selectedPostCategory === 'Collabs' && !finalTags.toLowerCase().includes('collab')) {
+                    finalTags = (finalTags + ' #collab').trim();
+                }
+
                 const formData = new FormData();
                 formData.append('content', content);
-                formData.append('tags', tags);
+                formData.append('tags', finalTags);
 
                 if (selectedFile) {
                     const editedBlob = await getEditedImageBlob();
@@ -2079,36 +2223,100 @@
             }
         }
 
-        async function searchProfiles(event) {
-            const query = event.target.value.trim();
-            const resultsContainer = document.getElementById('search-results');
-            if (query.length < 2) {
-                resultsContainer.innerHTML = '';
-                return;
-            }
+        let selectedPostCategory = 'General';
 
-            const response = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            const users = data.data || [];
+        function setPostCategory(category, element) {
+            selectedPostCategory = category;
+            document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
+            if (element) element.classList.add('active');
+        }
+
+        function openComposerWithCategory(category) {
+            selectedPostCategory = category;
+            toggleComposer(true);
+            document.querySelectorAll('.category-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat.toLowerCase() === category.toLowerCase());
+            });
+            const textarea = document.getElementById('modal-post-content');
+            if (category.toLowerCase() === 'questions') {
+                textarea.placeholder = "Ask a question to the community (e.g. Can anyone advise on...?)";
+            } else if (category.toLowerCase() === 'collabs') {
+                textarea.placeholder = "Describe what kind of partner or collaborator you're looking for...";
+            } else {
+                textarea.placeholder = "What do you want to talk about?";
+            }
+            textarea.focus();
+        }
+
+        async function fetchSuggestedProfiles() {
+            const resultsContainer = document.getElementById('search-results');
+            if (!resultsContainer) return;
+
+            try {
+                const response = await fetch('/api/users/search');
+                const data = await response.json();
+                const users = data.data || [];
+                renderProfessionalsList(users);
+            } catch (e) {
+                console.error("Error loading suggested professionals:", e);
+            }
+        }
+
+        let profileSearchTimeout = null;
+
+        function handleProfileSearchInput(event) {
+            clearTimeout(profileSearchTimeout);
+            const query = event.target.value.trim();
+            profileSearchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    const users = data.data || [];
+                    renderProfessionalsList(users, query);
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 300);
+        }
+
+        function renderProfessionalsList(users, query = '') {
+            const resultsContainer = document.getElementById('search-results');
+            if (!resultsContainer) return;
 
             if (!users.length) {
-                resultsContainer.innerHTML = '<p style="font-size:0.78rem;color:#64748b;text-align:center;font-weight:700;padding:0.8rem;">No professionals found.</p>';
+                resultsContainer.innerHTML = query 
+                    ? '<p style="font-size:0.8rem;color:#64748b;text-align:center;font-weight:700;padding:1rem 0.5rem;">No professionals found matching your search.</p>'
+                    : '<p style="font-size:0.8rem;color:#64748b;text-align:center;font-weight:700;padding:1rem 0.5rem;">No professionals found.</p>';
                 return;
             }
 
-            resultsContainer.innerHTML = users.map((user) => `
-                <div class="person-item">
-                    <div class="search-avatar">${escapeHtml(user.name[0].toUpperCase())}</div>
-                    <span><strong>${escapeHtml(user.name)}</strong><span>${escapeHtml(user.status || 'Professional')}</span></span>
-                    <i data-lucide="user-plus" size="15"></i>
-                </div>
-            `).join('');
+            resultsContainer.innerHTML = users.map((user) => {
+                const initial = (user.name || 'M')[0].toUpperCase();
+                const avatarHtml = user.avatar_url 
+                    ? `<img src="${safeImageUrl(user.avatar_url)}" alt="${escapeHtml(user.name)}" data-fallback="${fallbackImage('avatar')}">`
+                    : escapeHtml(initial);
+                const headline = user.headline || user.status || user.bio || 'CoWorkConnect Professional';
+
+                return `
+                    <div class="person-item" onclick="openUserProfileModal(${user.id})" title="View Profile">
+                        <div class="person-avatar">${avatarHtml}</div>
+                        <div class="person-info">
+                            <div class="person-name">${escapeHtml(user.name)}</div>
+                            <div class="person-headline">${escapeHtml(headline)}</div>
+                        </div>
+                        <button class="person-btn" type="button">Connect</button>
+                    </div>
+                `;
+            }).join('');
+
+            applyImageFallbacks(resultsContainer);
             lucide.createIcons();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             updateProfileStats();
             fetchFeed();
+            fetchSuggestedProfiles();
             setInterval(() => {
                 if (document.hidden) return;
                 
@@ -2127,14 +2335,12 @@
             document.getElementById('post-image-input').addEventListener('change', handleFile);
             document.getElementById('post-image-input-modal').addEventListener('change', handleFile);
             document.getElementById('submit-post').addEventListener('click', submitPost);
-            document.getElementById('profile-search-input').addEventListener('input', searchProfiles);
 
-            const filterMap = ['top', 'latest', 'questions', 'collaborations', 'events'];
-            document.querySelectorAll('.feed-tab').forEach((tab, index) => {
+            document.querySelectorAll('.feed-tab').forEach((tab) => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.feed-tab').forEach((item) => item.classList.remove('active'));
                     tab.classList.add('active');
-                    activeFilter = filterMap[index] || 'top';
+                    activeFilter = tab.dataset.filter || 'all';
                     applyFeedFilter();
                 });
             });

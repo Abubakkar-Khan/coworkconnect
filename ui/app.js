@@ -252,6 +252,12 @@ async function apiFetch(path, options = {}) {
     return response;
 }
 
+const EMAIL_FORMAT_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function isValidEmailAddress(email) {
+    return EMAIL_FORMAT_REGEX.test(String(email || '').trim());
+}
+
 function bindLoginForm(form) {
     if (!form || form.dataset.bound === 'true') return;
     form.dataset.bound = 'true';
@@ -262,9 +268,19 @@ function bindLoginForm(form) {
         const passwordInput = form.querySelector('input[type="password"]');
         const email = emailInput.value.trim().toLowerCase();
         const password = passwordInput.value;
-        const errorMsg = form.closest('.auth-card')?.querySelector('.auth-message, #error-message');
+        const errorMsg = form.closest('.auth-card')?.querySelector('.auth-message, #error-message, #inline-login-error');
         const submitBtn = form.querySelector('button[type="submit"]');
         const defaultLabel = submitBtn.innerHTML;
+
+        if (!isValidEmailAddress(email)) {
+            if (errorMsg) {
+                errorMsg.querySelector('.msg-content').textContent = 'Please enter a valid email address (e.g. user@example.com).';
+                errorMsg.classList.remove('hidden');
+            } else {
+                showToast('Please enter a valid email address.', 'error');
+            }
+            return;
+        }
 
         try {
             submitBtn.disabled = true;
@@ -281,12 +297,20 @@ function bindLoginForm(form) {
                 localStorage.setItem('user', JSON.stringify(data.user));
                 window.location.reload();
             } else {
-                errorMsg.querySelector('.msg-content').textContent = data.message || 'Could not sign in.';
-                errorMsg.classList.remove('hidden');
+                if (errorMsg) {
+                    errorMsg.querySelector('.msg-content').textContent = data.message || 'Could not sign in.';
+                    errorMsg.classList.remove('hidden');
+                } else {
+                    showToast(data.message || 'Could not sign in.', 'error');
+                }
             }
         } catch (error) {
-            errorMsg.querySelector('.msg-content').textContent = 'Server error. Please try again.';
-            errorMsg.classList.remove('hidden');
+            if (errorMsg) {
+                errorMsg.querySelector('.msg-content').textContent = 'Server error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            } else {
+                showToast('Server error. Please try again.', 'error');
+            }
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = defaultLabel;
@@ -307,6 +331,12 @@ if (registerForm) {
         const errorMsg = document.getElementById('error-message');
         const successMsg = document.getElementById('success-message');
         const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+        if (!isValidEmailAddress(email)) {
+            errorMsg.querySelector('.msg-content').textContent = 'Please enter a valid email address (e.g. user@example.com).';
+            errorMsg.classList.remove('hidden');
+            return;
+        }
 
         if (password.length < 8) {
             errorMsg.querySelector('.msg-content').textContent = 'Password must be at least 8 characters.';

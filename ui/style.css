@@ -56,7 +56,7 @@ body {
 .hidden { display: none !important; }
 
 /* Dynamic Big-Tech / YouTube Style Shimmer Skeleton Loaders */
-@keyframes youtubeShimmer {
+@keyframes CCShimmer {
   0% {
     background-position: -200% 0;
   }
@@ -65,19 +65,26 @@ body {
   }
 }
 
-.skeleton-box, .skeleton-card, .skeleton-bar, .skeleton-avatar, .skeleton-line {
-  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 20%, #e2e8f0 40%, #ffffff 55%, #e2e8f0 70%, #f8fafc 85%, #f1f5f9 100%);
-  background-size: 250% 100%;
-  animation: youtubeShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+.skeleton-shimmer, .skeleton-box, .skeleton-bar, .skeleton-avatar, .skeleton-line, .skeleton-img, .skeleton-pill, .skeleton-btn {
+  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 25%, #e2e8f0 45%, #ffffff 60%, #e2e8f0 75%, #f8fafc 90%, #f1f5f9 100%) !important;
+  background-size: 250% 100% !important;
+  animation: CCShimmer 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
   border-radius: 8px;
   position: relative;
   overflow: hidden;
 }
 
 .skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-avatar-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50% !important;
   flex-shrink: 0;
 }
 
@@ -88,12 +95,60 @@ body {
   border-radius: 6px;
 }
 
+.skeleton-line-sm { height: 10px; width: 60%; margin-bottom: 6px; border-radius: 4px; }
+.skeleton-line-md { height: 14px; width: 85%; margin-bottom: 8px; border-radius: 6px; }
+.skeleton-line-lg { height: 22px; width: 70%; margin-bottom: 12px; border-radius: 8px; }
+
+.skeleton-pill {
+  height: 24px;
+  width: 75px;
+  border-radius: 20px !important;
+  display: inline-block;
+}
+
+.skeleton-img {
+  width: 100%;
+  height: 190px;
+  border-radius: 14px;
+}
+
 .skeleton-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-space-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.skeleton-event-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-post-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 /* Fast & Responsive Button Interactions */

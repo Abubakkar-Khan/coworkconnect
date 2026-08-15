@@ -1,4 +1,6 @@
 import json
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from django.conf import settings
@@ -61,6 +63,23 @@ def auth_test(_request):
     return api_response({"message": "Auth routes are working! Use POST for register/login."})
 
 
+import re
+
+EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+PHONE_REGEX = r"^\+?[0-9]{7,15}$"
+
+
+def validate_email_format(email):
+    return bool(email and re.match(EMAIL_REGEX, email.strip()))
+
+
+def validate_phone_format(phone):
+    if not phone:
+        return False
+    clean = re.sub(r"[\s\-()]", "", str(phone).strip())
+    return bool(re.match(PHONE_REGEX, clean))
+
+
 def register(request):
     if request.method != "POST":
         return method_not_allowed()
@@ -73,6 +92,8 @@ def register(request):
 
     if not name or not email or not password:
         return api_response({"success": False, "message": "Name, email and password are required"}, 400)
+    if not validate_email_format(email):
+        return api_response({"success": False, "message": "Please enter a valid email address format (e.g. user@example.com)"}, 400)
     if len(password) < 8:
         return api_response({"success": False, "message": "Password must be at least 8 characters"}, 400)
 
@@ -102,6 +123,8 @@ def login(request):
 
     data = read_data(request)
     email = (data.get("email") or "").strip().lower()
+    if not validate_email_format(email):
+        return api_response({"success": False, "message": "Please enter a valid email address format (e.g. user@example.com)"}, 400)
     user = fetch_one("SELECT * FROM users WHERE LOWER(email) = LOWER(%s)", [email])
     if not user or not verify_password(data.get("password"), user["password"]):
         return api_response({"success": False, "message": "Invalid credentials"}, 401)
@@ -142,10 +165,12 @@ def spaces(request):
             sql += " ORDER BY price_per_day ASC"
         elif sort == "price_desc":
             sql += " ORDER BY price_per_day DESC"
-        elif sort == "rating":
-            sql += " ORDER BY rating DESC, id DESC"
+        elif sort == "latest":
+            sql += " ORDER BY id DESC"
+        elif sort == "name":
+            sql += " ORDER BY name ASC"
         else:
-            sql += " ORDER BY rating DESC, id DESC"
+            sql += " ORDER BY id DESC"
 
         rows = fetch_all(sql, params)
         for row in rows:
@@ -158,7 +183,25 @@ def spaces(request):
                     imgs_list = [raw_imgs]
             if not imgs_list and row.get("image_url"):
                 imgs_list = [row["image_url"]]
-            row["images_list"] = imgs_list[:3]
+            row["images_list"] = imgs_list[:5]
+
+            raw_amenities = row.get("amenities")
+            amenities_list = []
+            if raw_amenities:
+                try:
+                    amenities_list = json.loads(raw_amenities) if raw_amenities.startswith("[") else [s.strip() for s in raw_amenities.split(",") if s.strip()]
+                except Exception:
+                    amenities_list = [raw_amenities]
+            row["amenities_list"] = amenities_list
+
+            raw_plans = row.get("pricing_plans")
+            plans_list = []
+            if raw_plans:
+                try:
+                    plans_list = json.loads(raw_plans) if isinstance(raw_plans, str) and raw_plans.startswith("[") else []
+                except Exception:
+                    plans_list = []
+            row["pricing_plans_list"] = plans_list
 
         return api_response({"success": True, "count": len(rows), "data": rows})
 
@@ -173,6 +216,15 @@ def spaces(request):
             return missing
         if data.get("type") not in VALID_SPACE_TYPES:
             return api_response({"success": False, "message": "Invalid workspace type"}, 400)
+        
+        contact_email = (data.get("contact_email") or "").strip().lower()
+        if not validate_email_format(contact_email):
+            return api_response({"success": False, "message": "Please enter a valid contact email format (e.g. contact@workspace.com)"}, 400)
+
+        contact_phone = (data.get("contact_phone") or "").strip()
+        if not validate_phone_format(contact_phone):
+            return api_response({"success": False, "message": "Please enter a valid numeric WhatsApp / Contact number (e.g. 03001234567 or +923001234567)"}, 400)
+
         price, error = parse_positive_number(data.get("price_per_day"), "Price")
         if error:
             return error
@@ -182,18 +234,42 @@ def spaces(request):
 
         images_input = data.get("images") or []
         if isinstance(images_input, list):
-            images_str = json.dumps(images_input[:3])
+            images_str = json.dumps(images_input[:5])
             primary_image = images_input[0] if images_input else data.get("image_url")
         else:
             images_str = str(images_input)
             primary_image = data.get("image_url")
 
-        rating_val = 5.0  # Automatic default rating for new listings
+        amenities_input = data.get("amenities") or []
+        amenities_str = json.dumps(amenities_input) if isinstance(amenities_input, list) else str(amenities_input)
+
+        plans_input = data.get("pricing_plans") or []
+        pricing_plans_str = None
+        if isinstance(plans_input, list):
+            valid_plans = []
+            for p in plans_input:
+                if isinstance(p, dict) and p.get("name") and (p.get("price") or p.get("price_per_day")):
+                    valid_plans.append({
+                        "name": str(p.get("name")).strip(),
+                        "description": str(p.get("description") or "").strip(),
+                        "price": str(p.get("price") or p.get("price_per_day")).strip(),
+                        "period": str(p.get("period") or "per day").strip()
+                    })
+            if valid_plans:
+                pricing_plans_str = json.dumps(valid_plans)
+
+        rating_val = 5.0
+
+        # Check and ensure pricing_plans column exists
+        try:
+            execute("ALTER TABLE spaces ADD COLUMN pricing_plans TEXT")
+        except Exception:
+            pass
 
         _, space_id = execute(
             """
-            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url, images, rating, user_id, contact_email, contact_phone, website_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO spaces (name, type, location, price_per_day, capacity, description, image_url, images, rating, user_id, contact_email, contact_phone, website_url, amenities, pricing_plans)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             [
                 data.get("name"),
@@ -206,9 +282,11 @@ def spaces(request):
                 images_str,
                 rating_val,
                 user["id"],
-                (data.get("contact_email") or "").strip().lower(),
+                contact_email,
                 (data.get("contact_phone") or "").strip(),
-                (data.get("website_url") or "").strip() or None
+                (data.get("website_url") or "").strip() or None,
+                amenities_str,
+                pricing_plans_str,
             ],
         )
         return api_response(
@@ -256,7 +334,25 @@ def space_detail(request, space_id):
                 imgs_list = [raw_imgs]
         if not imgs_list and space.get("image_url"):
             imgs_list = [space["image_url"]]
-        space["images_list"] = imgs_list
+        space["images_list"] = imgs_list[:5]
+
+        raw_amenities = space.get("amenities")
+        amenities_list = []
+        if raw_amenities:
+            try:
+                amenities_list = json.loads(raw_amenities) if raw_amenities.startswith("[") else [s.strip() for s in raw_amenities.split(",") if s.strip()]
+            except Exception:
+                amenities_list = [raw_amenities]
+        space["amenities_list"] = amenities_list
+
+        raw_plans = space.get("pricing_plans")
+        plans_list = []
+        if raw_plans:
+            try:
+                plans_list = json.loads(raw_plans) if isinstance(raw_plans, str) and raw_plans.startswith("[") else []
+            except Exception:
+                plans_list = []
+        space["pricing_plans_list"] = plans_list
 
         return api_response({"success": True, "data": space})
 
@@ -268,8 +364,11 @@ def space_detail(request, space_id):
     if not space:
         return api_response({"success": False, "message": "Space not found"}, 404)
 
-    is_creator = space.get("user_id") is not None and int(space.get("user_id")) == int(user["id"])
+    user_id_val = space.get("user_id")
+    is_creator = (user_id_val is not None and int(user_id_val) == int(user["id"]))
     is_admin = user.get("role") == "admin"
+    if user_id_val is None:
+        is_creator = True
 
     if not is_creator and not is_admin:
         return api_response({"success": False, "message": "You are not authorized to modify or delete this workspace"}, 403)
@@ -287,10 +386,73 @@ def space_detail(request, space_id):
         return api_response({"success": True, "message": "Space updated successfully"})
 
     if request.method == "DELETE":
+        try:
+            execute("DELETE FROM bookings WHERE space_id = %s", [space_id])
+        except Exception:
+            pass
+        try:
+            execute("UPDATE events SET space_id = NULL WHERE space_id = %s", [space_id])
+        except Exception:
+            pass
         execute("DELETE FROM spaces WHERE id = %s", [space_id])
-        return api_response({"success": True, "message": "Space deleted successfully"})
+        return api_response({"success": True, "message": "Workspace deleted successfully"})
 
     return method_not_allowed()
+
+
+def location_suggestions(request):
+    if request.method != "GET":
+        return method_not_allowed()
+
+    q = (request.GET.get("q") or "").strip()
+    results = []
+    seen = set()
+
+    # Search strictly within registered workspaces in the database
+    try:
+        if q:
+            db_rows = fetch_all(
+                """
+                SELECT location, COUNT(*) as space_count 
+                FROM spaces 
+                WHERE location IS NOT NULL AND location != '' AND LOWER(location) LIKE %s 
+                GROUP BY location 
+                ORDER BY space_count DESC, location ASC 
+                LIMIT 12
+                """,
+                [f"%{q.lower()}%"],
+            )
+        else:
+            db_rows = fetch_all(
+                """
+                SELECT location, COUNT(*) as space_count 
+                FROM spaces 
+                WHERE location IS NOT NULL AND location != '' 
+                GROUP BY location 
+                ORDER BY space_count DESC, location ASC 
+                LIMIT 10
+                """
+            )
+        for row in db_rows:
+            loc = (row.get("location") or "").strip()
+            count = row.get("space_count") or 1
+            if loc and loc.lower() not in seen:
+                seen.add(loc.lower())
+                parts = [p.strip() for p in loc.split(",") if p.strip()]
+                area = parts[0] if parts else loc
+                city = parts[1] if len(parts) > 1 else ""
+                badge_text = f"{count} Space" if count == 1 else f"{count} Spaces"
+                results.append({
+                    "full_name": loc,
+                    "area": area,
+                    "city": city or "Registered Space",
+                    "type": "workspace",
+                    "badge": badge_text,
+                })
+    except Exception:
+        pass
+
+    return api_response({"success": True, "count": len(results), "data": results})
 
 
 def bookings(request):
@@ -640,13 +802,16 @@ def update_password(request):
 
 
 def search_users(request):
-    query = request.GET.get("query")
-    if not query:
-        return api_response({"success": True, "data": []})
-    rows = fetch_all(
-        "SELECT id, name, status, bio FROM users WHERE name LIKE %s OR bio LIKE %s LIMIT 10",
-        [f"%{query}%", f"%{query}%"],
-    )
+    query = (request.GET.get("query") or "").strip()
+    if query:
+        rows = fetch_all(
+            "SELECT id, name, status, bio, avatar_url, headline, role FROM users WHERE name LIKE %s OR bio LIKE %s OR headline LIKE %s LIMIT 10",
+            [f"%{query}%", f"%{query}%", f"%{query}%"],
+        )
+    else:
+        rows = fetch_all(
+            "SELECT id, name, status, bio, avatar_url, headline, role FROM users ORDER BY id DESC LIMIT 8"
+        )
     return api_response({"success": True, "data": rows})
 
 

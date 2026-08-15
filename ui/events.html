@@ -8,6 +8,133 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/icons/briefcase-fill.svg">
+    <style>
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        .evt-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .evt-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: #bbf7d0;
+        }
+        .evt-card-img-wrap {
+            position: relative;
+            height: 190px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .evt-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .evt-card:hover .evt-card-img {
+            transform: scale(1.04);
+        }
+        .evt-card-free-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            color: #4ade80;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.35rem 0.8rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .evt-card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .evt-card-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.75rem;
+            line-height: 1.35;
+        }
+        .evt-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin-bottom: 0.45rem;
+            font-weight: 600;
+        }
+        .evt-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .evt-card-attendees {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: #475569;
+            font-weight: 700;
+        }
+        .evt-card-tag {
+            background: #ecfdf5;
+            color: #059669;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+        .evt-filter-chip {
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            color: #475569;
+            padding: 0.55rem 1.25rem;
+            border-radius: 50px;
+            font-family: var(--font);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .evt-filter-chip:hover, .evt-filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        @media (max-width: 1024px) {
+            .events-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .events-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body style="background-color: #f8fafc;">
     <!-- Shared Navbar -->
@@ -31,121 +158,80 @@
         </div>
     </nav>
 
-    <!-- Events Hero Banner -->
-    <header style="padding-top: 160px; padding-bottom: 80px; background: #0d4d3d; color: white; position: relative; overflow: hidden;">
-        <div style="position: absolute; inset: 0; opacity: 0.05; background-image: url('https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?auto=format&fit=crop&q=80&w=1600'); background-size: cover; background-position: center;"></div>
-        <div class="container" style="position: relative; z-index: 1;">
-            <div style="max-width: 700px;">
-                <span style="background: rgba(255,255,255,0.15); color: white; padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; display: inline-block; margin-bottom: 1.5rem; backdrop-filter: blur(10px);">
-                    <i data-lucide="sparkles" size="14" style="display: inline; vertical-align: middle; margin-right: 6px;"></i>Academy Hub
-                </span>
-                <h1 style="font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -1px; color: white;">
-                    Events & <span style="color: #4ade80;">Workshops</span>
-                </h1>
-                <p style="font-size: 1.2rem; color: rgba(255,255,255,0.85); line-height: 1.7; font-weight: 500; margin-bottom: 2.5rem;">
-                    Learn from industry leaders, network with fellow professionals, and level up your career at curated events hosted across Pakistan's top co-working spaces.
-                </p>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <button class="btn" onclick="toggleEventModal(true)" style="background: white; color: var(--dark); padding: 1rem 2.5rem; font-weight: 800; border-radius: 12px; font-size: 1rem; border: none;">
-                        <i data-lucide="plus" size="18"></i> Host an Event
-                    </button>
-                    <a href="#events-section" class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 1rem 2.5rem; font-weight: 800; border-radius: 12px; font-size: 1rem; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); text-decoration: none;">
-                        Browse Events
-                    </a>
-                </div>
-            </div>
-            <!-- Stats strip -->
-            <div style="display: flex; gap: 3rem; margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.15);">
+    <!-- Clean, Practical Header -->
+    <header style="padding-top: 120px; padding-bottom: 26px; background: white; border-bottom: 1px solid var(--border);">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem;">
                 <div>
-                    <span style="font-size: 2rem; font-weight: 800; display: block;">120+</span>
-                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 600;">Events Hosted</span>
+                    <h1 style="font-size: 2rem; margin-bottom: 0.4rem; font-weight: 800; color: var(--dark);">
+                        Community <span style="color: var(--primary);">Events & Workshops</span>
+                    </h1>
+                    <p style="color: var(--gray); font-weight: 600; font-size: 0.95rem; margin: 0;">
+                        Discover upcoming tech workshops, founder meetups, and conferences across verified co-working spaces.
+                    </p>
                 </div>
-                <div>
-                    <span style="font-size: 2rem; font-weight: 800; display: block;">3.5K+</span>
-                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 600;">Total Attendees</span>
-                </div>
-                <div>
-                    <span style="font-size: 2rem; font-weight: 800; display: block;">4.9</span>
-                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 600;">Avg. Rating</span>
-                </div>
+                <button class="btn btn-primary" onclick="toggleEventModal(true)" style="border-radius: 12px; padding: 0.75rem 1.6rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px;">
+                    <i data-lucide="plus" size="18"></i> Host an Event
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Main Events Section -->
-    <main id="events-section" class="container" style="padding-top: 60px; padding-bottom: 80px;">
-        <!-- Filter Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
-                <h2 style="font-size: 2rem; font-weight: 800; color: var(--dark);">Upcoming <span style="color: var(--primary);">Events</span></h2>
-                <p style="color: var(--gray); margin-top: 0.3rem; font-weight: 600;">Find your next learning opportunity</p>
+    <main class="container" style="padding-top: 2rem; padding-bottom: 5rem;">
+        <!-- Practical Search & Filter Controls -->
+        <div style="background: white; border-radius: 16px; border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+                <!-- Search Input -->
+                <div style="display: flex; align-items: center; gap: 0.65rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.6rem 1rem; flex: 1; min-width: 260px;">
+                    <i data-lucide="search" size="18" style="color: #94a3b8;"></i>
+                    <input type="text" id="event-search-input" placeholder="Search events by title, venue, or city..." style="border: none; outline: none; background: transparent; width: 100%; font-family: inherit; font-size: 0.9rem; font-weight: 600; color: #0f172a;" oninput="filterAndRenderEvents()">
+                </div>
+
+                <!-- Event Count Indicator -->
+                <span id="events-count-badge" style="font-size: 0.85rem; font-weight: 700; color: #64748b;">
+                    Loading events...
+                </span>
             </div>
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-                <button class="evt-filter-btn active" data-filter="all">All Events</button>
-                <button class="evt-filter-btn" data-filter="workshop">Workshops</button>
-                <button class="evt-filter-btn" data-filter="meetup">Meetups</button>
-                <button class="evt-filter-btn" data-filter="conference">Conferences</button>
+
+            <!-- Type Filter Chips -->
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 0.82rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 0.25rem;">Type:</span>
+                <button class="evt-filter-chip active" data-type="all" onclick="selectEventTypeFilter('all')">All Events</button>
+                <button class="evt-filter-chip" data-type="Workshop" onclick="selectEventTypeFilter('Workshop')">Workshops</button>
+                <button class="evt-filter-chip" data-type="Meetup" onclick="selectEventTypeFilter('Meetup')">Meetups</button>
+                <button class="evt-filter-chip" data-type="Conference" onclick="selectEventTypeFilter('Conference')">Conferences</button>
+                <button class="evt-filter-chip" data-type="Webinar" onclick="selectEventTypeFilter('Webinar')">Webinars</button>
             </div>
         </div>
 
         <!-- Events Grid -->
         <div id="events-grid" class="events-grid">
-            <p style="text-align: center; color: var(--gray); grid-column: 1/-1; padding: 3rem;">Loading upcoming events...</p>
-        </div>
-
-        <!-- Host Your Event CTA -->
-        <div style="margin-top: 5rem; background: #0d4d3d; border-radius: 30px; overflow: hidden; position: relative;">
-            <div style="position: absolute; top: 0; right: 0; width: 50%; height: 100%; opacity: 0.08; background-image: url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=800'); background-size: cover; background-position: center;"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; padding: 5rem; position: relative; z-index: 1;">
-                <div>
-                    <span style="background: rgba(255,255,255,0.15); color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; display: inline-block; margin-bottom: 1.5rem;">For Event Hosts</span>
-                    <h3 style="font-size: 2.5rem; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 1.5rem;">Host your own <br><span style="color: #4ade80;">movement.</span></h3>
-                    <p style="color: rgba(255,255,255,0.85); line-height: 1.8; font-size: 1.05rem; margin-bottom: 2.5rem;">
-                        Whether it's a tech workshop, a founder meetup, or a creative masterclass, CoWorkConnect gives you the platform, the space, and the audience to lead.
-                    </p>
-                    <button class="btn" onclick="toggleEventModal(true)" style="background: white; color: var(--dark); padding: 1.2rem 3rem; font-weight: 800; border-radius: 12px; font-size: 1rem; border: none;">
-                        <i data-lucide="plus" size="18"></i> Create an Event
-                    </button>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                    <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-                        <i data-lucide="map-pin" size="28" style="color: #4ade80; margin-bottom: 1rem; display: block;"></i>
-                        <h4 style="color: white; font-weight: 800; margin-bottom: 0.5rem;">Pick a Venue</h4>
-                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">Choose from 50+ premium co-working spaces across Pakistan.</p>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-                        <i data-lucide="users" size="28" style="color: #4ade80; margin-bottom: 1rem; display: block;"></i>
-                        <h4 style="color: white; font-weight: 800; margin-bottom: 0.5rem;">Build Audience</h4>
-                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">Reach 5,000+ active professionals instantly.</p>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-                        <i data-lucide="ticket" size="28" style="color: #4ade80; margin-bottom: 1rem; display: block;"></i>
-                        <h4 style="color: white; font-weight: 800; margin-bottom: 0.5rem;">Smart Passes</h4>
-                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">Auto-generated QR passes for seamless check-in.</p>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-                        <i data-lucide="bar-chart-3" size="28" style="color: #4ade80; margin-bottom: 1rem; display: block;"></i>
-                        <h4 style="color: white; font-weight: 800; margin-bottom: 0.5rem;">Track Impact</h4>
-                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">Real-time analytics on registrations & engagement.</p>
-                    </div>
-                </div>
-            </div>
+            <div class="skeleton-card" style="height: 350px;"></div>
+            <div class="skeleton-card" style="height: 350px;"></div>
+            <div class="skeleton-card" style="height: 350px;"></div>
         </div>
     </main>
 
     <!-- Footer -->
-        <footer class="footer" style="padding: 2rem 0; background-color: var(--color-surface); border-top: 1px solid var(--color-border); text-align: center; color: var(--color-muted); font-size: 0.85rem; font-weight: 600;">
+    <footer class="footer" style="padding: 2rem 0; background-color: var(--color-surface); border-top: 1px solid var(--color-border); text-align: center; color: var(--color-muted); font-size: 0.85rem; font-weight: 600;">
         <div class="container">
             <p>&copy; 2026 CoWorkConnect. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- Create Event Modal -->
-    <div id="event-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-        <div style="background: white; width: 600px; border-radius: 24px; padding: 3rem; box-shadow: 0 30px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
-            <h3 style="margin-bottom: 2rem; font-weight: 800; font-size: 1.8rem;">Schedule an Event</h3>
+    <div id="event-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 1.5rem;">
+        <div style="background: white; width: 100%; max-width: 600px; border-radius: 24px; padding: 2.5rem; box-shadow: 0 30px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-weight: 800; font-size: 1.6rem; color: var(--dark);">Schedule an Event</h3>
+                <button class="btn-icon-sm" type="button" onclick="toggleEventModal(false)"><i data-lucide="x" size="20"></i></button>
+            </div>
             <form id="create-event-form">
-                <div class="input-group"><label>Event Name</label><input type="text" id="e-title" name="title" class="input-field" style="border-radius: 12px; padding: 0.8rem 1rem;" placeholder="e.g. Founder Mixer" required></div>
+                <div class="input-group">
+                    <label>Event Name</label>
+                    <input type="text" id="e-title" name="title" class="input-field" style="border-radius: 12px; padding: 0.8rem 1rem;" placeholder="e.g. AI Founders Mixer" required>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="input-group">
@@ -159,20 +245,32 @@
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    <div class="input-group"><label>City</label><input type="text" id="e-city" name="city" class="input-field" style="border-radius: 12px;" placeholder="e.g. Lahore"></div>
+                    <div class="input-group">
+                        <label>City</label>
+                        <input type="text" id="e-city" name="city" class="input-field" style="border-radius: 12px;" placeholder="e.g. Lahore">
+                    </div>
                 </div>
 
                 <div class="input-group" style="position: relative;">
-                    <label>Location</label>
+                    <label>Location / Venue</label>
                     <input type="text" id="e-venue" name="venue" class="input-field" style="border-radius: 12px;" placeholder="e.g. National Incubation Center" autocomplete="off">
                     <div id="venue-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-top: 0.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; max-height: 200px; overflow-y: auto; display: none;"></div>
                 </div>
 
-                <div class="input-group"><label>Description</label><textarea id="e-desc" name="description" class="input-field" placeholder="What will the audience learn?" style="height: 100px; resize: none; border-radius: 12px; padding: 1rem;"></textarea></div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea id="e-desc" name="description" class="input-field" placeholder="What will attendees learn?" style="height: 100px; resize: none; border-radius: 12px; padding: 1rem;"></textarea>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="input-group"><label>Starting Time</label><input type="datetime-local" id="e-date" name="eventDate" class="input-field" style="border-radius: 12px;" required></div>
-                    <div class="input-group"><label>Ending Time</label><input type="datetime-local" id="e-end-date" name="endDate" class="input-field" style="border-radius: 12px;" required></div>
+                    <div class="input-group">
+                        <label>Starting Time</label>
+                        <input type="datetime-local" id="e-date" name="eventDate" class="input-field" style="border-radius: 12px;" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Ending Time</label>
+                        <input type="datetime-local" id="e-end-date" name="endDate" class="input-field" style="border-radius: 12px;" required>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -183,254 +281,139 @@
                     </p>
                 </div>
 
-                <div class="input-group"><label>Upload Event Photo</label><input type="file" id="e-image" name="image" class="input-field" style="border-radius: 12px; padding: 0.6rem 1rem;" accept="image/*"></div>
+                <div class="input-group">
+                    <label>Upload Event Photo</label>
+                    <input type="file" id="e-image" name="image" class="input-field" style="border-radius: 12px; padding: 0.6rem 1rem;" accept="image/*">
+                </div>
 
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;"><button type="button" class="btn btn-outline" style="flex: 1;" onclick="toggleEventModal(false)">Cancel</button><button type="submit" class="btn btn-primary" style="flex: 1; font-weight: 800;">Create Event</button></div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1; border-radius: 12px;" onclick="toggleEventModal(false)">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: 800; border-radius: 12px;">Create Event</button>
+                </div>
             </form>
         </div>
     </div>
-
-    <style>
-        .events-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-        }
-        .evt-card {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid #cbd5e1;
-            transition: all 0.4s ease;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-        }
-        .evt-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-        }
-        .evt-card-img {
-            height: 200px;
-            width: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        .evt-card:hover .evt-card-img {
-            transform: scale(1.05);
-        }
-        .evt-card-img-wrap {
-            overflow: hidden;
-            position: relative;
-        }
-        .evt-card-free-badge {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            background: white;
-            color: var(--dark);
-            font-weight: 800;
-            padding: 0.4rem 1rem;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            z-index: 2;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .evt-card-body {
-            padding: 2rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .evt-card-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--dark);
-            line-height: 1.3;
-            margin-bottom: 0.8rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-        .evt-card-meta {
-            font-size: 0.85rem;
-            color: var(--gray);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 0.4rem;
-        }
-        .evt-card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto;
-            padding-top: 1.5rem;
-            border-top: 1px solid #f1f5f9;
-        }
-        .evt-card-attendees {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--dark);
-            font-weight: 800;
-        }
-        .evt-card-tag {
-            background: #ecfdf5;
-            color: var(--primary);
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 0.3rem 0.8rem;
-            border-radius: 50px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .avatar-stack {
-            display: flex;
-            align-items: center;
-        }
-        .avatar-stack .avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid white;
-            margin-left: -10px;
-            object-fit: cover;
-        }
-        .avatar-stack .avatar:first-child {
-            margin-left: 0;
-        }
-        .evt-filter-btn {
-            background: white;
-            border: 1px solid #cbd5e1;
-            color: var(--gray);
-            padding: 0.6rem 1.5rem;
-            border-radius: 50px;
-            font-family: var(--font);
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .evt-filter-btn:hover, .evt-filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        @media (max-width: 1024px) {
-            .events-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 768px) {
-            .events-grid { grid-template-columns: 1fr; }
-            header h1 { font-size: 2.5rem !important; }
-            header > div:last-child { flex-direction: column; gap: 1.5rem; }
-            main > div:last-child > div { grid-template-columns: 1fr !important; }
-            main > div:last-child > div > div:last-child { grid-template-columns: 1fr !important; }
-        }
-    </style>
 
     <script src="app.js?v=route-images-1"></script>
     <script>
         lucide.createIcons();
 
-        const eventImages = [
-            fallbackImage('event'),
-            fallbackImage('community'),
-            fallbackImage('workspace'),
-            fallbackImage('event'),
-            fallbackImage('community'),
-            fallbackImage('workspace')
-        ];
+        let allEventsList = [];
+        let selectedTypeFilter = 'all';
 
         async function fetchEvents() {
             const grid = document.getElementById('events-grid');
-            grid.innerHTML = `
-                <div class="skeleton-card" style="height: 340px;"></div>
-                <div class="skeleton-card" style="height: 340px;"></div>
-                <div class="skeleton-card" style="height: 340px;"></div>
+            const skeletonEventHtml = `
+                <div class="skeleton-event-card">
+                    <div class="skeleton-shimmer" style="height: 180px; width: 100%;"></div>
+                    <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 10px; flex: 1;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="skeleton-shimmer skeleton-pill" style="width: 70px; height: 22px;"></div>
+                            <div class="skeleton-shimmer skeleton-pill" style="width: 85px; height: 22px;"></div>
+                        </div>
+                        <div class="skeleton-shimmer skeleton-line-lg" style="width: 80%; margin-top: 4px;"></div>
+                        <div class="skeleton-shimmer skeleton-line-sm" style="width: 60%;"></div>
+                        <div class="skeleton-shimmer skeleton-line-md" style="width: 90%;"></div>
+                        <div style="margin-top: auto; pt-2; display: flex; justify-content: space-between; align-items: center;">
+                            <div class="skeleton-shimmer skeleton-pill" style="width: 75px; height: 24px;"></div>
+                            <div class="skeleton-shimmer skeleton-btn" style="width: 90px; height: 34px; border-radius: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
             `;
+            grid.innerHTML = Array(6).fill(skeletonEventHtml).join('');
             try {
                 const res = await fetch('/api/events');
                 const data = await res.json();
-                if(!data.data || data.data.length === 0) {
-                    grid.innerHTML = `
-                        <div style="text-align: center; grid-column: 1/-1; padding: 5rem 2rem;">
-                            <i data-lucide="calendar-off" size="60" style="color: #cbd5e1; margin-bottom: 1.5rem; display: block; margin-left: auto; margin-right: auto;"></i>
-                            <h3 style="font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">No Upcoming Events</h3>
-                            <p style="color: var(--gray); font-weight: 600; margin-bottom: 2rem;">Be the first to host an event for the community!</p>
-                            <button class="btn btn-primary" onclick="toggleEventModal(true)" style="padding: 1rem 2.5rem; border-radius: 12px; font-weight: 800;">+ Create Event</button>
-                        </div>`;
-                    lucide.createIcons();
-                    return;
-                }
-
-                const me = JSON.parse(localStorage.getItem('user')) || {};
-
-                grid.innerHTML = data.data.map((e, idx) => {
-                    const d = new Date(e.event_date);
-                    const formattedDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                    const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-                    const img = safeImageUrl(e.image_url, eventImages[idx % eventImages.length]);
-                    const venueDisplay = e.space_name || e.venue || e.city || 'Online / TBD';
-                    const typeDisplay = e.event_type || 'Event';
-                    const isHostOrAdmin = me.role === 'admin' || Number(e.created_by) === Number(me.id);
-
-                    // Generate random avatars for dummy attendees
-                    const avatars = [
-                        fallbackImage('avatar'),
-                        fallbackImage('avatar'),
-                        fallbackImage('avatar')
-                    ];
-
-                    return `
-                    <div class="evt-card" onclick="window.location.href='event-details.html?id=${Number(e.id)}'">
-                        <div class="evt-card-img-wrap">
-                            <span class="evt-card-free-badge">Free</span>
-                            <img class="evt-card-img" src="${img}" data-fallback="${fallbackImage('event')}" alt="${escapeHtml(e.title)}">
-                        </div>
-                        <div class="evt-card-body">
-                            <div style="margin-bottom: 0.5rem;"><span class="evt-card-tag" style="background: #e0f2fe; color: #0284c7;">${escapeHtml(typeDisplay)}</span></div>
-                            <h3 class="evt-card-title">${escapeHtml(e.title)}</h3>
-                            <p class="evt-card-meta"><i data-lucide="clock" size="14"></i> ${escapeHtml(formattedDate)} - ${escapeHtml(timeStr)} PKT</p>
-                            <p class="evt-card-meta"><i data-lucide="user" size="14"></i> by ${escapeHtml(e.creator_name || 'Host')}</p>
-                            <p class="evt-card-meta"><i data-lucide="map-pin" size="14"></i> ${escapeHtml(venueDisplay)}</p>
-                            
-                            <div class="evt-card-footer">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="avatar-stack">
-                                        <img src="${avatars[0]}" class="avatar" data-fallback="${fallbackImage('avatar')}">
-                                        <img src="${avatars[1]}" class="avatar" data-fallback="${fallbackImage('avatar')}">
-                                        <img src="${avatars[2]}" class="avatar" data-fallback="${fallbackImage('avatar')}">
-                                    </div>
-                                    <span class="evt-card-attendees">${Number(e.participant_count || 0)} attendees</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
-                applyImageFallbacks(grid);
-                lucide.createIcons();
+                allEventsList = data.data || [];
+                filterAndRenderEvents();
             } catch (err) {
                 grid.innerHTML = '<p style="text-align: center; color: var(--gray); grid-column: 1/-1; padding: 4rem;">Could not load events. Is the server running?</p>';
             }
         }
 
-        function toggleEventModal(show) { document.getElementById('event-modal').classList.toggle('hidden', !show); }
-
-        // Filter buttons (visual only for now)
-        document.querySelectorAll('.evt-filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.evt-filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        function selectEventTypeFilter(type) {
+            selectedTypeFilter = type;
+            document.querySelectorAll('.evt-filter-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
             });
-        });
+            filterAndRenderEvents();
+        }
+
+        function filterAndRenderEvents() {
+            const grid = document.getElementById('events-grid');
+            const searchQ = (document.getElementById('event-search-input').value || '').toLowerCase().trim();
+            const badge = document.getElementById('events-count-badge');
+
+            let filtered = allEventsList.filter(e => {
+                const matchesType = (selectedTypeFilter === 'all') || (e.event_type && e.event_type.toLowerCase() === selectedTypeFilter.toLowerCase());
+                const matchesSearch = !searchQ || 
+                    (e.title && e.title.toLowerCase().includes(searchQ)) ||
+                    (e.venue && e.venue.toLowerCase().includes(searchQ)) ||
+                    (e.city && e.city.toLowerCase().includes(searchQ)) ||
+                    (e.space_name && e.space_name.toLowerCase().includes(searchQ));
+                return matchesType && matchesSearch;
+            });
+
+            if (badge) {
+                badge.textContent = `Showing ${filtered.length} event${filtered.length === 1 ? '' : 's'}`;
+            }
+
+            if (!filtered.length) {
+                grid.innerHTML = `
+                    <div style="text-align: center; grid-column: 1/-1; padding: 5rem 2rem; background: white; border-radius: 20px; border: 1px solid var(--border);">
+                        <i data-lucide="calendar-off" size="52" style="color: #cbd5e1; margin-bottom: 1rem; display: block; margin-left: auto; margin-right: auto;"></i>
+                        <h3 style="font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">No Events Found</h3>
+                        <p style="color: var(--gray); font-weight: 600; margin-bottom: 1.5rem;">No events match your current filter criteria.</p>
+                        <button class="btn btn-primary" onclick="toggleEventModal(true)" style="padding: 0.8rem 2rem; border-radius: 12px; font-weight: 800;">+ Host an Event</button>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = filtered.map((e) => {
+                const d = new Date(e.event_date);
+                const formattedDate = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+                const img = safeImageUrl(e.image_url, fallbackImage('event'));
+                const venueDisplay = e.space_name || e.venue || e.city || 'Online / TBD';
+                const typeDisplay = e.event_type || 'Event';
+
+                return `
+                <div class="evt-card" onclick="window.location.href='event-details.html?id=${Number(e.id)}'">
+                    <div class="evt-card-img-wrap">
+                        <span class="evt-card-free-badge">Free</span>
+                        <img class="evt-card-img" src="${img}" data-fallback="${fallbackImage('event')}" alt="${escapeHtml(e.title)}">
+                    </div>
+                    <div class="evt-card-body">
+                        <div style="margin-bottom: 0.6rem;">
+                            <span class="evt-card-tag">${escapeHtml(typeDisplay)}</span>
+                        </div>
+                        <h3 class="evt-card-title">${escapeHtml(e.title)}</h3>
+                        <p class="evt-card-meta"><i data-lucide="calendar" size="14"></i> ${escapeHtml(formattedDate)} • ${escapeHtml(timeStr)}</p>
+                        <p class="evt-card-meta"><i data-lucide="user" size="14"></i> by ${escapeHtml(e.creator_name || 'Host')}</p>
+                        <p class="evt-card-meta"><i data-lucide="map-pin" size="14"></i> ${escapeHtml(venueDisplay)}</p>
+                        
+                        <div class="evt-card-footer">
+                            <div class="evt-card-attendees">
+                                <i data-lucide="users" size="15" style="color: var(--primary);"></i>
+                                <span>${Number(e.participant_count || 0)} registered</span>
+                            </div>
+                            <span style="font-size: 0.84rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 4px;">
+                                Details <i data-lucide="arrow-right" size="14"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            applyImageFallbacks(grid);
+            lucide.createIcons();
+        }
+
+        function toggleEventModal(show) { 
+            document.getElementById('event-modal').classList.toggle('hidden', !show); 
+        }
 
         document.getElementById('create-event-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -440,7 +423,6 @@
             const form = document.getElementById('create-event-form');
             const formData = new FormData(form);
 
-            // Format dates
             const rawDate = formData.get('eventDate');
             const rawEndDate = formData.get('endDate');
 
@@ -464,28 +446,40 @@
             if(rawDate) formData.set('eventDate', rawDate.replace('T', ' ') + ':00');
             if(rawEndDate) formData.set('endDate', rawEndDate.replace('T', ' ') + ':00');
 
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.dataset.origText = submitBtn.innerHTML;
+                submitBtn.innerHTML = 'Publishing Event...';
+            }
+
             try {
                 const res = await fetch('/api/events', { 
                     method: 'POST', 
-                    headers: { 'Authorization': `Bearer ${token}` }, // Do NOT set Content-Type with FormData
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formData 
                 });
                 
                 if(res.ok) { 
-                    alert('Event created successfully.'); 
+                    showToast ? showToast('Event created successfully.', 'success') : alert('Event created successfully.'); 
                     toggleEventModal(false); 
                     fetchEvents(); 
                     form.reset(); 
                 } else { 
                     const data = await res.json(); 
-                    alert('Error: ' + data.message); 
+                    showToast ? showToast('Error: ' + data.message, 'error') : alert('Error: ' + data.message); 
                 }
             } catch (err) { 
-                alert('Connection Error'); 
+                showToast ? showToast('Connection Error', 'error') : alert('Connection Error'); 
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.dataset.origText) submitBtn.innerHTML = submitBtn.dataset.origText;
+                }
             }
         });
 
-        // Venue Autocomplete logic
+        // Venue Autocomplete
         let venueTimeout;
         const venueInput = document.getElementById('e-venue');
         const venueSuggestions = document.getElementById('venue-suggestions');
@@ -524,7 +518,7 @@
                 } catch (err) {
                     console.error("Geocoding error:", err);
                 }
-            }, 600); // 600ms debounce
+            }, 600);
         });
         
         window.selectVenue = function(name) {
@@ -532,7 +526,6 @@
             venueSuggestions.style.display = 'none';
         };
         
-        // Hide suggestions when clicking outside
         document.addEventListener('click', (e) => {
             if (e.target !== venueInput && !venueSuggestions.contains(e.target)) {
                 venueSuggestions.style.display = 'none';

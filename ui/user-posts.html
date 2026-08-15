@@ -8,31 +8,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-    <nav class="navbar navbar-solid">
-        <div class="nav-container" style="padding: 0.75rem 3rem; max-width: 100%;">
+<body style="background-color: var(--bg-soft, #f8fafc);">
+    <!-- Shared Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
             <a href="index.html" class="logo">
-                <span class="logo-mark">C</span>
-                <span class="logo-text">CoWorkConnect</span>
+                <i data-lucide="layout"></i>
+                <span>CoWorkConnect</span>
             </a>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="spaces.html" class="nav-link">Spaces</a>
+                <a href="spaces.html" class="nav-link">Explore Spaces</a>
+                <a href="community.html" class="nav-link">Networking</a>
+                <a href="groups.html" class="nav-link">Groups</a>
                 <a href="events.html" class="nav-link">Events</a>
-                <a href="groups.html" class="nav-link">Circles</a>
-                <a href="community.html" class="nav-link">Network</a>
-            </div>
-            <div class="auth-buttons">
-                <div id="auth-links" class="nav-auth-group">
-                    <a href="login.html" class="btn btn-outline" style="border-radius: 50px;">Sign in</a>
-                    <a href="register.html" class="btn btn-primary" style="border-radius: 50px;">Get Started</a>
+                
+                <div id="auth-links" class="auth-links hidden"></div>
+                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <!-- Populated dynamically by app.js -->
                 </div>
-                <div id="user-links" class="hidden"></div>
             </div>
         </div>
     </nav>
 
-    <main class="container" style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
+    <main class="container" style="max-width: 900px; margin: 0 auto; padding-top: 100px; padding-bottom: 3rem;">
         <!-- Header Banner -->
         <div style="background: white; border-radius: 24px; border: 1px solid var(--border); padding: 2rem 2.5rem; margin-bottom: 2rem; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 1.25rem;">
@@ -146,6 +144,8 @@
             }
         }
 
+    <script src="app.js?v=route-images-2"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             loadUserPostsPage();
         });

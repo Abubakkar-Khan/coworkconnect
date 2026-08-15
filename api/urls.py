@@ -11,6 +11,7 @@ urlpatterns = [
     path("upload", views.upload_file),
     path("spaces", views.spaces),
     path("spaces/<int:space_id>", views.space_detail),
+    path("locations/suggest", views.location_suggestions),
     path("bookings", views.bookings),
     path("bookings/my", views.my_bookings),
     path("bookings/<int:booking_id>", views.booking_detail),
