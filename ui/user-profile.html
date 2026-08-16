@@ -309,13 +309,13 @@
             }
         }
 
-    <script src="app.js?v=route-images-2"></script>
-    <script>
-        lucide.createIcons();
-
-        document.addEventListener('DOMContentLoaded', () => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                loadUserProfile();
+            });
+        } else {
             loadUserProfile();
-        });
+        }
     </script>
 </body>
 </html>

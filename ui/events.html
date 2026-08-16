@@ -533,7 +533,11 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', fetchEvents);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchEvents);
+        } else {
+            fetchEvents();
+        }
     </script>
 </body>
 </html>

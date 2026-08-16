@@ -70,12 +70,13 @@ body {
 }
 
 .skeleton-shimmer, .skeleton-box, .skeleton-bar, .skeleton-avatar, .skeleton-line, .skeleton-img, .skeleton-pill, .skeleton-btn {
-  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 25%, #e2e8f0 45%, #ffffff 60%, #e2e8f0 75%, #f8fafc 90%, #f1f5f9 100%) !important;
-  background-size: 250% 100% !important;
-  animation: CCShimmer 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 35%, #ffffff 50%, #f8fafc 65%, #f1f5f9 100%) !important;
+  background-size: 200% 100% !important;
+  animation: CCShimmer 1.6s ease-in-out infinite !important;
   border-radius: 8px;
   position: relative;
   overflow: hidden;
+  will-change: background-position;
 }
 
 .skeleton-avatar {

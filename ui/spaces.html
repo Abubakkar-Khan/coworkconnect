@@ -562,6 +562,23 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-space-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 440px; text-align: center; padding: 2rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+                <i data-lucide="trash-2" size="26"></i>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">Delete Workspace</h3>
+            <p style="font-size: 0.88rem; color: #64748b; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem;">
+                Are you sure you want to delete <strong id="delete-modal-space-name" style="color: var(--dark);">this workspace</strong>? This action cannot be undone.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="closeDeleteSpaceModal()" style="border-radius: 12px; font-weight: 700; padding: 0.75rem;">Cancel</button>
+                <button type="button" id="confirm-delete-space-btn" class="btn" style="background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 800; padding: 0.75rem;">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js?v=route-images-2"></script>
     <script>
         lucide.createIcons();
@@ -647,13 +664,103 @@
             });
         }
 
-        // Initialize Location Suggestions on search input and modal input
+        function setupRealPlaceSuggestions(inputId, panelId, onSelectCallback) {
+            const input = document.getElementById(inputId);
+            const panel = document.getElementById(panelId);
+            if (!input || !panel) return;
+
+            let debounceTimer = null;
+            let currentAbortController = null;
+
+            async function fetchRealPlaces(query = '') {
+                const trimmed = query.trim();
+                if (trimmed.length < 2) {
+                    panel.classList.remove('open');
+                    return;
+                }
+
+                panel.innerHTML = `<div style="padding: 10px; font-size: 0.8rem; color: #94a3b8; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;"><i data-lucide="loader" size="14"></i> Searching map places...</div>`;
+                panel.classList.add('open');
+                if (window.lucide) lucide.createIcons();
+
+                if (currentAbortController) {
+                    currentAbortController.abort();
+                }
+                currentAbortController = new AbortController();
+
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=5`, {
+                        signal: currentAbortController.signal
+                    });
+                    const data = await res.json();
+
+                    if (!data || !data.length) {
+                        panel.innerHTML = `<div style="padding: 10px; font-size: 0.8rem; color: #94a3b8; text-align: center;">No matching map places found. You can still type your exact address.</div>`;
+                        panel.classList.add('open');
+                        return;
+                    }
+
+                    panel.innerHTML = data.map(item => `
+                        <div class="location-suggest-item" data-value="${escapeHtml(item.display_name)}">
+                            <span style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <i data-lucide="map-pin" size="14" style="color: var(--primary); flex-shrink: 0;"></i>
+                                <span style="overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.display_name)}</span>
+                            </span>
+                            <span class="city-tag" style="background: #eff6ff; color: #1d4ed8; font-weight: 800;">
+                                Map Place
+                            </span>
+                        </div>
+                    `).join('');
+
+                    panel.classList.add('open');
+                    if (window.lucide) lucide.createIcons();
+
+                    panel.querySelectorAll('.location-suggest-item').forEach(item => {
+                        item.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            const val = item.dataset.value;
+                            input.value = val;
+                            panel.classList.remove('open');
+                            if (onSelectCallback) onSelectCallback(val);
+                        });
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        panel.innerHTML = `<div style="padding: 10px; font-size: 0.8rem; color: #94a3b8; text-align: center;">Type address to search places</div>`;
+                    }
+                }
+            }
+
+            input.addEventListener('focus', () => {
+                if (input.value.trim().length >= 2) {
+                    fetchRealPlaces(input.value);
+                }
+            });
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchRealPlaces(input.value);
+                    const mapIframe = document.getElementById('modal-map-iframe');
+                    if (mapIframe) {
+                        const query = encodeURIComponent(input.value.trim() || 'Pakistan');
+                        mapIframe.src = `https://maps.google.com/maps?q=${query}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+                    }
+                }, 300);
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => panel.classList.remove('open'), 250);
+            });
+        }
+
+        // Initialize Location Suggestions on search input (Registered Spaces) and modal input (Real Google Map Places)
         setupLocationSuggestions('location-input', 'search-location-suggestions', (selectedLoc) => {
             currentFilters.location = selectedLoc;
             fetchResults();
         });
 
-        setupLocationSuggestions('new-space-location', 'modal-location-suggestions', (selectedLoc) => {
+        setupRealPlaceSuggestions('new-space-location', 'modal-location-suggestions', (selectedLoc) => {
             const mapIframe = document.getElementById('modal-map-iframe');
             if (mapIframe) {
                 const query = encodeURIComponent(selectedLoc || 'Pakistan');
@@ -977,29 +1084,6 @@
             }
         }
 
-    <!-- Delete Confirmation Modal -->
-    <div id="delete-space-modal" class="modal-overlay">
-        <div class="modal-card" style="max-width: 440px; text-align: center; padding: 2rem;">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
-                <i data-lucide="trash-2" size="26"></i>
-            </div>
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">Delete Workspace</h3>
-            <p style="font-size: 0.88rem; color: #64748b; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem;">
-                Are you sure you want to delete <strong id="delete-modal-space-name" style="color: var(--dark);">this workspace</strong>? This action cannot be undone.
-            </p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="closeDeleteSpaceModal()" style="border-radius: 12px; font-weight: 700; padding: 0.75rem;">Cancel</button>
-                <button type="button" id="confirm-delete-space-btn" class="btn" style="background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 800; padding: 0.75rem;">Delete</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="app.js?v=route-images-2"></script>
-    <script>
-        lucide.createIcons();
-
-        let currentFilters = { location: '', type: 'all', minPrice: '0', maxPrice: '', sort: 'latest' };
-        let uploadedImages = ['', '', '', '', ''];
         let pendingDeleteSpaceId = null;
 
         function deleteCardSpace(event, id, name) {

@@ -139,17 +139,18 @@
                 `).join('');
 
                 lucide.createIcons();
-
             } catch (e) {
                 console.error(e);
             }
         }
 
-    <script src="app.js?v=route-images-2"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                loadUserPostsPage();
+            });
+        } else {
             loadUserPostsPage();
-        });
+        }
     </script>
 </body>
 </html>

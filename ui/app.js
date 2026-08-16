@@ -23,10 +23,17 @@ document.addEventListener('alpine:init', () => {
                 window.location.href = 'login.html';
             }
         });
+
+        Alpine.store('ui', {
+            activeModal: null,
+            openModal(id) { this.activeModal = id; },
+            closeModal() { this.activeModal = null; },
+            isOpen(id) { return this.activeModal === id; }
+        });
     }
 });
 
-const PROTECTED_PAGES = new Set(['community.html', 'groups.html']);
+const PROTECTED_PAGES = new Set(['community.html']);
 const FALLBACK_IMAGES = {
     workspace: 'assets/fallback-workspace.svg',
     community: 'assets/fallback-community.svg',
@@ -254,9 +261,13 @@ function updateNavbar() {
         });
 
         document.addEventListener('click', () => trigger?.classList.remove('active'));
-    } else {
-        authLinks?.classList.add('hidden');
-        userLinks?.classList.add('hidden');
+    } else if (authLinks && userLinks) {
+        userLinks.classList.add('hidden');
+        authLinks.classList.remove('hidden');
+        authLinks.innerHTML = `
+            <a href="login.html" class="btn btn-outline" style="border-radius:10px;padding:0.45rem 1rem;font-weight:700;font-size:0.85rem;text-decoration:none;">Sign In</a>
+            <a href="register.html" class="btn btn-primary" style="border-radius:10px;padding:0.45rem 1rem;font-weight:800;font-size:0.85rem;text-decoration:none;">Join Free</a>
+        `;
     }
 
     setActiveNav();

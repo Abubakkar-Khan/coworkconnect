@@ -863,7 +863,11 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadEventDetails);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadEventDetails);
+        } else {
+            loadEventDetails();
+        }
     </script>
 
     <!-- Footer -->

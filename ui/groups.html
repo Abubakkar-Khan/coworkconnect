@@ -16,8 +16,8 @@
         /* Full Page Layout */
         .chat-app-shell {
             display: flex;
-            margin-top: 60px;
-            height: calc(100vh - 60px);
+            margin-top: var(--nav-height);
+            height: calc(100vh - var(--nav-height));
             width: 100vw;
             background: #efeae2;
             overflow: hidden;
@@ -621,17 +621,23 @@
     </style>
 </head>
 <body>
-    <nav class="navbar" style="background: white; border-bottom: 1px solid #e2e8f0; height: 60px; padding: 0 1.5rem;">
-        <div class="container nav-container" style="height: 100%; display: flex; align-items: center; justify-content: space-between;">
-            <a href="index.html" class="logo" style="color: var(--dark);">
+    <!-- Shared Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
                 <i data-lucide="layout"></i>
                 <span>CoWorkConnect</span>
             </a>
-            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
-                <a href="spaces.html" class="nav-link" style="color: var(--dark);">Explore Spaces</a>
-                <a href="community.html" class="nav-link" style="color: var(--dark);">Networking</a>
-                <a href="groups.html" class="nav-link active" style="color: var(--primary);">Groups</a>
-                <a href="events.html" class="nav-link" style="color: var(--dark);">Events</a>
+            <div class="nav-links">
+                <a href="spaces.html" class="nav-link">Explore Spaces</a>
+                <a href="community.html" class="nav-link">Networking</a>
+                <a href="groups.html" class="nav-link active">Groups</a>
+                <a href="events.html" class="nav-link">Events</a>
+                
+                <div id="auth-links" class="auth-links hidden"></div>
+                <div id="user-links" class="user-links hidden" style="border-left: 1px solid #eee; padding-left: 1.5rem; margin-left: 1rem;">
+                    <!-- Populated dynamically by app.js -->
+                </div>
             </div>
         </div>
     </nav>
@@ -641,10 +647,10 @@
         <aside class="chat-sidebar">
             <div class="sidebar-header">
                 <div class="my-profile-info">
-                    <div id="my-avatar" class="user-nav-avatar">U</div>
+                    <div id="my-avatar" class="user-nav-avatar"><i data-lucide="user" size="18" style="color:var(--primary);"></i></div>
                     <div>
-                        <strong id="my-name" style="font-size:0.95rem;color:#0f172a;display:block;">User Name</strong>
-                        <span style="font-size:0.75rem;color:#059669;font-weight:700;">● Online</span>
+                        <strong id="my-name" style="font-size:0.95rem;color:#0f172a;display:block;">Member</strong>
+                        <div id="my-status-wrap"><span style="font-size:0.75rem;color:#059669;font-weight:700;">● Online</span></div>
                     </div>
                 </div>
                 <button class="btn-icon-sm" type="button" onclick="openCreateGroupModal()" title="Create New Circle"><i data-lucide="plus" size="18"></i></button>
@@ -658,9 +664,35 @@
             </div>
 
             <div class="group-list" id="groups-directory-list">
-                <div style="text-align:center;padding:3rem 1rem;color:#64748b;font-weight:700;">
-                    <i data-lucide="loader-circle" class="spin" size="24"></i>
-                    <p style="margin-top:0.5rem;">Loading circles...</p>
+                <div style="display:flex; flex-direction:column; gap:0.6rem; padding:0.75rem;">
+                    <div style="display:flex; gap:12px; align-items:center; padding: 10px 12px; background: white; border: 1px solid #f1f5f9; border-radius: 14px;">
+                        <div class="skeleton-avatar skeleton-shimmer" style="width:44px;height:44px;border-radius:50%;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:130px; height: 13px; border-radius: 4px;"></div>
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:85px; height: 9px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center; padding: 10px 12px; background: white; border: 1px solid #f1f5f9; border-radius: 14px;">
+                        <div class="skeleton-avatar skeleton-shimmer" style="width:44px;height:44px;border-radius:50%;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:110px; height: 13px; border-radius: 4px;"></div>
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:70px; height: 9px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center; padding: 10px 12px; background: white; border: 1px solid #f1f5f9; border-radius: 14px;">
+                        <div class="skeleton-avatar skeleton-shimmer" style="width:44px;height:44px;border-radius:50%;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:140px; height: 13px; border-radius: 4px;"></div>
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:90px; height: 9px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center; padding: 10px 12px; background: white; border: 1px solid #f1f5f9; border-radius: 14px;">
+                        <div class="skeleton-avatar skeleton-shimmer" style="width:44px;height:44px;border-radius:50%;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:100px; height: 13px; border-radius: 4px;"></div>
+                            <div class="skeleton-shimmer skeleton-line-sm" style="width:60px; height: 9px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -923,38 +955,48 @@
             }
         }
 
-        function updateMyUserInfo() {
-            const me = getStoredUser();
-            if (!me) return;
-            document.getElementById('my-name').textContent = me.name || 'Member';
+        async function updateMyUserInfo() {
+            let me = getStoredUser();
+            const token = localStorage.getItem('token');
+
+            if (token && (!me || !me.name)) {
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.user) {
+                        me = data.user;
+                        localStorage.setItem('user', JSON.stringify(me));
+                    }
+                } catch (e) {}
+            }
+
+            const nameEl = document.getElementById('my-name');
             const avatarEl = document.getElementById('my-avatar');
-            if (avatarEl) {
-                if (me.avatar_url) {
-                    avatarEl.innerHTML = `<img src="${safeImageUrl(me.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">`;
-                } else {
-                    avatarEl.textContent = (me.name || 'U')[0].toUpperCase();
+            const statusWrap = document.getElementById('my-status-wrap');
+
+            if (me && me.name) {
+                if (nameEl) nameEl.textContent = me.name;
+                if (statusWrap) statusWrap.innerHTML = `<span style="font-size:0.75rem;color:#059669;font-weight:700;">● Online</span>`;
+                if (avatarEl) {
+                    if (me.avatar_url) {
+                        avatarEl.innerHTML = `<img src="${safeImageUrl(me.avatar_url)}" style="width:100%;height:100%;object-fit:cover;">`;
+                    } else {
+                        avatarEl.textContent = (me.name || 'U')[0].toUpperCase();
+                    }
+                }
+            } else {
+                if (nameEl) nameEl.innerHTML = `<a href="login.html" style="color:var(--primary);text-decoration:none;font-weight:800;font-size:0.92rem;">Sign In</a>`;
+                if (statusWrap) statusWrap.innerHTML = `<span style="font-size:0.75rem;color:#64748b;font-weight:600;">Guest Visitor</span>`;
+                if (avatarEl) {
+                    avatarEl.innerHTML = `<i data-lucide="user" size="18" style="color:var(--primary);"></i>`;
                 }
             }
+            if (window.lucide) lucide.createIcons();
         }
 
         async function fetchGroupsList() {
-            const directoryList = document.getElementById('groups-directory-list');
-            if (directoryList) {
-                const skeletonGroupItem = `
-                    <div style="display:flex; gap:12px; align-items:center; padding: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 14px;">
-                        <div class="skeleton-avatar skeleton-shimmer"></div>
-                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-                            <div class="skeleton-shimmer skeleton-line-sm" style="width:110px; height: 13px;"></div>
-                            <div class="skeleton-shimmer skeleton-line-sm" style="width:70px; height: 9px;"></div>
-                        </div>
-                    </div>
-                `;
-                directoryList.innerHTML = `
-                    <div style="display:flex; flex-direction:column; gap:0.6rem; padding:0.75rem;">
-                        ${Array(5).fill(skeletonGroupItem).join('')}
-                    </div>
-                `;
-            }
             try {
                 const token = localStorage.getItem('token');
                 const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -963,17 +1005,22 @@
                 if (res.ok && data.data) {
                     allGroupsList = data.data;
                     renderGroupsList(allGroupsList);
-                    if (!activeGroup && allGroupsList.length > 0) {
-                        selectGroupChat(allGroupsList[0].id);
+                    if (allGroupsList.length > 0) {
+                        const targetId = activeGroup ? activeGroup.id : allGroupsList[0].id;
+                        selectGroupChat(targetId);
                     }
+                } else {
+                    renderGroupsList([]);
                 }
             } catch (e) {
                 console.error(e);
+                renderGroupsList([]);
             }
         }
 
         function renderGroupsList(groups) {
             const container = document.getElementById('groups-directory-list');
+            if (!container) return;
             if (!groups || !groups.length) {
                 container.innerHTML = `
                     <div style="text-align:center;padding:2.5rem 1rem;color:#64748b;font-weight:700;">
@@ -1002,6 +1049,7 @@
                     </div>
                 `;
             }).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
         function filterGroupsList() {
@@ -1136,13 +1184,45 @@
             const token = localStorage.getItem('token');
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
+            const composer = document.getElementById('group-message-form');
+
             try {
                 const res = await fetch(`/api/groups/${groupId}/messages`, { headers });
                 const data = await res.json();
                 if (!res.ok) {
-                    container.innerHTML = `<div style="text-align:center;padding:3rem;color:#64748b;font-weight:700;">${data.message || 'Join circle to view messages.'}</div>`;
+                    if (composer) composer.style.display = 'none';
+                    if (res.status === 401 || !token) {
+                        container.innerHTML = `
+                            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:3rem 1.5rem;">
+                                <div style="width:56px; height:56px; border-radius:50%; background:#ecfdf5; color:var(--primary); display:flex; align-items:center; justify-content:center; margin-bottom:1rem;">
+                                    <i data-lucide="lock" size="26"></i>
+                                </div>
+                                <h4 style="margin:0 0 0.4rem; font-size:1.2rem; font-weight:800; color:#0f172a;">Sign In to Join Circles</h4>
+                                <p style="margin:0 0 1.25rem; font-size:0.88rem; color:#64748b; font-weight:600; max-width:340px; line-height:1.5;">Sign in to your CoWorkConnect account to view live circle messages, join discussions, and chat with members.</p>
+                                <a href="login.html" class="btn btn-primary" style="border-radius:10px; font-weight:800; padding:0.65rem 1.5rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                                    <i data-lucide="log-in" size="16"></i> Sign In to Account
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:3rem 1.5rem;">
+                                <div style="width:56px; height:56px; border-radius:50%; background:#f0fdf4; color:var(--primary); display:flex; align-items:center; justify-content:center; margin-bottom:1rem; border:1px solid #bbf7d0;">
+                                    <i data-lucide="users" size="26"></i>
+                                </div>
+                                <h4 style="margin:0 0 0.4rem; font-size:1.2rem; font-weight:800; color:#0f172a;">Join ${escapeHtml(activeGroup ? activeGroup.name : 'this Circle')}</h4>
+                                <p style="margin:0 0 1.25rem; font-size:0.88rem; color:#64748b; font-weight:600; max-width:360px; line-height:1.5;">Join this community circle to read previous conversations, send messages, share photos, and collaborate with members.</p>
+                                <button class="btn btn-primary" onclick="joinCurrentCircle(${groupId})" id="join-circle-btn-${groupId}" style="border-radius:10px; font-weight:800; padding:0.7rem 1.75rem; display:inline-flex; align-items:center; gap:8px;">
+                                    <i data-lucide="user-plus" size="17"></i> Join Circle
+                                </button>
+                            </div>
+                        `;
+                    }
+                    lucide.createIcons();
                     return;
                 }
+
+                if (composer) composer.style.display = 'flex';
 
                 const messages = data.data || [];
                 const me = getStoredUser();
@@ -1166,6 +1246,70 @@
             }
         }
 
+        async function joinCurrentCircle(groupId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('Please sign in to join this circle.', 'error');
+                setTimeout(() => window.location.href = 'login.html', 1200);
+                return;
+            }
+
+            const btn = document.getElementById(`join-circle-btn-${groupId}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="spin" size="16"></i> Joining...`;
+                lucide.createIcons();
+            }
+
+            try {
+                const res = await fetch(`/api/groups/${groupId}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('Successfully joined the circle!', 'success');
+                    await fetchGroupsList();
+                    await selectGroupChat(groupId);
+                } else {
+                    showToast(data.message || 'Could not join circle', 'error');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i data-lucide="user-plus" size="17"></i> Join Circle`;
+                        lucide.createIcons();
+                    }
+                }
+            } catch (err) {
+                showToast('Error joining circle', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="user-plus" size="17"></i> Join Circle`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function renderReactionsBadges(messageId, reactionsList) {
+            const msgRow = document.getElementById(`chat-msg-${messageId}`);
+            if (!msgRow) return;
+            let rxRow = msgRow.querySelector('.msg-reactions-row');
+            if (!rxRow) {
+                rxRow = document.createElement('div');
+                rxRow.className = 'msg-reactions-row';
+                rxRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;';
+                msgRow.querySelector('.msg-bubble-box')?.appendChild(rxRow);
+            }
+            if (!reactionsList || !reactionsList.length) {
+                rxRow.innerHTML = '';
+                return;
+            }
+            rxRow.innerHTML = reactionsList.map(r => `
+                <span class="flat-reaction-badge ${r.reacted_by_me ? 'reacted' : ''}" title="Reacted by members" onclick="reactToMessage(${messageId}, '${r.emoji}')">
+                    ${r.emoji} <span class="rx-count">${r.count}</span>
+                </span>
+            `).join('');
+        }
+
         async function reactToMessage(messageId, emoji) {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -1173,7 +1317,7 @@
                 return;
             }
 
-            // In-place optimistic UI toggle on the message row
+            // In-place optimistic UI: Single reaction per user constraint
             const msgRow = document.getElementById(`chat-msg-${messageId}`);
             if (msgRow) {
                 let rxRow = msgRow.querySelector('.msg-reactions-row');
@@ -1183,19 +1327,47 @@
                     rxRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;';
                     msgRow.querySelector('.msg-bubble-box')?.appendChild(rxRow);
                 }
-                let existingBadge = Array.from(rxRow.querySelectorAll('.flat-reaction-badge')).find(b => b.textContent.includes(emoji));
-                if (existingBadge) {
-                    const isReacted = existingBadge.classList.contains('reacted');
-                    existingBadge.classList.toggle('reacted', !isReacted);
-                    const countEl = existingBadge.querySelector('.rx-count') || existingBadge;
-                    let count = parseInt(countEl.textContent.replace(/[^0-9]/g, '')) || 1;
-                    let newCount = !isReacted ? count + 1 : Math.max(0, count - 1);
-                    if (newCount > 0) {
-                        existingBadge.innerHTML = `${emoji} <span class="rx-count">${newCount}</span>`;
+
+                const currentActiveBadge = rxRow.querySelector('.flat-reaction-badge.reacted');
+                const isSameEmoji = currentActiveBadge && currentActiveBadge.textContent.includes(emoji);
+
+                // If user had a reaction with a different emoji, unreact from the old one first
+                if (currentActiveBadge && !isSameEmoji) {
+                    currentActiveBadge.classList.remove('reacted');
+                    const oldCountEl = currentActiveBadge.querySelector('.rx-count');
+                    let oldCount = parseInt(oldCountEl ? oldCountEl.textContent : '1') || 1;
+                    let newOldCount = oldCount - 1;
+                    if (newOldCount > 0) {
+                        const oldEmojiChar = currentActiveBadge.textContent.replace(/[0-9]/g, '').trim();
+                        currentActiveBadge.innerHTML = `${oldEmojiChar} <span class="rx-count">${newOldCount}</span>`;
                     } else {
-                        existingBadge.remove();
+                        currentActiveBadge.remove();
                     }
-                } else {
+                }
+
+                // Now toggle/apply the target emoji reaction
+                let targetBadge = Array.from(rxRow.querySelectorAll('.flat-reaction-badge')).find(b => b.textContent.includes(emoji));
+                if (targetBadge) {
+                    if (isSameEmoji) {
+                        // Toggle off the same emoji
+                        targetBadge.classList.remove('reacted');
+                        const countEl = targetBadge.querySelector('.rx-count');
+                        let count = parseInt(countEl ? countEl.textContent : '1') || 1;
+                        let newCount = count - 1;
+                        if (newCount > 0) {
+                            targetBadge.innerHTML = `${emoji} <span class="rx-count">${newCount}</span>`;
+                        } else {
+                            targetBadge.remove();
+                        }
+                    } else {
+                        // Apply reaction to existing badge
+                        targetBadge.classList.add('reacted');
+                        const countEl = targetBadge.querySelector('.rx-count');
+                        let count = parseInt(countEl ? countEl.textContent : '0') || 0;
+                        targetBadge.innerHTML = `${emoji} <span class="rx-count">${count + 1}</span>`;
+                    }
+                } else if (!isSameEmoji) {
+                    // Create new reaction badge
                     rxRow.insertAdjacentHTML('beforeend', `
                         <span class="flat-reaction-badge reacted" onclick="reactToMessage(${messageId}, '${emoji}')">
                             ${emoji} <span class="rx-count">1</span>
@@ -1205,11 +1377,15 @@
             }
 
             try {
-                await fetch(`/api/groups/messages/${messageId}/react`, {
+                const res = await fetch(`/api/groups/messages/${messageId}/react`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                     body: JSON.stringify({ emoji: emoji })
                 });
+                const data = await res.json();
+                if (res.ok && data.reactions) {
+                    renderReactionsBadges(messageId, data.reactions);
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -1429,9 +1605,12 @@
                 const data = await res.json();
                 if (res.ok && data.data) {
                     renderGroupMembers(data.data);
+                } else if (listEl) {
+                    listEl.innerHTML = `<div style="text-align:center;padding:1.5rem 0.5rem;color:#64748b;font-size:0.82rem;font-weight:600;">Join circle to view members list</div>`;
                 }
             } catch (err) {
                 console.error(err);
+                if (listEl) listEl.innerHTML = `<div style="text-align:center;padding:1.5rem 0.5rem;color:#64748b;font-size:0.82rem;font-weight:600;">Join circle to view members list</div>`;
             }
         }
 
@@ -1472,36 +1651,32 @@
         }
 
         // Send Message
-        let selectedMessageImage = null;
-        let isSendingMessage = false;
-
-        document.getElementById('msg-image-btn').addEventListener('click', () => {
-            document.getElementById('msg-image-file-input').click();
-        });
-
-        document.getElementById('msg-image-file-input').addEventListener('change', (e) => {
+        function handleImageSelection(e) {
             const file = e.target.files[0];
             if (file) {
                 selectedMessageImage = file;
                 const tag = document.getElementById('image-attachment-tag');
-                const nameSpan = document.getElementById('attached-image-name');
+                const nameSpan = document.getElementById('attached-filename') || document.getElementById('attached-image-name');
                 if (nameSpan) nameSpan.textContent = file.name;
                 if (tag) tag.style.display = 'inline-flex';
                 lucide.createIcons();
             }
-        });
+        }
 
-        document.getElementById('remove-attached-image-btn').addEventListener('click', () => {
-            clearImageSelection();
-        });
+        const msgImgFileInput = document.getElementById('msg-image-file-input');
+        if (msgImgFileInput) {
+            msgImgFileInput.addEventListener('change', handleImageSelection);
+        }
 
         function clearImageSelection() {
             selectedMessageImage = null;
-            document.getElementById('msg-image-file-input').value = '';
-            document.getElementById('image-attachment-tag').style.display = 'none';
+            const fileInp = document.getElementById('msg-image-file-input');
+            if (fileInp) fileInp.value = '';
+            const tag = document.getElementById('image-attachment-tag');
+            if (tag) tag.style.display = 'none';
         }
 
-        document.getElementById('group-message-form').addEventListener('submit', async (e) => {
+        document.getElementById('group-message-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!activeGroup || isSendingMessage) return;
 
@@ -1925,10 +2100,15 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                updateMyUserInfo();
+                fetchGroupsList();
+            });
+        } else {
             updateMyUserInfo();
             fetchGroupsList();
-        });
+        }
     </script>
 </body>
 </html>

@@ -1370,22 +1370,29 @@ def toggle_message_reaction(request, message_id):
     if error:
         return error
 
-    msg = fetch_one("SELECT * FROM messages WHERE id = %s", [message_id])
-    if not msg:
+    if not fetch_one("SELECT id FROM messages WHERE id = %s", [message_id]):
         return api_response({"success": False, "message": "Message not found"}, 404)
 
     data = read_data(request)
     emoji = (data.get("emoji") or "👍").strip()
 
     try:
+        # Enforce single emoji reaction per user per message
         existing = fetch_one(
-            "SELECT id FROM message_reactions WHERE message_id = %s AND user_id = %s AND emoji = %s",
-            [message_id, user["id"], emoji],
+            "SELECT id, emoji FROM message_reactions WHERE message_id = %s AND user_id = %s",
+            [message_id, user["id"]],
         )
         if existing:
-            execute("DELETE FROM message_reactions WHERE id = %s", [existing["id"]])
-            action = "removed"
+            if existing["emoji"] == emoji:
+                # Same emoji clicked again -> remove reaction (toggle off)
+                execute("DELETE FROM message_reactions WHERE id = %s", [existing["id"]])
+                action = "removed"
+            else:
+                # Different emoji clicked -> swap/update to new emoji
+                execute("UPDATE message_reactions SET emoji = %s WHERE id = %s", [emoji, existing["id"]])
+                action = "swapped"
         else:
+            # First reaction on this message
             execute(
                 "INSERT INTO message_reactions (message_id, user_id, emoji) VALUES (%s, %s, %s)",
                 [message_id, user["id"], emoji],
