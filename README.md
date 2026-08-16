@@ -13,16 +13,19 @@
 3. [Database Architecture & ERD](#-3-database-architecture--erd)
    - [Entity-Relationship Diagram (ERD)](#entity-relationship-diagram-erd)
    - [Database Schema & Performance Indexes](#database-schema--performance-indexes)
-4. [Core Modules & Technical Workflows](#-4-core-modules--technical-workflows)
-   - [Module 1: Authentication & Role-Based Authorization](#module-1-authentication--role-based-authorization)
-   - [Module 2: Workspace Discovery & Adaptive Photo Collage](#module-2-workspace-discovery--adaptive-photo-collage)
-   - [Module 3: Dual-Source Location Intelligence & Geocoding](#module-3-dual-source-location-intelligence--geocoding)
-   - [Module 4: Professional Networking Feed](#module-4-professional-networking-feed)
-   - [Module 5: Mastermind Circles & Real-Time Chat](#module-5-mastermind-circles--real-time-chat)
-   - [Module 6: Single-Emoji Reaction Engine](#module-6-single-emoji-reaction-engine)
-   - [Module 7: Event Academy & Registration Center](#module-7-event-academy--registration-center)
-   - [Module 8: Member Profiles & Friendship Graph](#module-8-member-profiles--friendship-graph)
-   - [Module 9: Admin Management Hub](#module-9-admin-management-hub)
+4. [Complete Features & Modules Catalog](#-4-complete-features--modules-catalog)
+   - [Module 1: Authentication, Role-Based Access & Rate Limiting](#module-1-authentication-role-based-access--rate-limiting)
+   - [Module 2: Client-Side HTML Sanitization (DOMPurify XSS Shield)](#module-2-client-side-html-sanitization-dompurify-xss-shield)
+   - [Module 3: Stale-While-Revalidate (SWR) Client Caching Engine](#module-3-stale-while-revalidate-swr-client-caching-engine)
+   - [Module 4: Dual-Layer Image Compression Engine](#module-4-dual-layer-image-compression-engine)
+   - [Module 5: Workspace Discovery & Adaptive Photo Collage](#module-5-workspace-discovery--adaptive-photo-collage)
+   - [Module 6: Dual-Source Location Intelligence & Geocoding](#module-6-dual-source-location-intelligence--geocoding)
+   - [Module 7: Professional Networking Feed & User Activity Filters](#module-7-professional-networking-feed--user-activity-filters)
+   - [Module 8: Mastermind Circles & Real-Time Chat](#module-8-mastermind-circles--real-time-chat)
+   - [Module 9: Single-Emoji Reaction Engine (Swap & Toggle)](#module-9-single-emoji-reaction-engine-swap--toggle)
+   - [Module 10: Event Academy & Verification Center](#module-10-event-academy--verification-center)
+   - [Module 11: Member Profiles & Facebook-Style Friendship Graph](#module-11-member-profiles--facebook-style-friendship-graph)
+   - [Module 12: Admin Management & Moderation Hub](#module-12-admin-management--moderation-hub)
 5. [Performance Engineering & Bottleneck Elimination](#-5-performance-engineering--bottleneck-elimination)
    - [N+1 Query Elimination (Batch Resolution)](#n1-query-elimination-batch-resolution)
    - [Hardware-Accelerated Skeleton Shimmer](#hardware-accelerated-skeleton-shimmer)
@@ -61,17 +64,17 @@ Modern remote teams, freelancers, and growing startups frequently struggle with 
 ```mermaid
 flowchart TD
     subgraph ClientLayer["🖥️ Frontend Client Layer (UI)"]
-        UI_SPA["Vanilla JS (ES6+) + Alpine.js Stores<br/>Lucide SVG Icons · Responsive CSS Tokens"]
+        UI_SPA["Vanilla JS (ES6+) + Alpine.js Stores<br/>DOMPurify XSS Shield · SWR Client Cache<br/>Lucide SVG Icons · Responsive CSS Tokens"]
         Pages["spaces.html · space-details.html<br/>community.html · groups.html<br/>events.html · event-details.html<br/>profile.html · user-profile.html · admin.html"]
     end
 
     subgraph GatewayLayer["⚡ ASGI / Daphne Application Gateway"]
         Router["URL Routing & Request Dispatcher<br/>(/api/* and Static File Handler)"]
-        Middleware["EnsureSchemaMiddleware<br/>CorsMiddleware<br/>SecurityMiddleware"]
+        Middleware["AuthRateLimitMiddleware<br/>EnsureSchemaMiddleware<br/>CorsMiddleware<br/>SecurityMiddleware"]
     end
 
     subgraph ServiceLayer["🧠 Backend Core Services (Django)"]
-        AuthSvc["Auth & Security Engine<br/>(JWT HS256 + bcrypt)"]
+        AuthSvc["Auth & Security Engine<br/>(JWT HS256 + bcrypt + Rate Limiter)"]
         SpaceSvc["Workspace & Location Engine<br/>(Dual Geocoding + Custom Passes)"]
         ChatSvc["Circle & Messaging Engine<br/>(In-Place Chat + Emoji State Machine)"]
         FeedSvc["Feed & Social Graph Engine<br/>(Batch Comments + Friends Graph)"]
@@ -80,11 +83,11 @@ flowchart TD
 
     subgraph StorageLayer["💾 Persistence & Media Layer"]
         DB[(PostgreSQL / SQLite / MySQL<br/>Composite B-Tree Indexes · Pooling)]
-        CloudMedia["Cloudinary / Local Uploads<br/>(Optimized Pillow JPEG Engine)"]
+        CloudMedia["Cloudinary / Local Uploads<br/>(Dual-Layer Pillow Compression Engine)"]
     end
 
     UI_SPA -->|"HTTP REST API (Bearer JWT)"| Router
-    Pages -->|"fetch() Promises & Alpine Stores"| Router
+    Pages -->|"swrFetch() Promises & Alpine Stores"| Router
     Router --> Middleware
     Middleware --> ServiceLayer
     ServiceLayer -->|"Single Batch SQL Queries"| DB
@@ -97,22 +100,23 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor User as User / Browser
-    participant AppJS as app.js / Alpine Store
+    participant SWR as SWR Cache / DOMPurify
     participant Server as Django ASGI Server
-    participant Middleware as Middleware Layer
+    participant RateLimiter as AuthRateLimitMiddleware
     participant View as API View Controller
     participant DB as Relational Database (PostgreSQL)
 
-    User->>AppJS: Action (e.g. Load Space Details / React to Message)
-    AppJS->>AppJS: Optimistic UI Update (Immediate visual feedback)
-    AppJS->>Server: HTTP Request (GET /api/spaces/1 + Bearer Token)
-    Server->>Middleware: CorsMiddleware & Cached EnsureSchema
-    Middleware->>View: Dispatch to space_detail(request, 1)
+    User->>SWR: Navigate to Page / Trigger Filter
+    SWR->>User: Immediate 0ms Cache Render (If Available)
+    SWR->>Server: HTTP Request (GET /api/spaces + Bearer Token)
+    Server->>RateLimiter: Check Request Path & Rate Limits
+    RateLimiter->>View: Dispatch to API View Controller
     View->>DB: Query with B-Tree Index (Reused connection via CONN_MAX_AGE)
     DB-->>View: Result Row & Serialized JSON Fields
     View-->>Server: JsonResponse (200 OK + Payload)
-    Server-->>AppJS: HTTP 200 JSON Response
-    AppJS->>User: Reconcile UI & Render Data (Lucide Icons + Dynamic DOM)
+    Server-->>SWR: HTTP 200 JSON Response
+    SWR->>SWR: Sanitize Payload with DOMPurify & Update Cache
+    SWR->>User: Reconcile UI & Render Data (Lucide Icons + Dynamic DOM)
 ```
 
 ---
@@ -274,28 +278,62 @@ To ensure sub-millisecond execution even under heavy database loads, the followi
 
 ---
 
-## 🧩 4. Core Modules & Technical Workflows
+## 🧩 4. Complete Features & Modules Catalog
 
-### Module 1: Authentication & Role-Based Authorization
-- **Password Hashing**: Uses `bcrypt` with salt rounds for one-way password hashing.
-- **Stateless JWT Tokens**: Issues signed JSON Web Tokens (`HS256`) containing `user_id`, `role`, and expiration timestamp.
+### Module 1: Authentication, Role-Based Access & Rate Limiting
+- **One-Way Password Hashing**: Utilizes `bcrypt` with cryptographic salt generation.
+- **Stateless JWT Tokens**: Issues signed JSON Web Tokens (`HS256`) containing `user_id`, `role`, and expiration timestamp (`30d`).
+- **IP-Based Authentication Rate Limiting (`AuthRateLimitMiddleware`)**:
+  - Automatically intercepts POST requests to `/api/auth/login` and `/api/auth/register`.
+  - Enforces a sliding rate window (max **5 attempts per 60 seconds** per IP).
+  - Returns `429 Too Many Requests` with a calculated `Retry-After: <seconds>` HTTP header to block brute-force credential stuffing.
 - **Client Storage & Interceptors**: Stored in `localStorage` and dispatched automatically in the `Authorization: Bearer <token>` HTTP header by `apiFetch()` in [`ui/app.js`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js).
 - **Alpine.js Global Auth Store**: Dynamic reactivity updates user profile avatars and names across the navbar and guest actions seamlessly.
 
 ```mermaid
 flowchart LR
-    A[User Creds<br/>Email + Password] -->|POST /api/auth/login| B[Django Auth Controller]
-    B -->|Verify bcrypt hash| C[(Users Table)]
-    C -->|Match OK| D[Generate JWT Token<br/>Payload: id, role, exp]
-    D -->|HTTP 200 Response| E[Client Browser]
-    E -->|Save token & user| F[Alpine.store 'auth']
-    F -->|Update UI Dynamically| G[Navbar Avatar + Member Dropdown]
+    A[User Submits Creds] --> B[AuthRateLimitMiddleware]
+    B -->|Attempts >= 5 in 60s| C[HTTP 429 Too Many Requests + Retry-After]
+    B -->|Attempts < 5| D[Django Auth Controller]
+    D -->|Verify bcrypt hash| E[(Users Table)]
+    E -->|Match OK| F[Generate JWT Token]
+    F --> G[Client Browser LocalStorage + Alpine Store]
 ```
 
 ---
 
-### Module 2: Workspace Discovery & Adaptive Photo Collage
-- **Explore Grid ([`ui/spaces.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/spaces.html))**: Fast faceted search by registered city, space type (`Hot Desk`, `Dedicated Desk`, `Private Office`, `Meeting Room`), and daily price range.
+### Module 2: Client-Side HTML Sanitization (DOMPurify XSS Shield)
+- **DOMPurify CDN Integration**: Injected into the `<head>` of all 13 HTML pages.
+- **Strict Tag Whitelisting**: [`sanitizeHtml()`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js) permits only safe semantic formatting tags (`<b>`, `<i>`, `<em>`, `<strong>`, `<a>`, `<span>`, `<p>`, `<br>`, `<code>`, `<pre>`, `<ul>`, `<ol>`, `<li>`, `<small>`) and safe attributes (`href`, `target`, `class`, `style`, `rel`).
+- **Zero-Tag Stripping**: [`escapeHtml()`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js) executes complete tag neutralization (`ALLOWED_TAGS: []`) for pure string inputs, guaranteeing 100% immunity against Cross-Site Scripting (XSS) in user-submitted comments, bio fields, and posts.
+
+---
+
+### Module 3: Stale-While-Revalidate (SWR) Client Caching Engine
+- **Instantaneous 0ms Page Transitions**: [`swrFetch()`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js) immediately renders cached data from in-memory maps or `sessionStorage` before network requests complete.
+- **Silent Background Revalidation**: Simultaneously triggers a background fetch to verify fresh data, smoothly reconciling the DOM with zero UI flashes or layout jumps.
+- **Intelligent Invalidation**: [`clearSwrCache(prefix)`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js) purges cached entries whenever a user publishes a new space, deletes a listing, or submits a post.
+
+---
+
+### Module 4: Dual-Layer Image Compression Engine
+- **Layer 1 (Frontend Pre-Upload Canvas Compression)**:
+  - `compressImageFile(file)` in [`ui/app.js`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js) reads uploaded images via FileReader into an HTML5 Canvas.
+  - Automatically downsizes massive multi-megabyte photos (e.g. 4000x3000px DSLR shots) to a max bounding box of **1200x1200px** with JPEG quality `0.82` before network transmission.
+- **Layer 2 (Backend Pillow/PIL Optimization)**:
+  - `save_upload()` in [`api/utils.py`](file:///d:/PROGRAMS/web/random/coworkconnect/api/utils.py) strips unnecessary EXIF metadata, resizes to a max width of **1600px**, and saves with Pillow optimization flags.
+
+```mermaid
+flowchart LR
+    A[Raw Image File<br/>8MB - 4000x3000px] -->|HTML5 Canvas| B[Frontend Resizing & Compression<br/>~250KB - 1200x1200px]
+    B -->|POST Multipart Upload| C[Django Backend]
+    C -->|Pillow / PIL Strip EXIF & Quality 82| D[Optimized Storage File / Cloudinary<br/>~120KB WebP/JPEG]
+```
+
+---
+
+### Module 5: Workspace Discovery & Adaptive Photo Collage
+- **Explore Grid ([`ui/spaces.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/spaces.html))**: Fast faceted search by registered city, space type (`Hot Desk`, `Dedicated Desk`, `Private Office`, `Meeting Room`), and daily price range with SWR 0ms caching.
 - **Custom Workspace Options & Passes**: Hosts can define unlimited flexible passes (e.g., *Half-Day Flex Pass*, *Weekly Dedicated Pass*, *Monthly Team Suite*) stored as JSON arrays in `pricing_plans`.
 - **Adaptive 1-to-5 Photo Collage ([`ui/space-details.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/space-details.html))**:
   - `1 Image`: Full-width hero cover.
@@ -305,25 +343,9 @@ flowchart LR
   - `5+ Images`: Master showcase tile with a 4-tile thumbnail grid and a *"View Slideshow (N)"* trigger button.
 - **Fullscreen Lightbox Slideshow**: Fullscreen modal with smooth next/prev slide navigation, keyboard shortcuts (`Esc`, `←`, `→`), and image counter indicators.
 
-```mermaid
-graph TD
-    Data[Workspace Image Array imgs] --> Check{Count?}
-    Check -->|1| Layout1[collage-layout-1: Full Hero]
-    Check -->|2| Layout2[collage-layout-2: 50/50 Split]
-    Check -->|3| Layout3[collage-layout-3: 1 Lead + 2 Stacked]
-    Check -->|4| Layout4[collage-layout-4: 1 Lead + 3 Stacked]
-    Check -->|5+| Layout5[collage-layout-5: 1 Lead + 4 Grid Tiles]
-    Layout1 --> Lightbox[Fullscreen Modal Lightbox Carousel]
-    Layout2 --> Lightbox
-    Layout3 --> Lightbox
-    Layout4 --> Lightbox
-    Layout5 --> Lightbox
-```
-
 ---
 
-### Module 3: Dual-Source Location Intelligence & Geocoding
-To guarantee frictionless search while providing precision real-world mapping:
+### Module 6: Dual-Source Location Intelligence & Geocoding
 1. **Explore Search (`#location-input`)**:
    - Queries `/api/locations/suggest?q=...` strictly against **registered workspaces in the database**.
    - Displays a green `Registered` badge so users never search in non-existent cities.
@@ -335,8 +357,8 @@ To guarantee frictionless search while providing precision real-world mapping:
 flowchart TD
     subgraph SearchInput["🔍 Explore Spaces Search"]
         S_Input[User types 'Islamabad'] --> S_API["GET /api/locations/suggest?q=Islamabad"]
-        S_API --> S_DB[(Spaces Database)]
-        S_DB --> S_Dropdown["Dropdown: 'Islamabad' (Registered Badge)"]
+        S_DB[(Spaces Database)] --> S_API
+        S_API --> S_Dropdown["Dropdown: 'Islamabad' (Registered Badge)"]
     end
 
     subgraph ListingInput["📍 List Your Space Form"]
@@ -348,23 +370,22 @@ flowchart TD
 
 ---
 
-### Module 4: Professional Networking Feed
-- **Author Headlines & Short Descriptions**: Author cards showcase professional titles (e.g. *"Principal Architect @ CloudScale"*) rather than generic badges.
+### Module 7: Professional Networking Feed & User Activity Filters
+- **Author Headlines & Professional Bios**: Author cards showcase verified roles (e.g. *"Full Stack Engineer @ FinTech"*) instead of generic badges.
 - **Tag Filtering**: Filter feed content by `#startups`, `#design`, `#events`, `#hiring`, etc.
 - **User Activity Filter (`community.html?user_id=X`)**: Deep-link to view all networking posts created by a specific member.
 - **Optimistic Interactions**: Like toggles and comments update the DOM instantaneously before background network synchronization.
 
 ---
 
-### Module 5: Mastermind Circles & Real-Time Chat
+### Module 8: Mastermind Circles & Real-Time Chat
 - **Topic Channels**: Create and join dedicated industry or co-working circles with avatars and member rosters.
 - **In-Place Message Rendering**: Sent messages append directly to `#messages-feed-container` with smooth auto-scrolling without refreshing the channel view.
 - **Image Attachments**: Attach photos to messages with compressed previews and full-size zoom inspection.
 
 ---
 
-### Module 6: Single-Emoji Reaction Engine
-To prevent spam while encouraging rich sentiment:
+### Module 9: Single-Emoji Reaction Engine (Swap & Toggle)
 - **Constraint**: Each user can have **at most one active emoji reaction per message**.
 - **Swap Mechanic**: Clicking a different emoji automatically deletes/swaps the old reaction and applies the new emoji in-place.
 - **Toggle-Off Mechanic**: Clicking the same emoji removes/toggles off the user's reaction.
@@ -382,7 +403,7 @@ stateDiagram-v2
 
 ---
 
-### Module 7: Event Academy & Registration Center
+### Module 10: Event Academy & Verification Center
 - **Compulsory Google Form Integration**: Event hosts supply a Google Form registration URL.
 - **Embedded Modal Flow**: Prospective attendees complete registration inside an interactive in-app modal.
 - **Host Verification Center**: Hosts access connected response sheets and manage attendee statuses (`pending`, `approved`, `rejected`).
@@ -390,17 +411,17 @@ stateDiagram-v2
 
 ---
 
-### Module 8: Member Profiles & Friendship Graph
+### Module 11: Member Profiles & Facebook-Style Friendship Graph
 - **Bidirectional Friendships**:
   - `+ Add Friend` ➔ Outgoing request (`status: pending`).
   - `⏳ Request Sent` ➔ Pending response indicator.
   - `✓ Accept Friend Request` ➔ Bilateral friend confirmation (`status: accepted`).
   - `Friends ✓ (Unfriend)` ➔ Friendship management and removal.
-- **Public Profile View ([`ui/user-profile.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/user-profile.html))**: Direct portfolio link showcasing GitHub and LinkedIn links, expertise chips, bio, and shared workspaces.
+- **Public Profile View ([`ui/user-profile.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/user-profile.html))**: Direct portfolio link showcasing GitHub and LinkedIn links (emojis removed for clean aesthetic), expertise chips, bio, and shared workspaces.
 
 ---
 
-### Module 9: Admin Management Hub
+### Module 12: Admin Management & Moderation Hub
 - **Inventory Control**: Update or delete any space listing, manage capacity, and toggle availability.
 - **Moderation**: Remove inappropriate community posts, comments, and messages.
 - **User Records**: View registered accounts, modify roles (`user` ➔ `admin`), and inspect audit logs.
@@ -442,11 +463,11 @@ Implemented a dual-layer GPU-composited moving highlight shimmer wave in [`ui/st
 ## 📡 6. Complete REST API Reference
 
 ### Authentication Endpoints
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :---: | :--- |
-| `POST` | `/api/auth/register` | No | Register new user account (`name`, `email`, `password`) |
-| `POST` | `/api/auth/login` | No | Authenticate user & return JWT token |
-| `GET` | `/api/auth/me` | Yes | Get authenticated user profile & role |
+| Method | Endpoint | Auth | Description | Rate Limit |
+| :--- | :--- | :---: | :--- | :---: |
+| `POST` | `/api/auth/register` | No | Register new user account (`name`, `email`, `password`) | 5 req / 60s |
+| `POST` | `/api/auth/login` | No | Authenticate user & return JWT token | 5 req / 60s |
+| `GET` | `/api/auth/me` | Yes | Get authenticated user profile & role | Standard |
 
 ### Workspaces & Locations
 | Method | Endpoint | Auth | Description |
@@ -514,13 +535,15 @@ Implemented a dual-layer GPU-composited moving highlight shimmer wave in [`ui/st
 | :--- | :--- | :--- | :--- |
 | **Frontend Core** | HTML5 / CSS3 / Vanilla JavaScript | ES6+ | High performance, zero framework bundle bloat |
 | **Frontend Reactive Store** | Alpine.js | 3.14.x | Lightweight reactive state for auth, modals, and notifications |
+| **HTML Sanitizer** | DOMPurify | 3.1.6 | Universal XSS protection and safe HTML whitelisting |
+| **Client Caching** | Custom SWR Engine | Native JS / SessionStorage | 0ms instant cached transitions & background revalidation |
 | **Iconography** | Lucide Icons | Latest SVG | Uniform, crisp vector icons across all UI components |
 | **Typography** | Google Fonts (Outfit) | 300 - 800 | Modern, highly legible geometric sans-serif typeface |
 | **Backend Framework** | Python / Django | 5.2.x | Secure, robust MVC backend and routing architecture |
 | **ASGI Server** | Daphne / Channels | 4.2.x | Asynchronous gateway interface for low-latency dispatching |
 | **Database** | PostgreSQL / SQLite / MySQL | 15+ / 3.x | Relational storage with composite B-tree indexing |
 | **Authentication** | PyJWT / bcrypt | HS256 | Cryptographically secure token authentication & password hashing |
-| **Image Processing** | Pillow (PIL) | Latest | Server-side image resizing, EXIF cleanup, and JPEG optimization |
+| **Image Processing** | Pillow (PIL) + HTML5 Canvas | Latest | Dual-layer client Canvas & server Pillow compression |
 | **Geocoding Service** | OpenStreetMap / Nominatim | v2 API | Real-world map coordinates and address autocomplete |
 
 ---
