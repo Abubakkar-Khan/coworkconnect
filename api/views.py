@@ -881,24 +881,36 @@ def posts(request):
                     pass
             rows = fetch_all(sql, params)
 
-        for post in rows:
-            post["liked_by_me"] = bool(post.get("liked_by_me"))
-            post["comments"] = fetch_all(
-                """
+        if rows:
+            post_ids = [p["id"] for p in rows]
+            placeholders = ", ".join(["%s"] * len(post_ids))
+            all_comments = fetch_all(
+                f"""
                 SELECT c.*, COALESCE(u.name, 'Community Member') as user_name, u.avatar_url as user_avatar,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes_count
                 FROM comments c
                 LEFT JOIN users u ON c.user_id = u.id
-                WHERE c.post_id = %s ORDER BY c.created_at ASC
+                WHERE c.post_id IN ({placeholders}) ORDER BY c.created_at ASC
                 """,
-                [post["id"]],
+                post_ids,
             )
-            for comment in post["comments"]:
-                comment["liked_by_me"] = False
-                if current_user:
-                    comment["liked_by_me"] = bool(
-                        fetch_one("SELECT id FROM comment_likes WHERE comment_id = %s AND user_id = %s", [comment["id"], current_user["id"]])
-                    )
+            
+            user_liked_comment_ids = set()
+            if current_user and all_comments:
+                liked_rows = fetch_all(
+                    f"SELECT comment_id FROM comment_likes WHERE user_id = %s AND comment_id IN ({', '.join(['%s'] * len(all_comments))})",
+                    [current_user["id"]] + [c["id"] for c in all_comments],
+                )
+                user_liked_comment_ids = {r["comment_id"] for r in liked_rows}
+
+            comments_by_post = {}
+            for comment in all_comments:
+                comment["liked_by_me"] = comment["id"] in user_liked_comment_ids
+                comments_by_post.setdefault(comment["post_id"], []).append(comment)
+
+            for post in rows:
+                post["liked_by_me"] = bool(post.get("liked_by_me"))
+                post["comments"] = comments_by_post.get(post["id"], [])
         return api_response({"success": True, "count": len(rows), "data": rows})
 
     if request.method == "POST":
@@ -1032,15 +1044,21 @@ def groups(request):
             ORDER BY g.created_at DESC
             """
         )
-        if current_user:
+        if current_user and rows:
+            my_memberships = fetch_all(
+                "SELECT group_id, role FROM group_members WHERE user_id = %s",
+                [current_user["id"]]
+            )
+            membership_map = {m["group_id"]: m["role"] for m in my_memberships}
             for group in rows:
-                member_rec = fetch_one(
-                    "SELECT id, role FROM group_members WHERE group_id = %s AND user_id = %s",
-                    [group["id"], current_user["id"]],
-                )
-                group["joined_by_me"] = bool(member_rec)
-                group["my_role"] = member_rec.get("role") if member_rec else None
+                group["joined_by_me"] = group["id"] in membership_map
+                group["my_role"] = membership_map.get(group["id"])
                 group["created_by_me"] = group.get("created_by") == current_user["id"]
+        else:
+            for group in rows:
+                group["joined_by_me"] = False
+                group["my_role"] = None
+                group["created_by_me"] = False
         return api_response({"success": True, "count": len(rows), "data": rows})
 
     if request.method == "POST":
@@ -1261,18 +1279,24 @@ def group_messages(request, group_id):
             """,
             [group_id],
         )
-        for msg in rows:
-            reactions = fetch_all(
-                """
-                SELECT emoji, COUNT(*) as count,
+        if rows:
+            msg_ids = [m["id"] for m in rows]
+            placeholders = ", ".join(["%s"] * len(msg_ids))
+            all_reactions = fetch_all(
+                f"""
+                SELECT message_id, emoji, COUNT(*) as count,
                        SUM(CASE WHEN user_id = %s THEN 1 ELSE 0 END) as reacted_by_me
                 FROM message_reactions
-                WHERE message_id = %s
-                GROUP BY emoji
+                WHERE message_id IN ({placeholders})
+                GROUP BY message_id, emoji
                 """,
-                [user["id"], msg["id"]],
+                [user["id"]] + msg_ids,
             )
-            msg["reactions"] = reactions
+            reactions_by_msg = {}
+            for r in all_reactions:
+                reactions_by_msg.setdefault(r["message_id"], []).append(r)
+            for msg in rows:
+                msg["reactions"] = reactions_by_msg.get(msg["id"], [])
         return api_response({"success": True, "data": rows})
 
     if request.method == "POST":

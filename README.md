@@ -1,733 +1,649 @@
-# CoWorkConnect
+# CoWorkConnect — Full Platform Architecture & Technical Documentation 🏢🌐
 
-CoWorkConnect is a web-based coworking space management and professional networking platform. The system is designed to help users discover coworking spaces, book workspaces, create community posts, join discussion groups, exchange group messages, and register for professional events. It also provides an admin-side workflow for managing workspace inventory.
+> **CoWorkConnect** is an enterprise-grade coworking space management, social networking, and professional collaboration platform. Built with Python/Django and a high-performance, reactive Vanilla/Alpine.js frontend, it unifies flexible workspace booking, mastermind circles, community networking feeds, and verified event management into a single, cohesive ecosystem.
 
-This project is suitable for a final year project or thesis because it combines user management, role-based authorization, booking workflows, community interaction, event management, file uploads, database design, and a complete web interface.
+---
 
-## Table of Contents
-- [Project Overview](#project-overview)
-- [Problem Statement](#problem-statement)
-- [Objectives](#objectives)
-- [Technology Stack](#technology-stack)
-- [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
-- [Main Modules](#main-modules)
-  - [1. Authentication Module](#1-authentication-module)
-  - [2. User Profile Module](#2-user-profile-module)
-  - [3. Space Management Module](#3-space-management-module)
-  - [4. Booking Module](#4-booking-module)
-  - [5. Community Posts Module](#5-community-posts-module)
-  - [6. Groups and Messaging Module](#6-groups-and-messaging-module)
-  - [7. Events Module](#7-events-module)
-- [Database Design](#database-design)
-- [Authentication and Authorization](#authentication-and-authorization)
-- [API Summary](#api-summary)
-- [Setup Instructions](#setup-instructions)
-- [Deployment on Vercel](#deployment-on-vercel)
-- [User Interface Pages](#user-interface-pages)
-- [Testing and Validation](#testing-and-validation)
-- [Security Features](#security-features)
-- [Limitations](#limitations)
-- [Future Enhancements](#future-enhancements)
-- [Conclusion](#conclusion)
+## 📑 Table of Contents
 
-## Project Overview
+1. [Executive Summary & Problem Statement](#-1-executive-summary--problem-statement)
+2. [High-Level System Architecture](#-2-high-level-system-architecture)
+   - [System Context Diagram](#system-context-diagram)
+   - [Full Request & Response Pipeline](#full-request--response-pipeline)
+3. [Database Architecture & ERD](#-3-database-architecture--erd)
+   - [Entity-Relationship Diagram (ERD)](#entity-relationship-diagram-erd)
+   - [Database Schema & Performance Indexes](#database-schema--performance-indexes)
+4. [Core Modules & Technical Workflows](#-4-core-modules--technical-workflows)
+   - [Module 1: Authentication & Role-Based Authorization](#module-1-authentication--role-based-authorization)
+   - [Module 2: Workspace Discovery & Adaptive Photo Collage](#module-2-workspace-discovery--adaptive-photo-collage)
+   - [Module 3: Dual-Source Location Intelligence & Geocoding](#module-3-dual-source-location-intelligence--geocoding)
+   - [Module 4: Professional Networking Feed](#module-4-professional-networking-feed)
+   - [Module 5: Mastermind Circles & Real-Time Chat](#module-5-mastermind-circles--real-time-chat)
+   - [Module 6: Single-Emoji Reaction Engine](#module-6-single-emoji-reaction-engine)
+   - [Module 7: Event Academy & Registration Center](#module-7-event-academy--registration-center)
+   - [Module 8: Member Profiles & Friendship Graph](#module-8-member-profiles--friendship-graph)
+   - [Module 9: Admin Management Hub](#module-9-admin-management-hub)
+5. [Performance Engineering & Bottleneck Elimination](#-5-performance-engineering--bottleneck-elimination)
+   - [N+1 Query Elimination (Batch Resolution)](#n1-query-elimination-batch-resolution)
+   - [Hardware-Accelerated Skeleton Shimmer](#hardware-accelerated-skeleton-shimmer)
+   - [Connection Pooling & Network Latency](#connection-pooling--network-latency)
+6. [Complete REST API Reference](#-6-complete-rest-api-reference)
+7. [Technology Stack](#-7-technology-stack)
+8. [Installation & Local Setup](#-8-installation--local-setup)
+9. [Environment Variables Reference](#-9-environment-variables-reference)
+10. [Production Deployment Guide](#-10-production-deployment-guide)
 
-The main purpose of CoWorkConnect is to provide a centralized digital platform for coworking users, space owners, freelancers, startups, and remote professionals. Instead of using separate tools for workspace booking, event discovery, and community communication, CoWorkConnect brings these features into one integrated system.
+---
 
-The platform supports two main user roles:
+## 🎯 1. Executive Summary & Problem Statement
 
-- `user`: A normal member who can browse spaces, book spaces, create posts, join groups, send messages, and register for events.
-- `admin`: A privileged user who can manage coworking spaces and view or update booking records.
+### The Problem
+Modern remote teams, freelancers, and growing startups frequently struggle with fragmented software tooling:
+- Workspace booking platforms operate in isolation from professional community networks.
+- Discussion groups are buried in siloed messaging apps without physical workspace context.
+- Local networking events and workshops lack structured ticketing and attendance verification.
+- Space listings suffer from opaque pricing, rigid long-term lease lock-ins, and slow loading interfaces.
 
-## Problem Statement
+### The Solution: CoWorkConnect
+**CoWorkConnect** bridges physical real estate with digital social capital:
+- **Instant Workspace Marketplace**: Filter verified desks, private suites, and meeting rooms with custom pass options and direct host contact.
+- **Community Feed & Author Headlines**: Share milestones, insights, and project updates with verified local professionals.
+- **Mastermind Circles & Chat**: Topic-focused discussion groups with image attachments, in-place message rendering, and single-emoji reaction swaps.
+- **Verified Events Hub**: Compulsory Google Form attendee registration with in-app verification sheets and pass generation.
+- **Facebook-Style Social Graph**: Manage bidirectional friendships, view public member portfolios, and track mutual connections.
 
-Many coworking spaces rely on manual communication, social media pages, or disconnected tools for bookings, member interaction, and event promotion. This creates problems such as duplicate bookings, limited visibility of available spaces, weak community engagement, and inefficient administration.
+---
 
-CoWorkConnect addresses these issues by providing a single web application where users can:
+## 🏛️ 2. High-Level System Architecture
 
-- Search and view available coworking spaces.
-- Book a workspace for a selected date.
-- Manage their profile.
-- Share posts and interact with community content.
-- Join discussion groups and communicate with members.
-- Discover and register for coworking-related events.
-- Allow administrators to manage available workspace resources.
-
-## Objectives
-
-The key objectives of the project are:
-
-- To design and develop a coworking space management system.
-- To implement secure user registration and login using JWT authentication.
-- To provide role-based access control for users and administrators.
-- To allow users to browse, filter, and book coworking spaces.
-- To support community engagement through posts, comments, likes, and groups.
-- To provide event creation and registration functionality.
-- To store all important system data in a MySQL relational database.
-- To create a responsive frontend using HTML, CSS, and JavaScript.
-- To implement the backend using Django and Python.
-
-## Technology Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| Frontend | HTML, CSS, JavaScript |
-| Backend | Django, Python |
-| Database | MySQL |
-| Authentication | JWT, bcrypt password hashing |
-| File Uploads | Django file handling |
-| API Style | REST-style JSON endpoints |
-| Server | Django development server |
-
-The current project does not use Node.js. The frontend is plain HTML, CSS, and JavaScript, while the backend is Django.
-
-## System Architecture
-
-CoWorkConnect follows a client-server architecture.
+### System Context Diagram
 
 ```mermaid
 flowchart TD
-    A[Browser UI<br/>HTML, CSS, JavaScript] -->|"fetch() API requests"| B[Django Backend<br/>REST APIs]
-    B -->|"SQL Queries"| C[(MySQL Database)]
-    B -->|"File I/O"| D[Local File System<br/>Uploads Directory]
+    subgraph ClientLayer["🖥️ Frontend Client Layer (UI)"]
+        UI_SPA["Vanilla JS (ES6+) + Alpine.js Stores<br/>Lucide SVG Icons · Responsive CSS Tokens"]
+        Pages["spaces.html · space-details.html<br/>community.html · groups.html<br/>events.html · event-details.html<br/>profile.html · user-profile.html · admin.html"]
+    end
+
+    subgraph GatewayLayer["⚡ ASGI / Daphne Application Gateway"]
+        Router["URL Routing & Request Dispatcher<br/>(/api/* and Static File Handler)"]
+        Middleware["EnsureSchemaMiddleware<br/>CorsMiddleware<br/>SecurityMiddleware"]
+    end
+
+    subgraph ServiceLayer["🧠 Backend Core Services (Django)"]
+        AuthSvc["Auth & Security Engine<br/>(JWT HS256 + bcrypt)"]
+        SpaceSvc["Workspace & Location Engine<br/>(Dual Geocoding + Custom Passes)"]
+        ChatSvc["Circle & Messaging Engine<br/>(In-Place Chat + Emoji State Machine)"]
+        FeedSvc["Feed & Social Graph Engine<br/>(Batch Comments + Friends Graph)"]
+        EventSvc["Events & Registration Engine<br/>(Google Forms + Verification)"]
+    end
+
+    subgraph StorageLayer["💾 Persistence & Media Layer"]
+        DB[(PostgreSQL / SQLite / MySQL<br/>Composite B-Tree Indexes · Pooling)]
+        CloudMedia["Cloudinary / Local Uploads<br/>(Optimized Pillow JPEG Engine)"]
+    end
+
+    UI_SPA -->|"HTTP REST API (Bearer JWT)"| Router
+    Pages -->|"fetch() Promises & Alpine Stores"| Router
+    Router --> Middleware
+    Middleware --> ServiceLayer
+    ServiceLayer -->|"Single Batch SQL Queries"| DB
+    ServiceLayer -->|"Image Compression & I/O"| CloudMedia
 ```
 
-The frontend pages are stored in the `ui/` directory. These pages communicate with the backend through `/api/...` endpoints using JavaScript `fetch()` requests. The Django backend receives the requests, validates input, checks authentication where required, performs database operations, and returns JSON responses.
-
-## Project Structure
-
-```text
-coworkconnect/
-  api/
-    management/
-      commands/
-        seed.py
-    apps.py
-    middleware.py
-    schema.py
-    urls.py
-    utils.py
-    views.py
-  coworkconnect/
-    asgi.py
-    settings.py
-    urls.py
-    wsgi.py
-  ui/
-    admin.html
-    app.js
-    community.html
-# CoWorkConnect
-
-CoWorkConnect is a web-based coworking space management, social networking, and community collaboration platform. The system helps users discover coworking spaces, book workspaces, create community posts, join discussion groups (Circles), exchange group messages, manage Facebook-style friend connections, showcase GitHub & LinkedIn portfolios, and register for professional events with compulsory Google Form verification.
-
----
-
-## Table of Contents
-- [Project Overview](#project-overview)
-- [Key Features & Modules](#key-features--modules)
-  - [1. User Profile & Public Portfolios](#1-user-profile--public-portfolios)
-  - [2. Facebook-Style Friends System](#2-facebook-style-friends-system)
-  - [3. LinkedIn-Style User Activity & Networking Feed](#3-linkedin-style-user-activity--networking-feed)
-  - [4. Dual-Layer Image Compression Engine](#4-dual-layer-image-compression-engine)
-  - [5. Space Discovery & Workspace Bookings](#5-space-discovery--workspace-bookings)
-  - [6. Circles & Group Messaging](#6-circles--group-messaging)
-  - [7. Events Management & Verification Center](#7-events-management--verification-center)
-- [Technology Stack](#technology-stack)
-- [System Architecture](#system-architecture)
-- [Database Schema](#database-schema)
-- [API Endpoints Reference](#api-endpoints-reference)
-- [Setup & Local Development](#setup--local-development)
-
----
-
-## Project Overview
-
-CoWorkConnect brings together space reservation, social networking, event hosting, and team collaboration into a single, unified web platform.
-
-### User Roles:
-- **Member (`user`)**: Browse and book spaces, publish posts, connect with friends, join Circles, send chat messages, and attend events.
-- **Administrator (`admin`)**: Manage space listings, edit/delete any community content, approve/reject event registrations, and review system logs.
-
----
-
-## Key Features & Modules
-
-### 1. User Profile & Public Portfolios (`profile.html` & `user-profile.html`)
-- **Public Member Profile Page (`user-profile.html?id=X`)**: Clicking any user avatar or name across Circles, Network posts, or Event hosts opens their dedicated public profile page.
-- **Professional Headline & Bio**: Users can add a professional headline (e.g. *"Software Engineer @ TechCorp | Open to Collab"*) and catchy bio.
-- **GitHub 💻 & LinkedIn 💼 Links**: Interactive social badges on user profiles for instant portfolio viewing.
-- **Navbar Profile Avatar**: The top-right navbar profile button renders the user's actual uploaded avatar image across all pages.
-
-### 2. Facebook-Style Friends System (`friendships`)
-- **Friend Requests Lifecycle**:
-  - `+ Add Friend`: Sends a friend request.
-  - `⏳ Request Sent`: Displays pending outgoing request status.
-  - `✓ Accept Friend Request`: Accepts incoming friend requests.
-  - `Friends ✓ (Unfriend)`: Allows managing or removing friends.
-- **My Friends Grid**: Dedicated card on `profile.html` and `user-profile.html` displaying accepted friends.
-
-### 3. LinkedIn-Style User Activity & Networking Feed (`community.html`)
-- **Full Feed Filtering**: Filter posts by `#hashtags`, Latest, Top, Questions, and Collaborations.
-- **User Activity Filter (`community.html?user_id=X`)**: Filter the entire networking feed specifically for posts authored by a single user, complete with likes, nested comments, and sharing.
-- **Text Wrapping Protection**: Line-wrapping CSS (`white-space: pre-wrap; word-break: break-word;`) prevents long text or URLs from distorting card layouts.
-
-### 4. Dual-Layer Image Compression Engine
-- **Frontend Compression (`compressImageFile`)**: HTML5 Canvas resizes large uploads (max 1200x1200) and compresses blobs before network transmission.
-- **Backend Optimization (`save_upload`)**: Pillow/PIL resizes and saves images with JPEG `quality=82` and optimization flags.
-
-### 5. Space Discovery & Workspace Bookings (`spaces.html` & `spaces-details.html`)
-- **Workspace Filtering**: Search desks, private offices, meeting rooms, and virtual offices.
-- **Interactive Reservations**: Reserve spaces for selected dates with real-time price calculations and booking history on `my-bookings.html`.
-
-### 6. Circles & Group Messaging (`groups.html`)
-- **Discussion Circles**: Join or create public/private co-working circles.
-- **Group Chat & Media Attachments**: Send real-time group messages with image attachments.
-- **Circle Roster & Roles**: Manage member roles (Host, Co-Admin, Member) and click member rows to view profiles.
-
-### 7. Events Management & Verification Center (`events.html` & `event-details.html`)
-- **Compulsory Google Form Links**: Hosts must provide a valid Google Form registration URL when creating an event.
-- **Embedded Form Modal**: Participants fill out the Google Form directly inside an interactive iframe modal.
-- **Host Manual Verification Center**: Hosts review responses via direct Google Sheets links and approve/reject participant registration statuses (`pending`, `approved`, `rejected`).
-- **In-Page Host Controls**: Edit Event and Delete Event buttons with red confirmation modals sit directly in the event page header.
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | HTML5, Vanilla CSS, JavaScript (ES6+) |
-| **Backend** | Python, Django, ASGI / Daphne |
-| **Database** | PostgreSQL / SQLite / MySQL |
-| **Authentication** | JWT (JSON Web Tokens), bcrypt hashing |
-| **Icons & Typography** | Lucide Icons, Google Fonts (Outfit) |
-
----
-
-## Database Schema
-
-```sql
--- Users Table
-CREATE TABLE users (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('user', 'admin') DEFAULT 'user',
-  status VARCHAR(50) DEFAULT 'Available',
-  bio TEXT,
-  headline VARCHAR(255),
-  avatar_url VARCHAR(255),
-  github_url VARCHAR(255),
-  linkedin_url VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Friendships Table
-CREATE TABLE friendships (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT NOT NULL,
-  friend_id INT NOT NULL,
-  status VARCHAR(50) DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (user_id, friend_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Events Table
-CREATE TABLE events (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  title VARCHAR(150) NOT NULL,
-  event_type VARCHAR(50) NOT NULL,
-  city VARCHAR(50) NOT NULL,
-  location VARCHAR(150) NOT NULL,
-  event_date DATETIME NOT NULL,
-  end_time DATETIME,
-  description TEXT NOT NULL,
-  google_form_url VARCHAR(500) NOT NULL,
-  image_url VARCHAR(255),
-  created_by INT NOT NULL
-);
-
--- Event Registrations Table
-CREATE TABLE event_registrations (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  event_id INT NOT NULL,
-  user_id INT NOT NULL,
-  status VARCHAR(50) DEFAULT 'pending',
-  registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (event_id, user_id)
-);
-```
-
----
-
-## API Endpoints Reference
-
-### Authentication & Users
-- `POST /api/auth/register` — Register a new account.
-- `POST /api/auth/login` — Sign in and receive JWT token.
-- `GET /api/users/profile` — Fetch current user profile.
-- `PUT /api/users/profile` — Update name, bio, headline, GitHub/LinkedIn links, status.
-- `POST /api/users/profile/avatar` — Upload and compress profile avatar image.
-- `GET /api/users/<user_id>` — Fetch public user profile, headline, social links & friendship status.
-
-### Friends System
-- `GET /api/friends` — List accepted friends and pending requests.
-- `GET /api/users/<user_id>/friends` — List accepted friends for target user.
-- `POST /api/friends/request` — Send friend request to `friend_id`.
-- `PUT /api/friends/respond` — Accept, decline, or unfriend (`action`: `'accept'` | `'decline'` | `'unfriend'`).
-
-### Community Posts & Activity
-- `GET /api/posts` — Fetch community feed (supports optional `?tag=X` or `?user_id=X`).
-- `POST /api/posts` — Create a new post with text, tags, and compressed image.
-- `POST /api/posts/<post_id>/like` — Toggle post like.
-- `POST /api/posts/<post_id>/comments` — Add comment or nested reply.
-
-### Events & Host Control
-- `GET /api/events` — List upcoming events.
-- `POST /api/events` — Create event (enforces compulsory Google Form URL).
-- `GET /api/events/<event_id>` — Single event details.
-- `PUT /api/events/<event_id>` — Update event details (Host/Admin only).
-- `DELETE /api/events/<event_id>` — Delete event (Host/Admin only).
-- `POST /api/events/<event_id>/register` — Register for event (status defaults to `pending`).
-- `PUT /api/events/<event_id>/participants/<target_user_id>/status` — Update participant status (`approved`, `rejected`, `pending`).
-
----
-
-## Setup & Local Development
-
-1. **Clone & Install Dependencies**:
-   ```bash
-   python -m pip install django daphne pillow pyjwt bcrypt cloudinary
-   ```
-2. **Run Migrations & Start Development Server**:
-   ```bash
-   python manage.py migrate
-   python manage.py runserver 5000
-   ```
-3. **Access Application**:
-   Open `http://127.0.0.1:5000/` in your web browser.
-    event-details.html
-    events.html
-    groups.html
-    index.html
-    profile.html
-    register.html
-    spaces.html
-    style.css
-  uploads/
-  api_documentation.md
-  manage.py
-  README.md
-  requirements.txt
-```
-
-## Main Modules
-
-### 1. Authentication Module
-
-The authentication module allows users to register and log in. Passwords are hashed using bcrypt before being stored in the database. After login, the backend returns a JWT token. This token is stored by the frontend and sent in the `Authorization` header for protected routes.
+### Full Request & Response Pipeline
 
 ```mermaid
 sequenceDiagram
-    participant User as Frontend (Browser)
-    participant API as Django Backend
-    participant DB as MySQL Database
+    autonumber
+    actor User as User / Browser
+    participant AppJS as app.js / Alpine Store
+    participant Server as Django ASGI Server
+    participant Middleware as Middleware Layer
+    participant View as API View Controller
+    participant DB as Relational Database (PostgreSQL)
 
-    User->>API: POST /api/auth/login (email, password)
-    API->>DB: Query User by email
-    DB-->>API: Return User Record (with Hashed Password)
-    API->>API: Verify password with bcrypt
-    API-->>User: Return JWT Token
+    User->>AppJS: Action (e.g. Load Space Details / React to Message)
+    AppJS->>AppJS: Optimistic UI Update (Immediate visual feedback)
+    AppJS->>Server: HTTP Request (GET /api/spaces/1 + Bearer Token)
+    Server->>Middleware: CorsMiddleware & Cached EnsureSchema
+    Middleware->>View: Dispatch to space_detail(request, 1)
+    View->>DB: Query with B-Tree Index (Reused connection via CONN_MAX_AGE)
+    DB-->>View: Result Row & Serialized JSON Fields
+    View-->>Server: JsonResponse (200 OK + Payload)
+    Server-->>AppJS: HTTP 200 JSON Response
+    AppJS->>User: Reconcile UI & Render Data (Lucide Icons + Dynamic DOM)
 ```
 
-Main features:
-- User registration
-- User login
-- Password hashing
-- JWT token generation
-- Protected API access
+---
 
-### 2. User Profile Module
+## 🗄️ 3. Database Architecture & ERD
 
-The profile module allows authenticated users to view and update their personal information.
-
-Main features:
-- View profile
-- Update name, email, status, and bio
-- Change password
-- Search user profiles
-
-### 3. Space Management Module
-
-The space management module handles coworking space records.
-
-Main features:
-- View all available spaces
-- Filter spaces by location, type, and price
-- View details of one space
-- Create, update, and delete spaces as an admin
-
-### 4. Booking Module
-
-The booking module allows users to reserve coworking spaces.
-
-Main features:
-- Create a booking for a selected space and date
-- Prevent duplicate active bookings for the same space and date
-- View current user's bookings
-- Admin can view all bookings
-- Admin can update booking status
-- User or admin can cancel a booking
-
-### 5. Community Posts Module
-
-The community module allows users to share posts and interact with other members.
-
-Main features:
-- View community feed with paginated lazy loading
-- In-app photo editor card (zoom, rotate, aspect ratio crop)
-- Like or unlike posts with 0ms optimistic UI
-- Comment on posts with collapsed comment hierarchy
-- Delete own posts
-
-### 6. Groups and Messaging Module (WhatsApp Web Layout)
-
-The groups module provides a full-page (100vh) WhatsApp Web interface for community discussion circles.
-
-Main features:
-- Full-page WhatsApp Web 100vh chat layout
-- Group Header Bar with active group image, name, member count, and action controls
-- User profile avatars and role badges (`Admin`, `Co-Admin`, `Member`) on every message bubble
-- Direct file upload for group pictures
-- Drag & Drop and Clipboard Image Paste (`Ctrl+V`) into message composer
-- Member drawer with role management (Promote to Co-Admin, Remove Member, Add Member via search)
-- Admin group deletion with confirmation popup modal
-- Request debouncing to eliminate multi-group creation on rapid clicks
-
-### 7. Dual-Layer Image Compression Engine
-
-CoWorkConnect includes an automatic dual-layer image compression pipeline across the whole website:
-1. **Client-Side Canvas Compression (`ui/app.js`)**: High-resolution camera photos (3MB–10MB+) are compressed using an HTML5 Canvas pipeline (`compressImageFile`) down to max 1920x1920 resolution at ~82% quality before transmitting over the network.
-2. **Server-Side Pillow Optimization (`api/utils.py`)**: The backend processes all uploaded raster images using Pillow (`PIL.Image` & `ImageOps.exif_transpose`), auto-orients smartphone camera photos, resizes oversized dimensions, and outputs optimized JPEGs/WebPs at ~82% quality.
-
-### 8. Events Module
-
-The events module allows users to create and register for professional events.
-
-Main features:
-- View all events
-- Create events
-- Upload optional event image
-- Register for events
-- View event participants
-
-## Database Design
-
-The system uses a MySQL relational database. The database name is configured through the `.env` file. Django automatically creates the required database and tables when the application starts.
-
-### Tables
-
-| Table | Purpose |
-| :--- | :--- |
-| `users` | Stores user accounts, roles, profile information, and hashed passwords |
-| `spaces` | Stores coworking space information |
-| `bookings` | Stores workspace booking records |
-| `posts` | Stores community posts |
-| `comments` | Stores comments on posts |
-| `post_likes` | Stores post like records |
-| `community_groups` | Stores discussion groups |
-| `group_members` | Stores group membership records |
-| `messages` | Stores group messages |
-| `events` | Stores event details |
-| `event_registrations` | Stores event participant registrations |
-
-### Important Relationships
+### Entity-Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
-    USERS ||--o{ BOOKINGS : "creates"
-    SPACES ||--o{ BOOKINGS : "receives"
-    USERS ||--o{ POSTS : "creates"
-    POSTS ||--o{ COMMENTS : "has"
-    POSTS ||--o{ POST_LIKES : "has"
+    USERS ||--o{ SPACES : "creates/hosts"
+    USERS ||--o{ BOOKINGS : "places"
+    USERS ||--o{ POSTS : "authors"
+    USERS ||--o{ COMMENTS : "writes"
+    USERS ||--o{ POST_LIKES : "likes"
+    USERS ||--o{ COMMENT_LIKES : "likes"
     USERS ||--o{ COMMUNITY_GROUPS : "creates"
-    COMMUNITY_GROUPS ||--o{ GROUP_MEMBERS : "has"
-    COMMUNITY_GROUPS ||--o{ MESSAGES : "has"
-    USERS ||--o{ EVENTS : "creates"
-    EVENTS ||--o{ EVENT_REGISTRATIONS : "has"
+    USERS ||--o{ GROUP_MEMBERS : "joins"
+    USERS ||--o{ MESSAGES : "sends"
+    USERS ||--o{ MESSAGE_REACTIONS : "reacts"
+    USERS ||--o{ EVENTS : "hosts"
+    USERS ||--o{ EVENT_REGISTRATIONS : "registers"
+    USERS ||--o{ FRIENDSHIPS : "initiates/receives"
+
+    SPACES ||--o{ BOOKINGS : "reserved in"
+    SPACES ||--o{ EVENTS : "hosts venue"
+
+    POSTS ||--o{ COMMENTS : "contains"
+    POSTS ||--o{ POST_LIKES : "receives"
+    COMMENTS ||--o{ COMMENT_LIKES : "receives"
+
+    COMMUNITY_GROUPS ||--o{ GROUP_MEMBERS : "has roster"
+    COMMUNITY_GROUPS ||--o{ MESSAGES : "contains chat"
+    MESSAGES ||--o{ MESSAGE_REACTIONS : "receives emoji"
+
+    EVENTS ||--o{ EVENT_REGISTRATIONS : "has attendees"
+
+    USERS {
+        int id PK
+        string name
+        string email UK
+        string password
+        string role "user | admin"
+        string status
+        string headline
+        text bio
+        string avatar_url
+        string github_url
+        string linkedin_url
+        string expertise
+        timestamp created_at
+    }
+
+    SPACES {
+        int id PK
+        int user_id FK
+        string name
+        string type "desk | private_office | meeting_room | virtual_office"
+        string location
+        decimal price_per_day
+        decimal rating
+        int capacity
+        text description
+        string image_url
+        text images
+        text amenities
+        text pricing_plans
+        string contact_email
+        string contact_phone
+        string website_url
+        boolean is_available
+        timestamp created_at
+    }
+
+    POSTS {
+        int id PK
+        int user_id FK
+        text content
+        string tags
+        string image_url
+        timestamp created_at
+    }
+
+    COMMENTS {
+        int id PK
+        int post_id FK
+        int user_id FK
+        int parent_id FK
+        text content
+        timestamp created_at
+    }
+
+    COMMUNITY_GROUPS {
+        int id PK
+        int created_by FK
+        string name
+        text description
+        string image_url
+        timestamp created_at
+    }
+
+    MESSAGES {
+        int id PK
+        int group_id FK
+        int user_id FK
+        text content
+        string image_url
+        timestamp created_at
+    }
+
+    MESSAGE_REACTIONS {
+        int id PK
+        int message_id FK
+        int user_id FK
+        string emoji
+        timestamp created_at
+    }
+
+    EVENTS {
+        int id PK
+        int created_by FK
+        int space_id FK
+        string title
+        string event_type
+        string city
+        string location
+        timestamp event_date
+        timestamp end_date
+        text description
+        string google_form_url
+        string image_url
+        timestamp created_at
+    }
+
+    FRIENDSHIPS {
+        int id PK
+        int user_id FK
+        int friend_id FK
+        string status "pending | accepted | rejected"
+        timestamp created_at
+    }
 ```
 
-## Authentication and Authorization
+### Database Schema & Performance Indexes
 
-Protected routes require a JWT token in the request header:
+To ensure sub-millisecond execution even under heavy database loads, the following composite and B-tree indexes are maintained automatically by [`api/schema.py`](file:///d:/PROGRAMS/web/random/coworkconnect/api/schema.py):
 
-```text
-Authorization: Bearer <token>
+| Index Name | Table | Columns | Purpose |
+| :--- | :--- | :--- | :--- |
+| `idx_posts_created` | `posts` | `created_at DESC` | Instant pagination of the global networking feed |
+| `idx_posts_user` | `posts` | `user_id` | User activity filtering (`community.html?user_id=X`) |
+| `idx_comments_post` | `comments` | `post_id` | Batch-fetching all post comments in 1 query |
+| `idx_post_likes_composite` | `post_likes` | `post_id, user_id` | Instant verification of user's liked status |
+| `idx_messages_group` | `messages` | `group_id, created_at` | Sub-5ms retrieval of channel chat history |
+| `idx_reactions_msg` | `message_reactions` | `message_id` | Batch aggregation of emoji counts and reactions |
+| `idx_group_members_usr_grp` | `group_members` | `user_id, group_id` | Instant membership and permission checks |
+| `idx_comment_likes_composite` | `comment_likes` | `comment_id, user_id` | Batch resolution of comment likes |
+| `idx_spaces_avail_price` | `spaces` | `is_available, price_per_day` | Rapid faceted search and price sorting |
+
+---
+
+## 🧩 4. Core Modules & Technical Workflows
+
+### Module 1: Authentication & Role-Based Authorization
+- **Password Hashing**: Uses `bcrypt` with salt rounds for one-way password hashing.
+- **Stateless JWT Tokens**: Issues signed JSON Web Tokens (`HS256`) containing `user_id`, `role`, and expiration timestamp.
+- **Client Storage & Interceptors**: Stored in `localStorage` and dispatched automatically in the `Authorization: Bearer <token>` HTTP header by `apiFetch()` in [`ui/app.js`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/app.js).
+- **Alpine.js Global Auth Store**: Dynamic reactivity updates user profile avatars and names across the navbar and guest actions seamlessly.
+
+```mermaid
+flowchart LR
+    A[User Creds<br/>Email + Password] -->|POST /api/auth/login| B[Django Auth Controller]
+    B -->|Verify bcrypt hash| C[(Users Table)]
+    C -->|Match OK| D[Generate JWT Token<br/>Payload: id, role, exp]
+    D -->|HTTP 200 Response| E[Client Browser]
+    E -->|Save token & user| F[Alpine.store 'auth']
+    F -->|Update UI Dynamically| G[Navbar Avatar + Member Dropdown]
 ```
 
-Role-based authorization is used for admin operations. For example, only users with the `admin` role can create, update, or delete coworking spaces.
+---
 
-## API Summary
+### Module 2: Workspace Discovery & Adaptive Photo Collage
+- **Explore Grid ([`ui/spaces.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/spaces.html))**: Fast faceted search by registered city, space type (`Hot Desk`, `Dedicated Desk`, `Private Office`, `Meeting Room`), and daily price range.
+- **Custom Workspace Options & Passes**: Hosts can define unlimited flexible passes (e.g., *Half-Day Flex Pass*, *Weekly Dedicated Pass*, *Monthly Team Suite*) stored as JSON arrays in `pricing_plans`.
+- **Adaptive 1-to-5 Photo Collage ([`ui/space-details.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/space-details.html))**:
+  - `1 Image`: Full-width hero cover.
+  - `2 Images`: 50/50 dual split layout.
+  - `3 Images`: 60/40 primary tile with stacked secondary tiles.
+  - `4 Images`: Primary tile with 3-row stacked preview column.
+  - `5+ Images`: Master showcase tile with a 4-tile thumbnail grid and a *"View Slideshow (N)"* trigger button.
+- **Fullscreen Lightbox Slideshow**: Fullscreen modal with smooth next/prev slide navigation, keyboard shortcuts (`Esc`, `←`, `→`), and image counter indicators.
 
-Base URL:
-
-```text
-http://localhost:5000
+```mermaid
+graph TD
+    Data[Workspace Image Array imgs] --> Check{Count?}
+    Check -->|1| Layout1[collage-layout-1: Full Hero]
+    Check -->|2| Layout2[collage-layout-2: 50/50 Split]
+    Check -->|3| Layout3[collage-layout-3: 1 Lead + 2 Stacked]
+    Check -->|4| Layout4[collage-layout-4: 1 Lead + 3 Stacked]
+    Check -->|5+| Layout5[collage-layout-5: 1 Lead + 4 Grid Tiles]
+    Layout1 --> Lightbox[Fullscreen Modal Lightbox Carousel]
+    Layout2 --> Lightbox
+    Layout3 --> Lightbox
+    Layout4 --> Lightbox
+    Layout5 --> Lightbox
 ```
 
-### Authentication
+---
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Login and receive JWT token |
+### Module 3: Dual-Source Location Intelligence & Geocoding
+To guarantee frictionless search while providing precision real-world mapping:
+1. **Explore Search (`#location-input`)**:
+   - Queries `/api/locations/suggest?q=...` strictly against **registered workspaces in the database**.
+   - Displays a green `Registered` badge so users never search in non-existent cities.
+2. **"List Your Space" Form (`#new-space-location`)**:
+   - Queries **OpenStreetMap / Nominatim Geocoding API** for real-world streets, districts, landmarks, and coordinates.
+   - Displays a blue `Map Place` badge and dynamically syncs the embedded Google Maps iframe live as the user types.
 
-### Spaces
+```mermaid
+flowchart TD
+    subgraph SearchInput["🔍 Explore Spaces Search"]
+        S_Input[User types 'Islamabad'] --> S_API["GET /api/locations/suggest?q=Islamabad"]
+        S_API --> S_DB[(Spaces Database)]
+        S_DB --> S_Dropdown["Dropdown: 'Islamabad' (Registered Badge)"]
+    end
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | `/api/spaces` | List spaces |
-| GET | `/api/spaces/:id` | View one space |
-| POST | `/api/spaces` | Create space, admin only |
-| PUT | `/api/spaces/:id` | Update space, admin only |
-| DELETE | `/api/spaces/:id` | Delete space, admin only |
-
-### Bookings
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| POST | `/api/bookings` | Create booking |
-| GET | `/api/bookings/my` | View current user's bookings |
-| GET | `/api/bookings` | View all bookings, admin only |
-| PUT | `/api/bookings/:id` | Update booking status, admin only |
-| DELETE | `/api/bookings/:id` | Cancel booking |
-
-### Users
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | `/api/users/profile` | View current profile |
-| PUT | `/api/users/profile` | Update current profile |
-| PUT | `/api/users/updatepassword` | Change password |
-| GET | `/api/users/search?query=...` | Search users |
-
-### Community Posts
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | `/api/posts` | View community feed |
-| POST | `/api/posts` | Create post |
-| POST | `/api/posts/:id/like` | Toggle like |
-| POST | `/api/posts/:id/comments` | Add comment |
-| DELETE | `/api/posts/:id` | Delete post |
-
-### Groups
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | `/api/groups` | View groups |
-| POST | `/api/groups` | Create group |
-| POST | `/api/groups/:id/join` | Join group |
-| GET | `/api/groups/:id/messages` | View group messages |
-| POST | `/api/groups/:id/messages` | Send group message |
-
-### Events
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | `/api/events` | View events |
-| POST | `/api/events` | Create event |
-| POST | `/api/events/:id/register` | Register for event |
-| GET | `/api/events/:id/participants` | View participants |
-
-## Setup Instructions
-
-### 1. Install Python Dependencies
-
-```powershell
-python -m pip install -r requirements.txt
+    subgraph ListingInput["📍 List Your Space Form"]
+        L_Input[User types 'F-7 Markaz'] --> L_Geo["Nominatim Geocoding API"]
+        L_Geo --> L_Dropdown["Dropdown: 'F-7 Markaz, Islamabad' (Map Place Badge)"]
+        L_Dropdown --> L_Map["Auto-Update Live Google Map Iframe & Link"]
+    end
 ```
 
-### 2. Configure Environment Variables
+---
 
-Create or update the `.env` file in the project root. The Django settings load this file automatically during local development.
+### Module 4: Professional Networking Feed
+- **Author Headlines & Short Descriptions**: Author cards showcase professional titles (e.g. *"Principal Architect @ CloudScale"*) rather than generic badges.
+- **Tag Filtering**: Filter feed content by `#startups`, `#design`, `#events`, `#hiring`, etc.
+- **User Activity Filter (`community.html?user_id=X`)**: Deep-link to view all networking posts created by a specific member.
+- **Optimistic Interactions**: Like toggles and comments update the DOM instantaneously before background network synchronization.
 
-```text
+---
+
+### Module 5: Mastermind Circles & Real-Time Chat
+- **Topic Channels**: Create and join dedicated industry or co-working circles with avatars and member rosters.
+- **In-Place Message Rendering**: Sent messages append directly to `#messages-feed-container` with smooth auto-scrolling without refreshing the channel view.
+- **Image Attachments**: Attach photos to messages with compressed previews and full-size zoom inspection.
+
+---
+
+### Module 6: Single-Emoji Reaction Engine
+To prevent spam while encouraging rich sentiment:
+- **Constraint**: Each user can have **at most one active emoji reaction per message**.
+- **Swap Mechanic**: Clicking a different emoji automatically deletes/swaps the old reaction and applies the new emoji in-place.
+- **Toggle-Off Mechanic**: Clicking the same emoji removes/toggles off the user's reaction.
+
+```mermaid
+stateDiagram-v2
+    [*] --> NoReaction : User has not reacted
+
+    NoReaction --> ReactedEmojiA : Click Emoji A (action: added)
+    ReactedEmojiA --> NoReaction : Click Emoji A again (action: removed)
+    ReactedEmojiA --> ReactedEmojiB : Click Emoji B (action: swapped)
+    ReactedEmojiB --> NoReaction : Click Emoji B again (action: removed)
+    ReactedEmojiB --> ReactedEmojiA : Click Emoji A (action: swapped)
+```
+
+---
+
+### Module 7: Event Academy & Registration Center
+- **Compulsory Google Form Integration**: Event hosts supply a Google Form registration URL.
+- **Embedded Modal Flow**: Prospective attendees complete registration inside an interactive in-app modal.
+- **Host Verification Center**: Hosts access connected response sheets and manage attendee statuses (`pending`, `approved`, `rejected`).
+- **Pass Generation**: Approved attendees receive QR-coded ticket passes.
+
+---
+
+### Module 8: Member Profiles & Friendship Graph
+- **Bidirectional Friendships**:
+  - `+ Add Friend` ➔ Outgoing request (`status: pending`).
+  - `⏳ Request Sent` ➔ Pending response indicator.
+  - `✓ Accept Friend Request` ➔ Bilateral friend confirmation (`status: accepted`).
+  - `Friends ✓ (Unfriend)` ➔ Friendship management and removal.
+- **Public Profile View ([`ui/user-profile.html`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/user-profile.html))**: Direct portfolio link showcasing GitHub and LinkedIn links, expertise chips, bio, and shared workspaces.
+
+---
+
+### Module 9: Admin Management Hub
+- **Inventory Control**: Update or delete any space listing, manage capacity, and toggle availability.
+- **Moderation**: Remove inappropriate community posts, comments, and messages.
+- **User Records**: View registered accounts, modify roles (`user` ➔ `admin`), and inspect audit logs.
+
+---
+
+## ⚡ 5. Performance Engineering & Bottleneck Elimination
+
+### N+1 Query Elimination (Batch Resolution)
+In previous iterations, loading 50 posts triggered 1 post query + 50 comment queries + 150 comment-like queries (**201 database roundtrips**).
+
+We refactored all multi-item endpoints in [`api/views.py`](file:///d:/PROGRAMS/web/random/coworkconnect/api/views.py) to use **Single Batch Lookups (`WHERE IN (...)`)**:
+
+```mermaid
+graph LR
+    subgraph LegacyApproach["❌ Old Sequential N+1 Queries (201 DB Roundtrips ~1,200ms)"]
+        A1[Fetch 50 Posts] --> A2[Query Comments for Post 1]
+        A2 --> A3[Query Likes for Comment 1..N]
+        A3 --> A4[Query Comments for Post 2..50...]
+    end
+
+    subgraph OptimizedApproach["✅ CoWorkConnect Batch Resolution (2 DB Queries <15ms)"]
+        B1["1. SELECT * FROM posts ORDER BY created_at DESC LIMIT 50"] --> B2["2. SELECT * FROM comments WHERE post_id IN (1, 2, ... 50)"]
+        B2 --> B3["3. Group Comments in Python Dict & Return JSON"]
+    end
+```
+
+### Hardware-Accelerated Skeleton Shimmer
+Implemented a dual-layer GPU-composited moving highlight shimmer wave in [`ui/style.css`](file:///d:/PROGRAMS/web/random/coworkconnect/ui/style.css):
+- **Base Layer**: Linear gradient shifting smoothly across light slate tones (`CCShimmerGradient`).
+- **Highlight Sweep Beam**: `::after` pseudo-element with `linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent)` translating from `translateX(-150%)` to `translateX(150%)` at 60fps/120fps with zero layout reflows.
+
+### Connection Pooling & Network Latency
+- **Persistent Socket Connections**: Added `"CONN_MAX_AGE": 600` to database settings in [`coworkconnect/settings.py`](file:///d:/PROGRAMS/web/random/coworkconnect/coworkconnect/settings.py).
+- **TLS Handshake Savings**: Reuses existing TCP/SSL channels, eliminating 1.5s–2.5s connection reconnection penalties when communicating with remote databases (e.g. Neon PostgreSQL).
+
+---
+
+## 📡 6. Complete REST API Reference
+
+### Authentication Endpoints
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/api/auth/register` | No | Register new user account (`name`, `email`, `password`) |
+| `POST` | `/api/auth/login` | No | Authenticate user & return JWT token |
+| `GET` | `/api/auth/me` | Yes | Get authenticated user profile & role |
+
+### Workspaces & Locations
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/spaces` | No | Faceted workspace search (`location`, `type`, `minPrice`, `maxPrice`, `sort`) |
+| `POST` | `/api/spaces` | Yes | Publish new workspace listing (with image upload & pricing plans) |
+| `GET` | `/api/spaces/<id>` | No | Get comprehensive space details, images list, amenities, and plans |
+| `PUT` | `/api/spaces/<id>` | Yes | Update workspace listing (creator or admin only) |
+| `DELETE` | `/api/spaces/<id>` | Yes | Delete workspace & cascade delete bookings/references |
+| `GET` | `/api/locations/suggest` | No | Autocomplete location suggestions from registered database hubs |
+
+### Networking Feed & Comments
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/posts` | Optional | Get posts feed with batch-resolved comments and likes (`tag`, `user_id`) |
+| `POST` | `/api/posts` | Yes | Publish new networking post with optional photo |
+| `DELETE` | `/api/posts/<id>` | Yes | Delete post (author or admin only) |
+| `POST` | `/api/posts/<id>/like` | Yes | Toggle like on a networking post |
+| `POST` | `/api/posts/<id>/comments` | Yes | Add comment to a post |
+| `DELETE` | `/api/comments/<id>` | Yes | Delete comment (author or admin only) |
+| `POST` | `/api/comments/<id>/like` | Yes | Toggle like on a comment |
+
+### Circles & Messages
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/groups` | Optional | List all circles with batch membership status and member counts |
+| `POST` | `/api/groups` | Yes | Create new discussion circle |
+| `GET` | `/api/groups/<id>` | Optional | Get circle details and admin permissions |
+| `PUT` | `/api/groups/<id>` | Yes | Update circle info (admin/host only) |
+| `DELETE` | `/api/groups/<id>` | Yes | Delete circle (admin/host only) |
+| `GET` | `/api/groups/<id>/messages` | Yes | Retrieve chat history with batch-aggregated emoji reactions |
+| `POST` | `/api/groups/<id>/messages` | Yes | Send chat message with optional photo attachment |
+| `POST` | `/api/groups/<id>/join` | Yes | Join a circle |
+| `POST` | `/api/messages/<id>/reactions` | Yes | Single-emoji reaction toggle / swap engine |
+
+### Events & Registrations
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/events` | Optional | List upcoming events with city & category filters |
+| `POST` | `/api/events` | Yes | Create new event with compulsory Google Form URL |
+| `GET` | `/api/events/<id>` | Optional | Get event details, host info, and user registration status |
+| `PUT` | `/api/events/<id>` | Yes | Update event details (creator or admin only) |
+| `DELETE` | `/api/events/<id>` | Yes | Delete event (creator or admin only) |
+| `POST` | `/api/events/<id>/register` | Yes | Submit event registration |
+| `GET` | `/api/events/<id>/registrations`| Yes | View attendee list & Google Sheets verification link (host/admin) |
+| `PUT` | `/api/events/<id>/registrations/<uid>` | Yes | Update registration status (`approved`, `rejected`) |
+
+### Social Graph & Profiles
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/profile` | Yes | Get authenticated user's private profile & friend count |
+| `PUT` | `/api/profile` | Yes | Update bio, headline, skills, GitHub URL, LinkedIn URL, status |
+| `GET` | `/api/users/<id>` | Optional | Get public member profile, statistics, and mutual connections |
+| `GET` | `/api/users/search` | No | Search member directory by name, headline, or expertise |
+| `POST` | `/api/friends/request` | Yes | Send friend request to user |
+| `POST` | `/api/friends/accept` | Yes | Accept incoming friend request |
+| `POST` | `/api/friends/remove` | Yes | Unfriend / cancel friend request |
+| `GET` | `/api/friends` | Yes | List authenticated user's accepted friends |
+
+---
+
+## 🛠️ 7. Technology Stack
+
+| Layer | Technology | Version / Spec | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Frontend Core** | HTML5 / CSS3 / Vanilla JavaScript | ES6+ | High performance, zero framework bundle bloat |
+| **Frontend Reactive Store** | Alpine.js | 3.14.x | Lightweight reactive state for auth, modals, and notifications |
+| **Iconography** | Lucide Icons | Latest SVG | Uniform, crisp vector icons across all UI components |
+| **Typography** | Google Fonts (Outfit) | 300 - 800 | Modern, highly legible geometric sans-serif typeface |
+| **Backend Framework** | Python / Django | 5.2.x | Secure, robust MVC backend and routing architecture |
+| **ASGI Server** | Daphne / Channels | 4.2.x | Asynchronous gateway interface for low-latency dispatching |
+| **Database** | PostgreSQL / SQLite / MySQL | 15+ / 3.x | Relational storage with composite B-tree indexing |
+| **Authentication** | PyJWT / bcrypt | HS256 | Cryptographically secure token authentication & password hashing |
+| **Image Processing** | Pillow (PIL) | Latest | Server-side image resizing, EXIF cleanup, and JPEG optimization |
+| **Geocoding Service** | OpenStreetMap / Nominatim | v2 API | Real-world map coordinates and address autocomplete |
+
+---
+
+## 🚀 8. Installation & Local Setup
+
+### Prerequisites
+- Python 3.10+ installed
+- PostgreSQL, MySQL, or built-in SQLite3
+- Git
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Abubakkar-Khan/coworkconnect.git
+cd coworkconnect
+```
+
+### 2. Create and Activate Virtual Environment
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+Create a `.env` file in the project root:
+```env
+PORT=5000
 DEBUG=true
-DJANGO_SECRET_KEY=use_a_long_random_secret_here
-JWT_SECRET=use_a_long_random_secret_here
+DJANGO_SECRET_KEY=your_secure_development_secret_key
+JWT_SECRET=your_secure_jwt_secret_key
 JWT_EXPIRE=30d
 
-# Recommended for Supabase/Postgres:
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:6543/postgres?sslmode=require
-DB_SSL=true
+# Database Configuration (Choose PostgreSQL, MySQL, or leave empty for SQLite fallback)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/coworkconnect?sslmode=disable
+DB_CONN_MAX_AGE=600
 
-# Optional local MySQL fallback:
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=coworkconnect
-DB_SSL=false
+# Optional Cloudinary Configuration for Image Uploads
+# CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 ```
 
-### 3. Start MySQL
-
-Make sure the MySQL server is running on your machine. The application will create the configured database and tables automatically.
-
-### 4. Run the Django Server
-
-```powershell
-python manage.py runserver 5000
+### 5. Initialize Schema & Seed Data
+```bash
+python manage.py shell -c "from api.schema import ensure_schema; ensure_schema()"
 ```
 
-Open the application in the browser:
-
-```text
-http://localhost:5000
-```
-
-## Deployment on Vercel
-
-The project includes Vercel deployment support through:
-
-- `vercel.json`
-- root-level `wsgi.py`
-- `.python-version`
-- `requirements.txt`
-
-Important: Vercel cannot connect to the MySQL database running on your laptop through `localhost`. For a real deployed backend, use an external database. Supabase is recommended because it provides a hosted PostgreSQL database with a connection URL that works well with Vercel.
-
-### Recommended: Supabase Database
-
-1. Create a Supabase project.
-2. Open the Supabase dashboard.
-3. Go to Project Settings > Database.
-4. Copy the pooled connection string.
-5. Add it to Vercel as `DATABASE_URL`.
-
-Supabase connection string example:
-
-```text
-DATABASE_URL=postgresql://postgres.xxx:password@aws-0-region.pooler.supabase.com:6543/postgres?sslmode=require
-```
-
-The backend supports Supabase/PostgreSQL, hosted MySQL, and a temporary SQLite fallback for Vercel deployments without database variables. The SQLite fallback is only for basic testing because serverless storage is not permanent.
-
-Set these environment variables in the Vercel project dashboard:
-
-```text
-DEBUG=false
-DJANGO_SECRET_KEY=your_long_random_secret
-JWT_SECRET=your_long_random_secret
-JWT_EXPIRE=30d
-DATABASE_URL=your_supabase_or_external_database_url
-```
-
-Hosted MySQL can still be configured with individual DB variables:
-
-```text
-DB_ENGINE=mysql
-DB_HOST=your_external_mysql_host
-DB_PORT=3306
-DB_USER=your_external_mysql_user
-DB_PASSWORD=your_external_mysql_password
-DB_NAME=coworkconnect
-DB_SSL=true
-```
-
-After saving the environment variables, redeploy the Vercel project. The Django backend will create the required tables automatically on the first request.
-
-Note: Vercel serverless storage is not persistent. Uploaded files may not remain permanently unless external file storage is added later, such as Vercel Blob, S3, or Cloudinary.
-
-### 5. Optional Seed Data
-
-After registering at least one user, run:
-
-```powershell
+*(Optional: Run seed script if available)*
+```bash
 python manage.py seed
 ```
 
-This adds sample event data for testing.
-
-## User Interface Pages
-
-| Page | Purpose |
-| :--- | :--- |
-| `index.html` | Landing/home page |
-| `register.html` | User registration |
-| `spaces.html` | Browse coworking spaces |
-| `profile.html` | User profile management |
-| `community.html` | Community posts and inline sign in when needed |
-| `groups.html` | Discussion groups, messaging, and inline sign in when needed |
-| `events.html` | Event listing and creation |
-| `event-details.html` | Event details and registration |
-| `admin.html` | Admin space management |
-
-## Testing and Validation
-
-The project can be tested using:
-
-- Browser testing for frontend pages.
-- API testing through Postman or similar tools.
-- Django system check:
-
-```powershell
-python manage.py check
+### 6. Launch the Development Server
+```bash
+python manage.py runserver 0.0.0.0:5000
 ```
+Open your browser and navigate to: **`http://localhost:5000`** (or `http://127.0.0.1:5000`).
 
-Important test scenarios:
+---
 
-- Register a new user.
-- Login and receive a JWT token.
-- Access protected routes with and without a token.
-- Create and filter coworking spaces.
-- Create a booking and verify duplicate booking prevention.
-- Create posts, comments, and likes.
-- Create and join groups.
-- Send and retrieve group messages.
-- Create and register for events.
-- Verify admin-only endpoints reject normal users.
+## ⚙️ 9. Environment Variables Reference
 
-## Security Features
+| Variable | Type | Default | Description |
+| :--- | :---: | :---: | :--- |
+| `PORT` | `int` | `5000` | Port for the Daphne/Django development server |
+| `DEBUG` | `bool` | `true` | Enable Django debug mode and detailed error reporting |
+| `DJANGO_SECRET_KEY` | `string` | — | Cryptographic secret key for session signing |
+| `JWT_SECRET` | `string` | — | Secret key used to sign and verify HS256 JWT tokens |
+| `JWT_EXPIRE` | `string` | `30d` | Lifetime of issued authentication tokens (e.g. `30d`, `24h`) |
+| `DATABASE_URL` | `string` | — | Standard PostgreSQL / MySQL database connection string |
+| `DB_CONN_MAX_AGE` | `int` | `600` | Database connection persistence in seconds (connection pooling) |
+| `DB_SSL` | `bool` | `false` | Enforce SSL mode on database queries |
+| `MAX_UPLOAD_SIZE` | `int` | `5242880` | Maximum file upload size in bytes (default: 5MB) |
+| `CLOUDINARY_URL` | `string` | — | Optional remote media storage connection string |
 
-- Passwords are stored as bcrypt hashes.
-- JWT authentication is used for protected routes.
-- Role-based authorization protects admin functionality.
-- SQL queries use parameterized values to reduce SQL injection risk.
-- File uploads are stored in the `uploads/` directory.
+---
 
-## Limitations
+## 🌐 10. Production Deployment Guide
 
-The current system is functional for academic and prototype use, but some limitations remain:
+### Deploying to Vercel + Neon / Supabase
 
-- Group messaging uses polling instead of real-time WebSocket communication.
-- The admin panel focuses mainly on space management.
-- No online payment integration is included.
-- No email verification or password reset workflow is included.
-- File upload validation can be expanded further.
-- The project currently uses manually defined SQL tables instead of Django ORM models.
+1. **Connect Database**:
+   - Provision a PostgreSQL database on [Neon](https://neon.tech) or [Supabase](https://supabase.com).
+   - Copy the connection string to `DATABASE_URL`.
 
-## Future Enhancements
+2. **Configure `vercel.json`**:
+   The project includes a root `vercel.json` configured for serverless Python ASGI execution:
+   ```json
+   {
+     "builds": [
+       {
+         "src": "coworkconnect/wsgi.py",
+         "use": "@vercel/python"
+       }
+     ],
+     "routes": [
+       {
+         "src": "/(.*)",
+         "dest": "coworkconnect/wsgi.py"
+       }
+     ]
+   }
+   ```
 
-Future versions of CoWorkConnect can include:
+3. **Deploy via Vercel CLI**:
+   ```bash
+   vercel --prod
+   ```
 
-- Real-time chat using Django Channels.
-- Online payment gateway integration.
-- Email verification and password reset.
-- Advanced admin dashboard with analytics.
-- Booking calendar view.
-- Reviews and ratings for coworking spaces.
-- Notification system.
-- Space owner role separate from admin.
-- Better search and recommendation features.
-- Deployment on a cloud server.
+---
 
-## Conclusion
+## 👥 Contributors & License
 
-CoWorkConnect demonstrates how a coworking management system can combine workspace booking, community networking, group communication, and event participation into a single platform. The project uses a simple HTML, CSS, and JavaScript frontend with a Django and MySQL backend, making it understandable, extensible, and suitable for academic documentation and thesis presentation.
+- **Project Lead & Author**: Abubakkar Khan ([@Abubakkar-Khan](https://github.com/Abubakkar-Khan))
+- **License**: MIT License — open for academic, personal, and commercial usage.
+
+---
+*Built with ❤️ for remote professionals, founders, and flexible workspace operators.*

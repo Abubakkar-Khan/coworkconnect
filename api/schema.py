@@ -559,6 +559,9 @@ def compatibility_statements(vendor):
             "CREATE INDEX IF NOT EXISTS idx_post_likes_composite ON post_likes(post_id, user_id)",
             "CREATE INDEX IF NOT EXISTS idx_messages_group ON messages(group_id, created_at)",
             "CREATE INDEX IF NOT EXISTS idx_spaces_avail_price ON spaces(is_available, price_per_day)",
+            "CREATE INDEX IF NOT EXISTS idx_group_members_usr_grp ON group_members(user_id, group_id)",
+            "CREATE INDEX IF NOT EXISTS idx_reactions_msg ON message_reactions(message_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comment_likes_composite ON comment_likes(comment_id, user_id)",
         ]
     if vendor == "sqlite":
         return [
@@ -582,6 +585,9 @@ def compatibility_statements(vendor):
             "CREATE INDEX IF NOT EXISTS idx_post_likes_composite ON post_likes(post_id, user_id)",
             "CREATE INDEX IF NOT EXISTS idx_messages_group ON messages(group_id, created_at)",
             "CREATE INDEX IF NOT EXISTS idx_spaces_avail_price ON spaces(is_available, price_per_day)",
+            "CREATE INDEX IF NOT EXISTS idx_group_members_usr_grp ON group_members(user_id, group_id)",
+            "CREATE INDEX IF NOT EXISTS idx_reactions_msg ON message_reactions(message_id)",
+            "CREATE INDEX IF NOT EXISTS idx_comment_likes_composite ON comment_likes(comment_id, user_id)",
         ]
     return [
         "ALTER TABLE messages ADD COLUMN image_url VARCHAR(255)",

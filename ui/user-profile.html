@@ -8,13 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body style="background-color: var(--bg-soft, #f8fafc);">
     <!-- Shared Navbar -->
     <nav class="navbar">
         <div class="container nav-container">
             <a href="index.html" class="logo">
-                <i data-lucide="layout"></i>
+                <i data-lucide="briefcase"></i>
                 <span>CoWorkConnect</span>
             </a>
             <div class="nav-links">
@@ -164,10 +165,10 @@
                 const socialsWrap = document.getElementById('u-socials');
                 let socialsHtml = '';
                 if (u.github_url) {
-                    socialsHtml += `<a href="${escapeHtml(u.github_url)}" target="_blank" class="btn" style="background:#0f172a;color:white;padding:0.4rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">💻 GitHub Profile ↗</a>`;
+                    socialsHtml += `<a href="${escapeHtml(u.github_url)}" target="_blank" class="btn" style="background:#0f172a;color:white;padding:0.4rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">GitHub Profile ↗</a>`;
                 }
                 if (u.linkedin_url) {
-                    socialsHtml += `<a href="${escapeHtml(u.linkedin_url)}" target="_blank" class="btn" style="background:#0a66c2;color:white;padding:0.4rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">💼 LinkedIn Profile ↗</a>`;
+                    socialsHtml += `<a href="${escapeHtml(u.linkedin_url)}" target="_blank" class="btn" style="background:#0a66c2;color:white;padding:0.4rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">LinkedIn Profile ↗</a>`;
                 }
                 socialsWrap.innerHTML = socialsHtml;
 

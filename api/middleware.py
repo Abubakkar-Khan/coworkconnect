@@ -24,12 +24,21 @@ class CorsMiddleware:
         return response
 
 
+_schema_done = False
+
+
 class EnsureSchemaMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        from .schema import ensure_schema
+        global _schema_done
+        if not _schema_done:
+            from .schema import ensure_schema
 
-        ensure_schema()
+            try:
+                ensure_schema()
+            except Exception:
+                pass
+            _schema_done = True
         return self.get_response(request)
